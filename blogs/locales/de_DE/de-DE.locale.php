@@ -10,9 +10,9 @@
  *  - 'charset':  Character set of the locale's messages files.
  */
 $locale_defs['de-DE'] = array(
-		'name' => NT_('German (DE) latin1'),
+		'name' => NT_('German (DE) utf8'),
 		'messages' => 'de_DE',
-		'charset' => 'iso-8859-1',
+		'charset' => 'utf-8',
 		'datefmt' => 'd.m.y',
 		'timefmt' => 'H:i:s',
 		'startofweek' => 1,

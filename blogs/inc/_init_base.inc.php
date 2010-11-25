@@ -101,6 +101,10 @@ elseif( !isset( $locales[$default_locale] ) )
 {
 	$error_message = 'The default locale '.var_export( $default_locale, true ).' does not exist! (see /conf/_locales.php)';
 }
+elseif( ! function_exists('mb_internal_encoding') )
+{
+	$error_message = "$app_name requires the PHP mbstring extension.";
+}
 if( isset( $error_message ) )
 { // error & exit
 	require dirname(__FILE__).'/../skins_adm/conf_error.main.php';
@@ -110,7 +114,7 @@ if( isset( $error_message ) )
 /**
  * Class loader.
  */
-require_once $inc_path.'_core/_class'.floor(PHP_VERSION).'.funcs.php';
+require_once $inc_path.'_core/_class5.funcs.php';
 
 
 /**

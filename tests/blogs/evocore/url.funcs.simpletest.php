@@ -88,16 +88,64 @@ class UrlFuncsTestCase extends EvoUnitTestCase
 	}
 
 
+	function test_validate_url()
+	{
+		// valid:
+		foreach( array(
+			'http://b2evolution.net',
+			'https://demo.b2evolution.net',
+			'http://user@example.com/path',
+			'http://user:pass@example.com/path',
+			'mailto:example@example.org',
+			'mailto:example@example.org?subject=TEST',
+			'http://läu.de/',
+			'http://läu.de/foo bar',
+			) as $url )
+		{
+			$r = validate_url( $url, 'commenting' );
+			// True means validation ok
+			$this->assertFalse( $r, $url.' NOT allowed in comments' );
+
+			$r = validate_url( $url, 'posting' );
+			$this->assertFalse( $r, $url.' NOT allowed in posts' );
+		}
+
+		// valid in "posting" mode only:
+		foreach( array(
+			'/foobar',
+			'/foobar#anchor',
+			'#anchor',
+			) as $url )
+		{
+			$r = validate_url( $url, 'posting' );
+			$this->assertFalse( $r, $url.' NOT allowed in posts' );
+		}
+
+		// invalid:
+		foreach( array(
+			'http://',
+			'http://&amp;',
+			'http://<script>...</script>',
+			'mailto:www.example.com',
+			'foobar',
+			) as $url )
+		{
+			$r = validate_url( $url, 'commenting' );
+			// True means validation rejected
+			$this->assertTrue( $r, $url.' allowed in comments' );
+
+			$r = validate_url( $url, 'posting' );
+			$this->assertTrue( $r, $url.' allowed in posts' );
+		}
+	}
+
+
 	/**
 	 * Tests {@link idna_encode()}
 	 */
 	function test_idna_encode()
 	{
-		global $evo_charset;
-		$old_evo_charset = $evo_charset;
-		$evo_charset = 'utf-8'; // this file
 		$this->assertEqual( idna_encode( 'läu.de' ), 'xn--lu-via.de' );
-		$evo_charset = $old_evo_charset;
 	}
 
 

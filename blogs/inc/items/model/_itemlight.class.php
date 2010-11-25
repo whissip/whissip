@@ -59,7 +59,7 @@ class ItemLight extends DataObject
  	var $title;
 
  	var $excerpt;
- 
+
  	var $urltitle;
 
 	var $canonical_slug_ID;
@@ -117,7 +117,7 @@ class ItemLight extends DataObject
 	 * @param string User ID field name
 	 * @param string User ID field name
 	 */
-	function ItemLight( $db_row = NULL, $dbtable = 'T_items__item', $dbprefix = 'post_', $dbIDname = 'post_ID', $objtype = 'ItemLight',
+	function ItemLight( stdClass $db_row = NULL, $dbtable = 'T_items__item', $dbprefix = 'post_', $dbIDname = 'post_ID', $objtype = 'ItemLight',
 	               $datecreated_field = '', $datemodified_field = 'datemodified',
 	               $creator_field = '', $lasteditor_field = '' )
 	{
@@ -193,7 +193,7 @@ class ItemLight extends DataObject
   /**
 	 * Generate a single post link for the item
 	 *
-	 * @param boolean allow redir to permalink, true | false | 'auto' to prevent redit only if single isn't the current permalink type
+	 * @param boolean Allow redirect to permalink? (true, false, 'auto' to prevent redir only if single isn't the current permalink type)
  	 * @param string base url to use
 	 * @param string glue between url params
 	 */
@@ -692,7 +692,7 @@ class ItemLight extends DataObject
 	 * Check if cross post navigation should stay in the current blog or not.
 	 * Also check that this item has at least one category that belongs to the given blog.
 	 * If current blog is the same as item blog then, this function will return false, because no need to check.
-	 * 
+	 *
 	 * @param string 'auto' value means this call needs to decide to stay in the current blog or not. Every other value will return false!
 	 * @param integer the given blog ID (its usually the current blog id)
 	 * @return boolean true if we have to stay in the current blog, false otherwise
@@ -708,7 +708,7 @@ class ItemLight extends DataObject
 
 		$this->get_Blog();
 		if( $this->Blog->ID == $blog_ID )
-		{ // item's blog is the same as target blog 
+		{ // item's blog is the same as target blog
 			return false;
 		}
 
@@ -780,10 +780,13 @@ class ItemLight extends DataObject
 
 		$url = $this->get_permanent_url( $permalink_type, $blogurl );
 
+		$text = str_replace( '$title$', format_to_output( $this->title ), $text );
+		$title = str_replace( '$title$', format_to_output( $this->title ), $title );
+
 		// Display as link
 		$r = '<a href="'.$url.'" title="'.$title.'"';
 		if( !empty( $class ) ) $r .= ' class="'.$class.'"';
-		$r .= '>'.str_replace( '$title$', format_to_output( $this->title ), $text ).'</a>';
+		$r .= '>'.$text.'</a>';
 
 		return $r;
 	}

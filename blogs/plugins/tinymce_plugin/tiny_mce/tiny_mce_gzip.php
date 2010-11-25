@@ -1,13 +1,17 @@
 <?php
 /**
- * $Id$
+ * tiny_mce_gzip.php
  *
- * @author Moxiecode
- * @copyright Copyright © 2005-2006, Moxiecode Systems AB, All rights reserved.
+ * Copyright 2009, Moxiecode Systems AB
+ * Released under LGPL License.
+ *
+ * License: http://tinymce.moxiecode.com/license
+ * Contributing: http://tinymce.moxiecode.com/contributing
  *
  * This file compresses the TinyMCE JavaScript using GZip and
  * enables the browser to do two requests instead of one for each .js file.
- * Notice: This script defaults the button_tile_map option to true for extra performance.
+ *
+ * It's a good idea to use the diskcache option since it reduces the servers workload.
  */
 
 	// Set the error reporting to minimal.
@@ -22,9 +26,7 @@
 	$compress = getParam("compress", "true") == "true";
 	$core = getParam("core", "true") == "true";
 	$suffix = getParam("suffix", "_src") == "_src" ? "_src" : "";
-
 	$cachePath = dirname(__FILE__).'/../../../cache/plugins/tinymce'; // Cache path, this is where the .gz files will be stored
-
 	$expiresOffset = 3600 * 24 * 10; // Cache for 10 days in browser cache
 	$content = "";
 	$encodings = array();
@@ -64,7 +66,6 @@
 		// TinyMCE upgrade/changes:
 		$last_mod_time = @filemtime('tiny_mce'.$suffix.'.js');
 		$cacheKey .= $last_mod_time;
-
 		$cacheKey = md5($cacheKey);
 
 		$cacheFile = $cachePath.'/tiny_mce_'.$cacheKey;

@@ -48,7 +48,14 @@ $Form->begin_form( 'fform', T_('Delete') );
 
 	$Form->add_crumb( 'file' );
 	$Form->hidden_ctrl();
-	$Form->hiddens_by_key( get_memorized() );
+	/**
+	 * Regenerate POSTed keys and their values but ignore the original
+	 * value of fm_selected and override it with the files which are
+	 * selected *now* (some files may have been removed from the list
+	 * because of delete restrictions).
+	 */
+	$Form->hiddens_by_key( array_merge( get_memorized(),
+		array( 'fm_selected' => $selected_Filelist->get_array( 'get_rdfp_rel_path' ) ) ) );
 	$Form->hidden( 'action', 'delete' );
 	$Form->hidden( 'confirmed', 1 );
 

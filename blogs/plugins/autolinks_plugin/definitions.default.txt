@@ -19,14 +19,6 @@ personman;;;personman.com/
 fplanque;;;fplanque.com/
 blueyed;;;daniel.hahler.de/
 
-; A couple of English definitions
-csv;;;www.tellmewhatis.com/csv-comma-separated-values
-dns;;;www.tellmewhatis.com/dns-domain-name-system
-ethernet;;;www.tellmewhatis.com/ethernet
-ftp;;;www.tellmewhatis.com/ftp-file-transfer-protocol
-rss;;;webreference.fr/defintions/rss-atom-xml
-xml;;;www.tellmewhatis.com/xml
-
 ; b2evo stuff
 b2;;;b2evolution.net/
 b2evo;;;b2evolution.net/
@@ -37,9 +29,6 @@ evoskins;;;skins.b2evolution.net/
 platform;multiblog;;b2evolution.net/
 skin;evo;;skins.b2evolution.net/
 skins;evo;;skins.b2evolution.net/
-
-; A couple of French definitions (TODO: different files by language/locale)
-hypertexte;;;webreference.fr/defintions/www/hypertexte
 
 ; Twitter handles:
 @b2evolution;;;twitter.com/b2evolution

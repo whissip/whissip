@@ -51,7 +51,7 @@ if( $is_cli )
 				case '-h':
 				case '--help':
 					// display help:
-					echo $argv[0]." - Execute cron jobs for b2evolution\n";
+					echo $argv[0]." - Execute cron jobs for $app_name\n";
 					echo "\n";
 					echo "Options:\n";
 					echo " -q --quiet: Be quiet (do not output a message, if there are no jobs).\n";

@@ -55,7 +55,7 @@ echo $ItemList->get_filter_title( '<h2>', '</h2>', '<br />', NULL, 'htmlbody' );
 	 *
 	function filter_on_post_title( & $Form )
 	{
-		global $pagenow, $post_filter;
+		global $post_filter;
 
 		$Form->hidden( 'filter_on_post_title', 1 );
 		$Form->text( 'post_filter', $post_filter, 20, T_('Task title'), '', 60 );

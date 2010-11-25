@@ -994,7 +994,7 @@ class Hit
 	 *
 	 * @static
 	 * @param string referer
-	 * @return string keyphrase
+	 * @return string keyphrase (UTF-8 encoded)
 	 */
 	function extract_keyphrase_from_referer( $ref )
 	{

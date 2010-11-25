@@ -1,0 +1,28 @@
+Differences between whissip and b2evolution trunk
+=================================================
+
+The following is a list of (documented) differences between whissip
+(this branch of b2evolution) and the trunk.
+
+ * Requires PHP5 and does not support PHP4 anymore (this is a good thing!).
+ * uses UTF8 internally for encoding only; this allows to mix contents using
+   different charsets on a single page and does not require input/output
+   conversion.
+ * Improved format for global.php (translations), using single quotes, and
+   avoiding runtime conversion; this provides better performance.
+ * ResourceBundles: CSS and JavaScript files get bundled (less HTTP requests)
+   and minimized (less data to transfer).
+   This also allows to cache the resulting files "forever", so browsers do
+   never have to fetch them again (or ask if they have changed).
+   If there are changes to CSS or JS files, the bundle filenames change
+   automatically - and clients will fetch the updated bundles.
+ * "Publish NOW" button considers "Protected" and "Private" as published,
+   too. In particular, it does not set a post to "published", if it gets
+   created as "protected" (TODO: might be merged/improved via HEAD).
+
+Note
+----
+This list is incomplete and I've documented the first entries from the top
+of my head.
+However, I will use it in the future to document any relevant changes and
+probably improve this list later on, too.

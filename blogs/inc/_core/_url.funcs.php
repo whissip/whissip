@@ -58,7 +58,7 @@ function validate_url( $url, $context = 'posting', $antispam_check = true )
 	// Validate URL structure
 	if( $url[0] == '$' )
 	{	// This is a 'special replace code' URL (used in footers)
- 		if( ! preg_match( '¤\$([a-z_]+)\$¤', $url ) )
+ 		if( ! preg_match( 'Â¤\$([a-z_]+)\$Â¤', $url ) )
 		{
 			return T_('Invalid URL $code$ format');
 		}
@@ -101,7 +101,7 @@ function validate_url( $url, $context = 'posting', $antispam_check = true )
 					: T_('URI scheme not allowed.');
 			}
 
-			if( ! preg_match( '¤^(clsid):([a-fA-F0-9\-]+)$¤', $url, $match) )
+			if( ! preg_match( 'Â¤^(clsid):([a-fA-F0-9\-]+)$Â¤', $url, $match) )
 			{
 				return T_('Invalid class ID format');
 			}
@@ -118,7 +118,7 @@ function validate_url( $url, $context = 'posting', $antispam_check = true )
 					: T_('URI scheme not allowed.');
 			}
 
-			preg_match( '¤^(javascript):¤', $url, $match );
+			preg_match( 'Â¤^(javascript):Â¤', $url, $match );
 		}
 		else
 		{
@@ -728,7 +728,7 @@ function disp_url( $url, $max_length = NULL )
 {
 	if( !empty($max_length) && strlen($url) > $max_length )
 	{
-		$disp_url = htmlspecialchars(substr( $url, 0, $max_length-1 )).'&hellip;';
+		$disp_url = htmlspecialchars(substr( $url, 0, $max_length-1 )).'â€¦';
 	}
 	else
 	{
@@ -773,30 +773,9 @@ function is_same_url( $a, $b )
  */
 function idna_encode( $url )
 {
-	global $evo_charset;
-
-	$url_utf8 = convert_charset( $url, 'utf-8', $evo_charset );
-
-	if( version_compare(PHP_VERSION, '5', '>=') )
-	{
-		load_class('_ext/idna/_idna_convert.class.php', 'idna_convert' );
-		$IDNA = new idna_convert();
-	}
-	else
-	{
-		load_class('_ext/idna/_idna_convert.class.php4', 'Net_IDNA_php4' );
-		$IDNA = new Net_IDNA_php4();
-	}
-
-	//echo '['.$url_utf8.'] ';
-	$url = $IDNA->encode( $url_utf8 );
-	/* if( $idna_error = $IDNA->get_last_error() )
-	{
-		echo $idna_error;
-	} */
-	// echo '['.$url.']<br>';
-
-	return $url;
+	load_class('_ext/idna/_idna_convert.class.php', 'idna_convert');
+	$IDNA = new idna_convert();
+	return $IDNA->encode( $url );
 }
 
 
@@ -808,16 +787,8 @@ function idna_encode( $url )
  */
 function idna_decode( $url )
 {
-	if( version_compare(PHP_VERSION, '5', '>=') )
-	{
-		load_class('_ext/idna/_idna_convert.class.php', 'idna_convert' );
-		$IDNA = new idna_convert();
-	}
-	else
-	{
-		load_class('_ext/idna/_idna_convert.class.php4', 'Net_IDNA_php4' );
-		$IDNA = new Net_IDNA_php4();
-	}
+	load_class('_ext/idna/_idna_convert.class.php', 'idna_convert');
+	$IDNA = new idna_convert();
 	return $IDNA->decode($url);
 }
 

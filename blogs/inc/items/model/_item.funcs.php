@@ -215,29 +215,6 @@ function urltitle_validate( $urltitle, $title, $post_ID = 0, $query_only = false
 		$urltitle = 'title';
 	}
 
-	// Leave only first 5 words in order to get a shorter URL 
-	// (which is generally accepted as a better practice)
-	// User can manually enter a very long URL if he wants
-	$slug_changed = param( 'slug_changed' );
-	if( $slug_changed == 0 )
-	{ // this should only happen when the slug is auto generated
-		$title_words = array();
-		$title_words = explode('-', $urltitle);
-		$count_of_words = 5;
-		if(count($title_words) > $count_of_words)
-		{
-			$urltitle = '';
-			for($i = 0; $i < $count_of_words; $i++)
-			{
-				$urltitle .= $title_words[$i].'-';
-			}
-			//delete last '-'
-			$urltitle = substr($urltitle, 0, strlen($urltitle) - 1);
-		}
-
-		// echo 'leaving 5 words: '.$urltitle.'<br />';
-	}
-
 	// Normalize to 200 chars + a number
 	preg_match( '/^(.*?)((-|_)+([0-9]+))?$/', $urltitle, $matches );
 	$urlbase = substr( $matches[1], 0, 200 );
@@ -387,7 +364,7 @@ function get_postdata($postid)
  * @todo dh> Test if http://de3.php.net/manual/en/function.str-word-count.php#85579 works better/faster
  *           (only one preg_* call and no loop).
  *
- * @param string The string.
+ * @param string The string (UTF-8).
  * @return integer Number of words.
  *
  * @internal PHP's str_word_count() is not accurate. Inaccuracy reported
@@ -395,8 +372,6 @@ function get_postdata($postid)
  */
 function bpost_count_words( $str )
 {
-	global $evo_charset;
-
 	$str = trim( strip_tags( $str ) );
 
 	// Note: The \p escape sequence is available since PHP 4.4.0 and 5.1.0.
@@ -407,7 +382,7 @@ function bpost_count_words( $str )
 
 	$count = 0;
 
-	foreach( preg_split( '#\s+#', convert_charset( $str, 'UTF-8', $evo_charset ), -1,
+	foreach( preg_split( '#\s+#', $str, -1,
 							PREG_SPLIT_NO_EMPTY ) as $word )
 	{
 		if( preg_match( '#\pL#u', $word ) )
@@ -676,7 +651,7 @@ function cat_select_header()
 	$r .= '<th class="selector catsel_extra" title="'.T_('Additional category').'">'.T_('Extra').'</th>';
 
 	// category header
-	$r .= '<th class="catsel_name">'.T_('Category').'</th><!--[if IE 7]><th width="1"><!-- for IE7 --></th><![endif]--></tr></thead>';
+	$r .= '<th class="catsel_name">'.T_('Category').'</th><!--[if IE 7]><th width="1"></th><![endif]--></tr></thead>';
 
 	return $r;
 }
@@ -772,7 +747,7 @@ function cat_select_before_each( $cat_ID, $level, $total_count )
 				.' <a href="'.htmlspecialchars($thisChapter->get_permanent_url()).'" title="'.htmlspecialchars(T_('View category in blog.')).'">'
 				.'&nbsp;&raquo;&nbsp; ' // TODO: dh> provide an icon instead? // fp> maybe the A(dmin)/B(log) icon from the toolbar? And also use it for permalinks to posts?
 				.'</a></td>'
-				.'<!--[if IE 7]><td width="1"><!-- for IE7 --></td><![endif]--></tr>'
+				.'<!--[if IE 7]><td width="1"></td><![endif]--></tr>'
 				."\n";
 
 	return $r;
@@ -1078,7 +1053,7 @@ function issue_date_control( $Form, $break = false )
 
 	// Autoselect "change date" is the date is changed.
 	?>
-	<script>
+	<script type="text/javascript">
 	jQuery( function()
 			{
 				jQuery('#item_issue_date, #item_issue_time').change(function()
@@ -1257,6 +1232,7 @@ function echo_autocomplete_tags()
 
 	echo <<<EOD
 	<script type="text/javascript">
+	// <![CDATA[
 	(function($){
 		$(function() {
 			function split(val) {
@@ -1297,6 +1273,7 @@ function echo_autocomplete_tags()
 			});
 		});
 	})(jQuery);
+	// ]]>
 	</script>
 EOD;
 }
@@ -1630,24 +1607,12 @@ function echo_slug_filler()
 		jQuery( '#post_urltitle' ).change( function()
 		{
 			slug_changed = true;
-			jQuery( '[name=slug_changed]' ).val( 1 );
 		} );
 	</script>
 <?php
 }
 
 
-/**
- * Set slug_changed to 1 for cases when it is not needed trim slug
- */
-function echo_set_slug_changed()
-{
-?>
-	<script type="text/javascript">
-		jQuery( '[name=slug_changed]' ).val( 1 );
-	</script>
-<?php
-}
 
 
 /**
@@ -1987,9 +1952,6 @@ function echo_pages( $item_ID, $currentpage, $comments_number )
  *
  * Revision 1.106  2010/05/02 00:13:28  blueyed
  * urltitle_validate: make it use the current urlname, if invoked via empty urltitle, instead of creating a new one over and over again. See tests.
- *
- * Revision 1.105  2010/05/01 18:43:53  blueyed
- * TODO/doc: why limit urlnames to 5 words?
  *
  * Revision 1.104  2010/05/01 16:14:56  blueyed
  * Item categories form: use IE Conditional Comments for IE7 code. I do not know if IE8 should use the same workaround. But Firefox does not and an extra table column looks ugly here.

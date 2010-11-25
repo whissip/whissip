@@ -13,8 +13,9 @@
 if( !defined('EVO_MAIN_INIT') ) die( 'Please, do not access this page directly.' );
 
 global $xmlsrv_url;
+global $app_name, $app_version;
 
-require_css( 'style.css', true );
+# require_css( 'style.css', true ); // included by absolute path below
 
 add_js_for_toolbar();		// Registers all the javascripts needed by the toolbar menu
 
@@ -35,7 +36,7 @@ add_js_for_toolbar();		// Registers all the javascripts needed by the toolbar me
 	<?php skin_description_tag(); ?>
 	<?php skin_keywords_tag(); ?>
 	<?php robots_tag(); ?>
-	<meta name="generator" content="b2evolution <?php app_version(); ?>" /> <!-- Please leave this for stats -->
+	<meta name="generator" content="<?php echo $app_name.' '.$app_version; ?>" /> <!-- Please leave this for stats -->
 	<?php
 	if( $Blog->get_setting( 'feed_content' ) != 'none' )
 	{ // auto-discovery urls
@@ -47,10 +48,16 @@ add_js_for_toolbar();		// Registers all the javascripts needed by the toolbar me
 	?>
  	<link rel="EditURI" type="application/rsd+xml" title="RSD" href="<?php echo $xmlsrv_url; ?>rsd.php?blog=<?php echo $Blog->ID; ?>" />
 	<meta name="viewport" content="width = 750" />
-	<?php include_headlines() /* Add javascript and css files included by plugins and skin */ ?>
 	<?php
-		$Blog->disp( 'blog_css', 'raw');
-		$Blog->disp( 'user_css', 'raw');
+
+	// Link to style.css in the skin's folder.
+	// The absolute path gets passed so it can be included in the CSS resource bundle.
+	global $skin;
+	require_css($skins_path.$skin.'/style.css');
+
+	$Blog->add_custom_css();
+
+	include_headlines(); /* Add javascript and css files included by plugins and skin */
 	?>
 </head>
 

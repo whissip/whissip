@@ -34,7 +34,7 @@ if( ! $config_is_done )
 	$rsc_url = '../rsc/';
 }
 
-require_once $inc_path.'_core/_class'.floor(PHP_VERSION).'.funcs.php';
+require_once $inc_path.'_core/_class5.funcs.php';
 require_once $inc_path.'_core/_misc.funcs.php';
 
 load_class( '_core/model/_log.class.php', 'Log');
@@ -100,8 +100,6 @@ if( ! locale_activate( $default_locale ) )
 	locale_activate( 'en-US' );
 }
 
-init_charsets( $current_charset );
-
 $timestamp = time() - 120; // We start dates 2 minutes ago because their dates increase 1 second at a time and we want everything to be visible when the user watches the blogs right after install :P
 
 
@@ -138,7 +136,7 @@ switch( $action )
 		$title = '';
 }
 
-header('Content-Type: text/html; charset='.$io_charset);
+header('Content-Type: text/html; charset=utf-8');
 header('Cache-Control: no-cache'); // no request to this page should get cached!
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -186,9 +184,6 @@ if( $config_is_done || (($action != 'start') && ($action != 'default') && ($acti
 	// We want a friendly message if we can't connect:
 	$tmp_evoconf_db['halt_on_error'] = false;
 	$tmp_evoconf_db['show_errors'] = false;
-
-	// Make sure we use the proper charset:
-	$tmp_evoconf_db['connection_charset'] = $evo_charset;
 
 	// CONNECT TO DB:
 	$DB = new DB( $tmp_evoconf_db );
@@ -263,7 +258,6 @@ switch( $action )
 			'aliases' => $db_config['aliases'],
 			'use_transactions' => $db_config['use_transactions'],
 			'table_options' => $db_config['table_options'],
-			'connection_charset' => $db_config['connection_charset'],
 			'halt_on_error' => false ) );
 		if( $DB->error )
 		{ // restart conf
@@ -586,20 +580,9 @@ switch( $action )
 		 * Note: auto installers should kick in directly at this step and provide all required params.
 		 */
 
-		// fp> TODO: this test should probably be made more generic and applied to upgrade too.
-		$expected_connection_charset = $DB->php_to_mysql_charmap($evo_charset);
-		if( $DB->connection_charset != $expected_connection_charset )
-		{
-			echo '<div class="error"><p class="error">'.sprintf( T_('In order to install b2evolution with the %s locale, your MySQL needs to support the %s connection charset.').' (SET NAMES %s)',
-				$current_locale, $evo_charset, $expected_connection_charset ).'</p></div>';
-			// sam2kb> TODO: If something is not supported we can display a message saying "do this and that, enable extension X etc. etc... or switch to a better hosting".
-			break;
-		}
-
 		if( $old_db_version = get_db_version() )
 		{
 			echo '<p><strong>'.T_('OOPS! It seems b2evolution is already installed!').'</strong></p>';
-
 			if( $old_db_version < $new_db_version )
 			{
 				echo '<p>'.sprintf( T_('Would you like to <a %s>upgrade your existing installation now</a>?'), 'href="?action=evoupgrade"' ).'</p>';

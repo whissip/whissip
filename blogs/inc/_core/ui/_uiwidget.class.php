@@ -94,6 +94,7 @@ class Widget
 	 */
 	function global_icon( $title, $icon, $url, $word = '', $icon_weight = 3, $word_weight = 2, $link_attribs = array( 'class'=>'action_icon' ) )
 	{
+		assert( '! preg_match("~&(?!amp;)~", $url)' ); // assert "&" is always escaped in $url
 		$this->global_icons[] = array(
 			'title' => $title,
 			'icon'  => $icon,

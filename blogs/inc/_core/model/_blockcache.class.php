@@ -77,10 +77,11 @@ class BlockCache
 
 
 	/**
-	 * Invalidate a special key
+	 * Invalidate a special key.
 	 *
-	 * All we do is store the timestamp of teh invalidation
+	 * All we do is store the timestamp of the invalidation.
 	 *
+	 * @todo dh> can this get done on shutdown? (and only once for each key). Use case: updating 1000+ items from the same blog should not invalidate that blog's key 1000 times.
 	 */
 	function invalidate_key( $key, $val )
 	{
@@ -88,9 +89,9 @@ class BlockCache
 
 		$lastchanged_key_name = 'last_changed+'.$key.'='.$val;
 
-		// Invalidate using the real time (seconds may have elapsed since $sertimenow)
-		// Add 1 second because of teh granularity that's down to teh second
-		// Worst case scenario: content will be collected/cahced several times for a whole second (as well as the first request after the end of that second)
+		// Invalidate using the real time (seconds may have elapsed since $servertimenow).
+		// Add 1 second because of the granularity that's down to the second.
+		// Worst case scenario: content will be collected/cached several times for a whole second (as well as the first request after the end of that second).
 		BlockCache::cacheproviderstore( $lastchanged_key_name, time()+1 );
 
 		$Debuglog->add( 'Invalidated: '.$lastchanged_key_name.' @ '.(time()+1), 'blockcache' );

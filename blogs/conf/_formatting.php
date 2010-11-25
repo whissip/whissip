@@ -34,7 +34,7 @@ $use_balanceTags = 1;
  *
  * @todo fp> Should probably be an additional radio option in group permissions.
  */
-$use_strict =  false;
+$use_strict = true;
 
 
 /**

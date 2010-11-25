@@ -71,6 +71,11 @@ class DataObjectCache
 	var $cache = array();
 
 	/**
+	 * Object array by name
+	 */
+	var $cache_name = array();
+
+	/**
 	 * Copy of previous object array
 	 * @see DataObjectCache::clear()
 	 */
@@ -119,7 +124,7 @@ class DataObjectCache
 	 * @see get_ID_array()
 	 * @access protected
 	 */
-	var $ID_array;
+	protected $ID_array;
 
 
 	/**
@@ -280,7 +285,7 @@ class DataObjectCache
 			$SQL->WHERE_and($this->dbIDname.' NOT IN ('.implode(',', $loaded_IDs).')');
 		}
 
-		return $this->instantiate_list($DB->get_results( $SQL->get(), OBJECT, $SQL->title ));
+		return $this->instantiate_by_sql($SQL);
 	}
 
 
@@ -303,15 +308,16 @@ class DataObjectCache
 	/**
 	 * Get list of objects, referenced by list of IDs.
 	 * @param array
+	 * @param boolean
 	 * @return array
 	 */
-	function get_list( $ids )
+	function get_list( $ids, $halt_on_error = true )
 	{
 		$this->load_list($ids);
 		$r = array();
 		foreach( $ids as $id )
 		{
-			$r[] = $this->get_by_ID($id);
+			$r[] = $this->get_by_ID( $id, $halt_on_error );
 		}
 		return $r;
 	}
@@ -365,6 +371,11 @@ class DataObjectCache
 		$this->DataObject_array[] = & $Obj;
 		// Add the ID to the list of IDs
 		$this->ID_array[] = $Obj->ID;
+		// Add to named cache:
+		if( ! empty($Obj->name_field_member) )
+		{
+			$this->cache_name[$Obj->{$Obj->name_field_member}] = & $this->cache[$Obj->ID];
+		}
 
 		return true;
 	}
@@ -406,29 +417,43 @@ class DataObjectCache
 			$this->add( $this->new_obj( $db_row ) );
 		}
 
-/* fp>blueyed: yes move that to add()!
-		// Add to named cache:
-		if( ! empty($this->name_field) )
-		{ // NOTE: this should get done in add() really, but there the mapping of $name_field => object property is not given.
-			//       (handled by DataObject constructors).
-			$this->cache_name[$db_row->{$this->name_field}] = & $this->cache[$obj_ID];
-		}
-*/
-
 		return $this->cache[$obj_ID];
 	}
 
 
 	/**
-	 * @access public
+	 * Instantiate a list of objects from the provided list of data rows.
+	 * For a more memory efficient way see {@link instantiate_by_sql()}.
+	 *
 	 * @param array List of DB rows
 	 * @return array List of DataObjects
 	 */
-	function instantiate_list($db_rows)
+	public function instantiate_list($db_rows)
 	{
 		$r = array();
 		foreach( $db_rows as $db_row )
 		{
+			$r[] = $this->instantiate($db_row);
+		}
+		return $r;
+	}
+
+
+	/**
+	 * Instantiate a list of objects, according to the provided $SQL object.
+	 * This is more memory efficient than {@link instantiate_list()}, which
+	 * would use {@link DB::get_results()} to fetch all DB rows at once; in
+	 * contrast to {@link DB::get_row()} used in this method.
+	 *
+	 * @param SQL SQL object
+	 * @return array List of DataObjects
+	 */
+	public function instantiate_by_sql($SQL)
+	{
+		global $DB;
+		$r = array();
+		$DB->query($SQL->get(), $SQL->title);
+		while( $db_row = $DB->get_row() ) {
 			$r[] = $this->instantiate($db_row);
 		}
 		return $r;
@@ -451,6 +476,7 @@ class DataObjectCache
 		}
 
 		$this->cache = array();
+		$this->cache_name = array();
 		$this->DataObject_array = array();
 		$this->all_loaded = false;
 		$this->ID_array = NULL;
@@ -608,70 +634,46 @@ class DataObjectCache
 			return $r;
 		}
 
-		// Load just the requested object:
-		$Debuglog->add( "Loading <strong>$this->objtype($req_name)</strong>", 'dataobjects' );
-		$SQL = $this->get_SQL_object();
-		$SQL->WHERE_and($this->name_field.' = '.$DB->quote($req_name));
-
-		if( $db_row = $DB->get_row( $SQL->get(), OBJECT, 0, 'DataObjectCache::get_by_name()' ) )
+		// Lookup named cache:
+		if( isset($this->cache_name[$req_name]) )
 		{
-			$resolved_ID = $db_row->{$this->dbIDname};
-			$Debuglog->add( 'success; ID = '.$resolved_ID, 'dataobjects' );
-			if( ! isset( $this->cache[$resolved_ID] ) )
-			{	// Object is not already in cache:
-				$Debuglog->add( 'Adding to cache...', 'dataobjects' );
-				//$Obj = new $this->objtype( $row ); // COPY !!
-				//if( ! $this->add( $this->new_obj( $db_row ) ) )
-				if( ! $this->add( $this->new_obj( $db_row ) ) )
-				{	// could not add
-					$Debuglog->add( 'Could not add() object to cache!', 'dataobjects' );
+			return $this->cache_name[$req_name];
+		}
+		elseif( ! $this->all_loaded )
+		{
+			if( $this->load_all )
+			{ // It's ok to just load everything:
+				$this->load_all();
+			}
+			else
+			{ // only if not everything has been loaded, load just the requested object:
+				$Debuglog->add( "Loading <strong>$this->objtype($req_name)</strong>", 'dataobjects' );
+				$SQL = $this->get_SQL_object();
+				$SQL->WHERE_and($this->name_field.' = '.$DB->quote($req_name));
+
+				if( $db_row = $DB->get_row( $SQL->get(), OBJECT, 0, 'DataObjectCache::get_by_name()' ) )
+				{
+					$resolved_ID = $db_row->{$this->dbIDname};
+					$Debuglog->add( 'success; ID = '.$resolved_ID, 'dataobjects' );
+					if( ! isset( $this->cache[$resolved_ID] ) )
+					{	// Object is not already in cache:
+						$Debuglog->add( 'Adding to cache...', 'dataobjects' );
+						//$Obj = new $this->objtype( $row ); // COPY !!
+						//if( ! $this->add( $this->new_obj( $db_row ) ) )
+						if( ! $this->add( $this->new_obj( $db_row ) ) )
+						{	// could not add
+							$Debuglog->add( 'Could not add() object to cache!', 'dataobjects' );
+						}
+					}
 				}
 			}
-			return $this->cache[$resolved_ID];
 		}
-		else
-		{
-			$Debuglog->add( 'Could not get DataObject by name.', 'dataobjects' );
-			if( $halt_on_error )
-			{
-				debug_die( "Requested $this->objtype does not exist!" );
-			}
-			$r = NULL;
-			return $r;
-		}
-
-/* fp> code below  by blueyed, undocumented, except for cache insertion in instantiate which is self labeled as dirty
 		if( isset($this->cache_name[$req_name]) )
 		{
 			return $this->cache_name[$req_name];
 		}
 
-		if( ! $this->all_loaded )
-		{
-			// Load just the requested object:
-			$Debuglog->add( "Loading <strong>$this->objtype($req_name)</strong>", 'dataobjects' );
-			$SQL = $this->get_SQL_object();
-			$SQL->WHERE_and($this->name_field.' = '.$DB->quote($req_name));
-
-			if( $db_row = $DB->get_row( $SQL->get(), OBJECT, 0, 'DataObjectCache::get_by_name()' ) )
-			{
-				$resolved_ID = $db_row->{$this->dbIDname};
-				$Debuglog->add( 'success; ID = '.$resolved_ID, 'dataobjects' );
-				if( ! isset( $this->cache[$resolved_ID] ) )
-				{	// Object is not already in cache:
-					$Debuglog->add( 'Adding to cache...', 'dataobjects' );
-					//$Obj = new $this->objtype( $row ); // COPY !!
-					//if( ! $this->add( $this->new_obj( $db_row ) ) )
-					if( ! $this->add( $this->new_obj( $db_row ) ) )
-					{	// could not add
-						$Debuglog->add( 'Could not add() object to cache!', 'dataobjects' );
-					}
-				}
-				$this->cache_name[$req_name] = $this->cache[$resolved_ID];
-				return $this->cache[$resolved_ID];
-			}
-		}
-
+		// Not found:
 		$Debuglog->add( 'Could not get DataObject by name.', 'dataobjects' );
 		if( $halt_on_error )
 		{
@@ -679,7 +681,6 @@ class DataObjectCache
 		}
 		$r = NULL;
 		return $r;
-*/
 	}
 
 
@@ -693,6 +694,15 @@ class DataObjectCache
 		# if( ($k = array_search($this->ID_array, $req_ID)) !== false )
 		# 	unset($this->ID_array[$k]);
 		$this->ID_array = NULL;
+		if( ! isset($this->cache[$req_ID]) )
+		{
+			return;
+		}
+		if( $this->name_field )
+		{ // unset from named cache
+			$Obj = & $this->cache[$req_ID];
+			unset($this->cache_name[ $Obj->{$Obj->name_field_member} ]);
+		}
 		unset( $this->cache[$req_ID] );
 	}
 

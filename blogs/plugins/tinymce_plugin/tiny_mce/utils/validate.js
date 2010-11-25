@@ -1,13 +1,4 @@
 /**
- * $Id$
- *
- * Various form validation methods.
- *
- * @author Moxiecode
- * @copyright Copyright © 2004-2008, Moxiecode Systems AB, All rights reserved.
- */
-
-/**
 	// String validation:
 
 	if (!Validator.isEmail('myemail'))

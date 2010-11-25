@@ -341,8 +341,20 @@ class AutoPPluginTestCase extends EvoPluginUnitTestCase
 		// BR not allowed in DL, but DT and DD; P allowed in DD
 		$this->assertEqual("<dl>\n\n<dt>foo<br />\nbar\n</dt>\n\n<dd>\n\n<p>foo<br />\nbar</p></dd>\n\n</dl>",
 			$this->render("<dl>\n\n<dt>foo\nbar\n</dt>\n\n<dd>\n\nfoo\nbar</dd>\n\n</dl>") );
+
+		// this should not mistake the scripts "</div>" string as a closing tag
+		$this->assertUnchangedAfterRender("<div><script>\n\"</div>\"</script></div>");
 	}
 
+
+	/**
+	 * Assert that $text does not get changed when rendered.
+	 * @param string
+	 */
+	function assertUnchangedAfterRender($text)
+	{
+		$this->assertEqual($text, $this->render($text));
+	}
 }
 
 

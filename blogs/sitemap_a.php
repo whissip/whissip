@@ -22,9 +22,6 @@ $timestamp_min = '';
 # You can use a unix timestamp value or 'now' which will hide all posts in the future
 $timestamp_max = 'now';
 
-# Sitemap spec requires UTF-8, so let's force all outputs to UTF-8:
-$force_io_charset_if_accepted = 'utf-8';
-
 // We don't want _blog_main to try any extra path resolution
 $resolve_extra_path = false;
 

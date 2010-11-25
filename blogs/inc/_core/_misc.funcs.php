@@ -226,7 +226,8 @@ function shutdown()
  * Format a string/content for being output
  *
  * @author fplanque
- * @todo htmlspecialchars() takes a charset argument, which we could provide ($evo_charset?)
+ * @todo htmlspecialchars() takes a charset argument, which we could provide ("utf-8")
+ *       (=> utf8_htmlspecialchars(), but it does not seem to be required really - since only some chars get replaced..?!)
  * @param string raw text
  * @param string format, can be one of the following
  * - raw: do nothing
@@ -375,7 +376,7 @@ function zeroise( $number, $threshold )
 
 
 /**
- * Crop string to maxlen with &hellip; (default tail) at the end if needed.
+ * Crop string to maxlen with "â€¦" (default tail) at the end if needed.
  *
  * If $format is not "raw", we make sure to not cut in the middle of an
  * HTML entity, so that strmaxlen('1&amp;2', 3, NULL, 'formvalue') will not
@@ -385,7 +386,7 @@ function zeroise( $number, $threshold )
  * @param int Maximum length
  * @param string Tail to use, when string gets cropped. Its length gets
  *               substracted from the total length (with HTML entities
- *               being decoded). Default is "&hellip;" (HTML entity)
+ *               being decoded). Default is "â€¦".
  * @param string Format, see {@link format_to_output()}
  * @param boolean Crop at whitespace, if possible?
  *        (any word split at the end will get its head removed)
@@ -395,7 +396,7 @@ function strmaxlen( $str, $maxlen = 50, $tail = NULL, $format = 'raw', $cut_at_w
 {
 	if( is_null($tail) )
 	{
-		$tail = '&hellip;';
+		$tail = 'â€¦';
 	}
 
 	$str = rtrim($str);
@@ -433,15 +434,14 @@ function strmaxlen( $str, $maxlen = 50, $tail = NULL, $format = 'raw', $cut_at_w
 
 		if( $cut_at_whitespace )
 		{
-			if( ! ctype_space($str[strlen($str_cropped)]) )
-			{ // first character being cut off is not whitespace
-				$i = evo_strlen($str_cropped);
-				while( $i && ! ctype_space($str_cropped[--$i]) )
-				{}
-				if( $i )
-				{
-					$str_cropped = substr($str_cropped, 0, $i);
-				}
+			$i = evo_strlen($str_cropped);
+			while( $i && ($c = evo_substr($str_cropped, $i-1, 1)) && ! ctype_space($c) )
+			{
+				$i--;
+			}
+			if( $i )
+			{
+				$str_cropped = evo_substr($str_cropped, 0, $i);
 			}
 		}
 
@@ -469,7 +469,7 @@ function strmaxwords( $str, $maxwords = 50, $params = array() )
 {
 	$params = array_merge( array(
 			'continued_link' => '',
-			'continued_text' => '&hellip;',
+			'continued_text' => 'â€¦',
 			'always_continue' => false,
 		), $params );
 	$open = false;
@@ -530,70 +530,18 @@ function strmaxwords( $str, $maxwords = 50, $params = array() )
 
 
 /**
- * Convert all non ASCII chars (except if UTF-8, GB2312 or CP1251) to &#nnnn; unicode references.
- * Also convert entities to &#nnnn; unicode references if output is not HTML (eg XML)
+ * Convert entities to &#nnnn; unicode references if output is not HTML (eg XML)
  *
  * Preserves < > and quotes.
  *
+ * NOTE: this is much lighter in whissip then in b2evo.
+ *
  * fplanque: simplified
  * sakichan: pregs instead of loop
+ * @param string String (UTF-8)
  */
 function convert_chars( $content, $flag = 'html' )
 {
-	global $b2_htmltrans, $evo_charset;
-
-	/**
-	 * Translation of invalid Unicode references range to valid range.
-	 * These are Windows CP1252 specific characters.
-	 * They would look weird on non-Windows browsers.
-	 * If you've ever pasted text from MSWord, you'll understand.
-	 *
-	 * You should not have to change this.
-	 */
-	static $b2_htmltranswinuni = array(
-		'&#128;' => '&#8364;', // the Euro sign
-		'&#130;' => '&#8218;',
-		'&#131;' => '&#402;',
-		'&#132;' => '&#8222;',
-		'&#133;' => '&#8230;',
-		'&#134;' => '&#8224;',
-		'&#135;' => '&#8225;',
-		'&#136;' => '&#710;',
-		'&#137;' => '&#8240;',
-		'&#138;' => '&#352;',
-		'&#139;' => '&#8249;',
-		'&#140;' => '&#338;',
-		'&#142;' => '&#382;',
-		'&#145;' => '&#8216;',
-		'&#146;' => '&#8217;',
-		'&#147;' => '&#8220;',
-		'&#148;' => '&#8221;',
-		'&#149;' => '&#8226;',
-		'&#150;' => '&#8211;',
-		'&#151;' => '&#8212;',
-		'&#152;' => '&#732;',
-		'&#153;' => '&#8482;',
-		'&#154;' => '&#353;',
-		'&#155;' => '&#8250;',
-		'&#156;' => '&#339;',
-		'&#158;' => '&#382;',
-		'&#159;' => '&#376;'
-	);
-
-	// Convert highbyte non ASCII/UTF-8 chars to urefs:
-	if( ! in_array(strtolower($evo_charset), array( 'utf8', 'utf-8', 'gb2312', 'windows-1251') ) )
-	{ // This is a single byte charset
-		// fp> why do we actually bother doing this:?
-		$content = preg_replace_callback(
-			'/[\x80-\xff]/',
-			create_function( '$j', 'return "&#".ord($j[0]).";";' ),
-			$content);
-	}
-
-	// Convert Windows CP1252 => Unicode (valid HTML)
-	// TODO: should this go to input conversions instead (?)
-	$content = strtr( $content, $b2_htmltranswinuni );
-
 	if( $flag == 'html' )
 	{ // we can use entities
 		// Convert & chars that are not used in an entity
@@ -603,9 +551,6 @@ function convert_chars( $content, $flag = 'html' )
 	{ // unicode, xml...
 		// Convert & chars that are not used in an entity
 		$content = preg_replace('/&(?![#A-Za-z0-9]{2,20};)/', '&#38;', $content);
-
-		// Convert HTML entities to urefs:
-		$content = strtr($content, $b2_htmltrans);
 	}
 
 	return( $content );
@@ -632,16 +577,14 @@ function evo_bytes( $string )
 /**
  * mbstring wrapper for strlen function
  *
- * @param string
+ * @param string String (utf8)
  * @return string
  */
 function evo_strlen( $string )
 {
-	global $current_charset;
-
-	if( $current_charset != 'iso-8859-1' && $current_charset != '' && function_exists('mb_strlen') )
+	if( is_callable('mb_strlen') )
 	{
-		return mb_strlen( $string, $current_charset );
+		return mb_strlen( $string, 'utf-8' );
 	}
 
 	return strlen($string);
@@ -651,15 +594,13 @@ function evo_strlen( $string )
 /**
  * mbstring wrapper for substr function
  *
- * @param string
+ * @param string String (utf8)
  * @param int start position
  * @param int string length
  * @return string
  */
 function evo_substr( $string, $start = 0, $length = '#' )
 {
-	global $current_charset;
-
 	if( ! $length )
 	{ // make mb_substr and substr behave consistently (mb_substr returns string for length=0)
 		return '';
@@ -669,9 +610,9 @@ function evo_substr( $string, $start = 0, $length = '#' )
 		$length = evo_strlen($string);
 	}
 
-	if( $current_charset != 'iso-8859-1' && $current_charset != '' && function_exists('mb_substr') )
+	if( is_callable('mb_substr') )
 	{
-		return mb_substr( $string, $start, $length, $current_charset );
+		return mb_substr( $string, $start, $length, 'utf8' );
 	}
 
 	return substr( $string, $start, $length );
@@ -1253,7 +1194,7 @@ function is_number( $number )
  *
  * @param string email address to check
  * @param string Format to use ('simple', 'rfc')
- *    'simple':
+ *    'simple'/'single':
  *      Single email address.
  *    'rfc':
  *      Full email address, may include name (RFC2822)
@@ -1303,7 +1244,7 @@ function is_email( $email, $format = 'simple', $return_match = false )
 		case 'simple':
 		default:
 			// '/^\S+@[^\.\s]\S*\.[a-z]{2,}$/i'
-			$pattern_email = '~^(([_a-z0-9-]+)(\.[_a-z0-9-]+)*@([a-z0-9-]+)(\.[a-z0-9-]+)*(\.[a-z]{2,}))$~i';
+			$pattern_email = '~^(([_a-z0-9-]+)(\.[_a-z0-9-]+)*@([a-z0-9][a-z0-9-]*)(\.[a-z0-9-]+)*(\.[a-z]{2,}))$~i';
 			break;
 	}
 
@@ -1674,7 +1615,7 @@ function pre_dump( $var__var__var__var__ )
 		$old_var_display_max_data = ini_set('xdebug.var_display_max_data', -1); // max string length; default: 512
 		$old_var_display_max_depth = ini_set('xdebug.var_display_max_depth', -1); // default: 3
 
-		echo "\n<div style=\"padding:1ex;border:1px solid #00f;\">\n";
+		echo "\n<div style=\"padding:1ex;border:1px solid #00f;text-align:left\">\n";
 		foreach( func_get_args() as $lvar )
 		{
 			xdebug_var_dump($lvar);
@@ -1696,7 +1637,7 @@ function pre_dump( $var__var__var__var__ )
 	{
 		$orig_html_errors = ini_set('html_errors', 0); // e.g. xdebug would use fancy html, if this is on; we catch (and use) xdebug explicitly above, but just in case
 
-		echo "\n<pre style=\"padding:1ex;border:1px solid #00f;\">\n";
+		echo "\n<pre style=\"padding:1ex;border:1px solid #00f;text-align:left;\">\n";
 		foreach( func_get_args() as $lvar )
 		{
 			ob_start();
@@ -2317,11 +2258,28 @@ function debug_info( $force = false, $force_clean = false )
 			}
 		}
 
-		echo 'Len of serialized $cache_imgsize: '.strlen(serialize($cache_imgsize));
-		echo $clean ? "\n" : '<br />';
-		echo 'Len of serialized $cache_File: '.strlen(serialize($cache_File));
-		echo $clean ? "\n" : '<br />';
+		// Output size of global caches:
+		/* Commented out: not accurate (too low) and resource intensive to build.
+		// Get sizes:
+		$cache_sizes = array();
+		foreach( $GLOBALS as $k => $v )
+		{
+			if( substr($k, -5) != 'Cache' && substr($k, 0, 6) != 'cache_' && $k != 'DB' )
+			{
+				continue;
+			}
+			$cache_sizes[$k] = strlen(serialize($v));
+		}
+		arsort($cache_sizes);
 
+		// Output table:
+		echo $clean ? 'Global caches (length, serialized)' : '<table class="debug_timer"><thead><th colspan="2">Global caches (length, serialized)</th></thead><tbody>';
+		foreach( $cache_sizes as $k => $v )
+		{
+			printf( $clean ? "\$%s\t\t\t%s" : '<tr><td>$%s</td><td>%s</td></tr>', $k, bytesreadable($v) );
+		}
+		echo $clean ? "\n" : '</tbody></table>';
+		*/
 	}
 
 
@@ -2454,8 +2412,7 @@ function debug_info( $force = false, $force_clean = false )
 		echo T_('DB Username').': '.$db_config['user']."\n".
 			 T_('DB Database').': '.$db_config['name']."\n".
 			 T_('DB Host').': '.(isset($db_config['host']) ? $db_config['host'] : 'unset (localhost)')."\n".
-			 T_('DB tables prefix').': '.$tableprefix."\n".
-			 T_('DB connection charset').': '.$db_config['connection_charset']."\n";
+			 T_('DB tables prefix').': '.$tableprefix."\n";
 
 		echo $clean ? "\n" : '</pre>';
 	}
@@ -2500,35 +2457,8 @@ function mail_sanitize_header_string( $header_str, $close_brace = false )
  */
 function mail_encode_header_string( $header_str, $mode = 'Q' )
 {
-	global $evo_charset;
-
-	/* mbstring way  (did not work for Alex RU)
-	if( function_exists('mb_encode_mimeheader') )
-	{ // encode subject
-		$orig = mb_internal_encoding();
-		mb_internal_encoding('utf-8');
-		$r = mb_encode_mimeheader( $header_str, 'utf-8', $mode );
-		mb_internal_encoding($orig);
-		return $r;
-	}
-	*/
-
-	if( preg_match( '¤[^a-z0-9!*+\-/ ]¤i', $header_str ) )
-	{	// If the string actually needs some encoding
-		if( $mode == 'Q' )
-		{	// Quoted printable is best for reading with old/text terminal mail reading/debugging stuff:
-			$header_str = preg_replace( '#[^a-z0-9!*+\-/ ]#ie', 'sprintf(\'=%02x\', ord(stripslashes(\'$0\')))', $header_str );
-			$header_str = str_replace( ' ', '_', $header_str );
-
-			$header_str = '=?'.$evo_charset.'?Q?'.$header_str.'?=';
-		}
-		else
-		{ // Base 64 -- Alex RU way:
-			$header_str = '=?'.$evo_charset.'?B?'.base64_encode( $header_str ).'?=';
-		}
-	}
-
-	return $header_str;
+	$r = mb_encode_mimeheader( $header_str, 'utf-8', $mode );
+	return $r;
 }
 
 
@@ -2556,7 +2486,7 @@ function mail_encode_header_string( $header_str, $mode = 'Q' )
  */
 function send_mail( $to, $to_name, $subject, $message, $from = NULL, $from_name = NULL, $headers = array() )
 {
-	global $debug, $app_name, $app_version, $current_locale, $current_charset, $evo_charset, $locales, $Debuglog, $notify_from;
+	global $debug, $app_name, $app_version, $current_locale, $locales, $Debuglog, $notify_from;
 
 	$NL = "\r\n";
 
@@ -2592,12 +2522,8 @@ function send_mail( $to, $to_name, $subject, $message, $from = NULL, $from_name 
 
 	$message = str_replace( array( "\r\n", "\r" ), $NL, $message );
 
-	// Convert encoding of message (from internal encoding to the one of the message):
-	// fp> why do we actually convert to $current_charset?
-	// dh> I do not remember. Appears to make sense sending it unconverted in $evo_charset.
-	$message = convert_charset( $message, $current_charset, $evo_charset );
 	// Specify charset and content-type of email
-	$headers['Content-Type'] = 'text/plain; charset='.$current_charset;
+	$headers['Content-Type'] = 'text/plain; charset=utf-8';
 
 
 	// ADDITIONAL HEADERS:
@@ -3089,8 +3015,6 @@ function get_ip_list( $firstOnly = false )
  */
 function get_base_domain( $url )
 {
-	global $evo_charset;
-
 	//echo '<p>'.$url;
 	// Chop away the http part and the path:
 	$domain = preg_replace( '~^([a-z]+://)?([^:/#]+)(.*)$~i', '\\2', $url );
@@ -3114,7 +3038,7 @@ function get_base_domain( $url )
 	{
 		return '';
 	}
-	$base_domain = convert_charset(idna_decode($match[0]), $evo_charset, 'UTF-8');
+	$base_domain = idna_decode($match[0]);
 
 	// Remove any www*. prefix:
 	$base_domain = preg_replace( '~^www.*?\.~i', '', $base_domain );
@@ -3757,6 +3681,16 @@ function format_to_js( $unformatted )
 						), $unformatted );
 }
 
+/**
+ * Wrapper around htmlspecialchars, with default of 'UTF-8' for $charset
+ *
+ * @return string
+ */
+function utf8_htmlspecialchars($string, $quote_style = ENT_QUOTES, $charset = 'UTF-8', $double_encode = true)
+{
+	return htmlspecialchars($string, $quote_style, $charset, $double_encode);
+}
+
 
 /**
  * @return array key=>name
@@ -4049,7 +3983,7 @@ function get_ReqURI()
 		$ReqURI = isset($_SERVER['QUERY_STRING']) && !empty( $_SERVER['QUERY_STRING'] ) ? ($ReqPath.'?'.$_SERVER['QUERY_STRING']) : $ReqPath;
 	}
 	elseif( isset($_SERVER['SCRIPT_NAME']) )
-	{ // Some Odd Win2k Stuff
+	{ // CGI 1.1 spec / Some Odd Win2k Stuff
 		$Debuglog->add( 'vars: Getting ReqPath from SCRIPT_NAME', 'request' );
 		$ReqPath = $_SERVER['SCRIPT_NAME'];
 		$ReqURI = isset($_SERVER['QUERY_STRING']) && !empty( $_SERVER['QUERY_STRING'] ) ? ($ReqPath.'?'.$_SERVER['QUERY_STRING']) : $ReqPath;
@@ -4761,7 +4695,7 @@ function get_ReqURI()
  * uncool feature about limiting credits
  *
  * Revision 1.29  2008/03/31 21:13:47  fplanque
- * Reverted übergeekyness
+ * Reverted Ã¼bergeekyness
  *
  * Revision 1.28  2008/03/30 23:03:40  blueyed
  * action_icon: doc, provide default for $icon_weight and $word_weight through "null"

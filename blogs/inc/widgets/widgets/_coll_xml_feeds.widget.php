@@ -93,7 +93,7 @@ class coll_xml_feeds_Widget extends ComponentWidget
 					'label' => T_( 'Help link' ),
 					'type' => 'checkbox',
 					'note' => T_( 'Check this to display "What is RSS?" link' ),
-					'defaultvalue' => 1,
+					'defaultvalue' => 0,
 				),
 				'info_link' => array(
 					'label' => T_( 'New Window' ),

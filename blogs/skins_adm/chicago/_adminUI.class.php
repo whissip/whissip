@@ -127,8 +127,6 @@ class AdminUI extends AdminUI_general
 <![endif]-->';
 		}
 
-		$r .= '<a href="http://b2evolution.net/" class="footer_logo"><img src="'.$adminskins_url.'chicago/rsc/img/b2evolution-footer-logo-blue-bg.gif" alt="Powered by b2evolution" width="142" height="43" longdesc="http://b2evolution.net/" /></a>';
-
 		$r .= '<div class="copyright">';
 
 		$r .= $app_footer_text.' &ndash; '.$copyright_text."</div></div>\n\n";

@@ -60,7 +60,7 @@ class Message extends DataObject
 	 *
 	 * @param db_row database row
 	 */
-	function Message( $db_row = NULL )
+	function Message( stdClass $db_row = NULL )
 	{
 		// Call parent constructor:
 		parent::DataObject( 'T_messaging__message', 'msg_', 'msg_ID', 'datetime', '', 'author_user_ID' );
@@ -427,17 +427,11 @@ class Message extends DataObject
 		$SQL->WHERE( 'ts.tsta_thread_ID = '.$this->Thread->ID.' AND ts.tsta_user_ID <> '.$this->author_user_ID );
 
 		// Construct message subject and body:
-		$body = /* TRANS: Email salutation */ T_( 'Dear user,' );
-		$body .= "\n\n";
-
-		$body .= $current_User->login;
-		$body .= ' ';
-
 		if( $new_thread )
 		{
 			$subject = sprintf( T_( 'New conversation created: "%s"' ), $this->Thread->title );
 
-			$body .= sprintf( /* TRANS: Space at the end */ T_( 'has created the "%s" conversation. ' ), $this->Thread->title );
+			$body = sprintf( /* TRANS: first %s refers to the user login, second %s refers to the subject */ T_( '%s has created the "%s" conversation.' ), $current_User->login, $this->Thread->title );
 			$body .= "\n";
 			$body .= sprintf( T_( 'To read it, click on this link: %s' ), $admin_url.'?ctrl=messages&thrd_ID='.$this->Thread->ID );
 		}
@@ -445,7 +439,7 @@ class Message extends DataObject
 		{
 			$subject = sprintf( T_( 'New message in conversation "%s" created' ), $this->Thread->title );
 
-			$body .= sprintf( /* TRANS: Space at the end */ T_( 'has created a new message in the "%s" conversation. ' ), $this->Thread->title );
+			$body = sprintf( /* TRANS: first %s refers to the user login, second %s refers to the subject */ T_( '%s has created a new message in the "%s" conversation.' ), $current_User->login, $this->Thread->title );
 			$body .= "\n";
 			$body .= sprintf( T_( 'To read it, click on this link: %s' ),
 								$admin_url.'?ctrl=messages&thrd_ID='.$this->Thread->ID );

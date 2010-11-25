@@ -96,6 +96,8 @@ $File = new File( $FileRoot->type, $FileRoot->in_type_ID, $path );
 if( !empty($size) && $File->is_image() )
 {	// We want a thumbnail:
 	// fp> TODO: for more efficient caching, this should probably redirect to the static file right after creating it (when $public_access_to_media=true OF COURSE)
+	// dh>       For even more efficient handling, the cached version should get written already when being referred to (no redirect necessary then). Also File::get_img_attribs would know about width/height already.
+	//           The bigger part of this code should get moved to file.funcs/.class.
 
 	global $thumbnail_sizes;
 

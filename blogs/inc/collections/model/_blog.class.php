@@ -139,7 +139,7 @@ class Blog extends DataObject
 	 *
 	 * @param object DB row
 	 */
-	function Blog( $db_row = NULL )
+	function Blog( stdClass $db_row = NULL )
 	{
 		global $Timer;
 
@@ -440,9 +440,6 @@ class Blog extends DataObject
 		{	// HTML notes:
 			param_check_html( 'blog_notes', T_('Invalid Blog Notes') );
 			$this->set( 'notes', get_param( 'blog_notes' ) );
-
-			param_integer_range( 'max_footer_credits', 0, 3, T_('Max credits must be between %d and %d.') );
-			$this->set_setting( 'max_footer_credits', get_param( 'max_footer_credits' ) );
 		}
 
 
@@ -1707,11 +1704,7 @@ class Blog extends DataObject
 				return $this->get_comment_feed_url( '_atom' );
 
 
-			/* Add the html for a blog-specified stylesheet
-			 * All stylesheets will be included if the blog settings allow it
-			 * and the file "style.css" exists. CSS rules say that the latter style sheets can
-			 * override earlier stylesheets.
-			 */
+			// DEPRECATED: you probably want to use add_custom_css() instead
 			case 'blog_css':
 				if( $this->allowblogcss
 					&& file_exists( $this->get_media_dir(false).'style.css' ) )
@@ -1723,12 +1716,7 @@ class Blog extends DataObject
 					return '';
 				}
 
-			/* Add the html for a user-specified stylesheet
-			 * All stylesheets will be included if the blog settings allow it
-			 * and the file "style.css" exists. CSS rules say that the latter style sheets can
-			 * override earlier stylesheets. A user-specified stylesheet will
-			 * override a blog-specified stylesheet which will override a skin stylesheet.
-			 */
+			// DEPRECATED: you probably want to use add_custom_css() instead
 			case 'user_css':
 				if( $this->allowusercss
 					&& isset( $current_User )
@@ -1745,6 +1733,34 @@ class Blog extends DataObject
 			default:
 				// All other params:
 				return parent::get( $parname );
+		}
+	}
+
+
+	/**
+	 * Add custom CSS files (for blog and/or user).
+	 * This is meant to be called in _html_header.inc.php.
+	 *
+	 * All stylesheets will be included if the blog settings allow it
+	 * and the file "style.css" exists. CSS rules say that the latter style sheets can
+	 * override earlier stylesheets. A user-specified stylesheet will
+	 * override a blog-specified stylesheet which will override a skin stylesheet.
+	 *
+	 * @uses require_css()
+	 */
+	function add_custom_css()
+	{
+		global $current_User;
+		if( $this->allowblogcss
+			&& file_exists( $this->get_media_dir(false).'style.css' ) )
+		{
+			require_css( $this->get_media_dir().'style.css' );
+		}
+		if( $this->allowusercss
+			&& isset( $current_User )
+			&& file_exists( $current_User->get_media_dir(false).'style.css' ) )
+		{
+			require_css( $current_User->get_media_dir().'style.css' );
 		}
 	}
 
@@ -1831,10 +1847,20 @@ class Blog extends DataObject
 			{
 				// So far all settings have been saved to collection #0 !
 				// Update the settings: hackish but the base class should not even store this value actually...
-				// dh> what do you mean? What "base class"? Is there a problem with CollectionSettings?
-				$this->CollectionSettings->cache[$this->ID] = $this->CollectionSettings->cache[0];
-				unset( $this->CollectionSettings->cache[0] );
+				// dh> the base class should not store _what_ value? The settings?
+				//     Smells like the CollectionSettings class should handle this somehow, e.g. on dbupdate, check if ID is 0. (or the base class after all)
 
+				// TODO: dh> Please fix / use a defined interface. A test case would be awesome.. ^^
+				if( is_a( $this->CollectionSettings->cache, 'AbstractSettings_dynamic_cache' ) )
+				{
+					$this->CollectionSettings->cache->{$this->ID} = $this->CollectionSettings->cache->{0};
+					unset( $this->CollectionSettings->cache->{0} );
+				}
+				else
+				{
+					$this->CollectionSettings->cache[$this->ID] = $this->CollectionSettings->cache[0];
+					unset( $this->CollectionSettings->cache[0] );
+				}
 				$this->CollectionSettings->dbupdate();
 			}
 
@@ -1948,6 +1974,8 @@ class Blog extends DataObject
 	 * Delete a blog and dependencies from database
 	 *
 	 * Includes WAY TOO MANY requests because we try to be compatible with MySQL 3.23, bleh!
+	 *
+	 * @todo dh> handle CollectionSettings (drop it)
 	 *
 	 * @param boolean true if you want to try to delete the static file
 	 * @param boolean true if you want to echo progress

@@ -1,10 +1,3 @@
- /**
- * $Id$
- *
- * @author Moxiecode - based on work by Andrew Tetlaw
- * @copyright Copyright © 2004-2008, Moxiecode Systems AB, All rights reserved.
- */
-
 function init() {
 	SXE.initElementDialog('ins');
 	if (SXE.currentAction == "update") {
@@ -44,16 +37,6 @@ function insertIns() {
 function removeIns() {
 	SXE.removeElement('ins');
 	tinyMCEPopup.close();
-}
-
-function insertInlineElement(en) {
-	var ed = tinyMCEPopup.editor, dom = ed.dom;
-
-	ed.getDoc().execCommand('FontName', false, 'mceinline');
-	tinymce.each(dom.select(tinymce.isWebKit ? 'span' : 'font'), function(n) {
-		if (n.style.fontFamily == 'mceinline' || n.face == 'mceinline')
-			dom.replace(dom.create(en), n, 1);
-	});
 }
 
 tinyMCEPopup.onInit.add(init);

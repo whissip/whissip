@@ -242,7 +242,7 @@ function stats_referer( $before='', $after='', $disp_ref = true )
 	if( strlen($ref) > 0 )
 	{
 		echo $before;
-		if( $disp_ref ) echo htmlentities( $ref );
+		if( $disp_ref ) echo utf8_htmlspecialchars($ref);
 		echo $after;
 	}
 }
@@ -255,7 +255,7 @@ function stats_basedomain( $disp = true )
 {
 	global $row_stats;
 	if( $disp )
-		echo htmlentities( $row_stats['dom_name'] );
+		echo utf8_htmlspecialchars($row_stats['dom_name']);
 	else
 		return $row_stats['dom_name'];
 }
@@ -266,8 +266,6 @@ function stats_basedomain( $disp = true )
  */
 function stats_search_keywords( $keyphrase, $length = 45 )
 {
-	global $evo_charset;
-
 	if( empty( $keyphrase ) )
 	{
 		return '<span class="note">['.T_('n.a.').']</span>';
@@ -278,11 +276,7 @@ function stats_search_keywords( $keyphrase, $length = 45 )
 
 	$keyphrase = strmaxlen($keyphrase, $length, '...', 'raw');
 
-	// Convert keyword encoding, some charsets are supported only in PHP 4.3.2 and later.
-	// This fixes encoding problem for Cyrillic keywords
-	// See http://forums.b2evolution.net/viewtopic.php?t=17431
-	$keyphrase = htmlentities( $keyphrase, ENT_COMPAT, $evo_charset );
-
+	
 	return '<span title="'.format_to_output( $keyphrase_orig, 'htmlattr' ).'">'.$keyphrase.'</span>';
 }
 

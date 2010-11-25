@@ -378,8 +378,8 @@ function skin_init( $disp )
 	}
 
 	// dummy var for backward compatibility with versions < 2.4.1 -- prevents "Undefined variable"
-	global $global_Cache, $credit_links;
-	$credit_links = $global_Cache->get( 'creds' );
+	global $credit_links;
+	$credit_links = array();
 
 	$Timer->pause( 'skin_init' );
 
@@ -711,9 +711,7 @@ function skin_content_header( $type = 'text/html' )
  */
 function skin_content_meta( $type = 'text/html' )
 {
-	global $io_charset;
-
-	echo '<meta http-equiv="Content-Type" content="'.$type.'; charset='.$io_charset.'" />'."\n";
+	echo '<meta http-equiv="Content-Type" content="'.$type.'; charset=utf-8" />'."\n";
 }
 
 

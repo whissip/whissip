@@ -25,12 +25,12 @@ if( empty($action) )
 	<html>
 
 	<head>
-		<title>b2evolution simpletest framework</title>
+		<title>whissip simpletest framework</title>
 		<meta name="robots" content="noindex, nofollow" />
 	</head>
 
 	<body>
-		<h1>b2evolution simpletest framework</h1>
+		<h1>whissip simpletest framework</h1>
 
 		<a href="index.php?action=all"><strong>All tests</strong></a>
 

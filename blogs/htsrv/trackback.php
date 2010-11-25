@@ -48,9 +48,7 @@ require_once $inc_path.'_main.inc.php';
  */
 function trackback_response( $error = 0, $error_message = '' )
 { // trackback - reply
-	global $io_charset;
-
-	echo '<?xml version="1.0" encoding="'.$io_charset.'"?'.">\n";
+	echo '<?xml version="1.0" encoding="utf-8"?'.">\n";
 	echo "<response>\n";
 	echo "<error>$error</error>\n";
 	echo "<message>$error_message</message>\n";

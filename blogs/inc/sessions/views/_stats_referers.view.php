@@ -144,7 +144,7 @@ if( count( $res_stats ) )
 	$count = 0;
 	foreach( $res_stats as $row_stats )
 	{
-		if( $count < 8 )
+		if( $count < 9 )
 		{
 			$count++;
 			$chart [ 'chart_data' ][ 0 ][ $count ] = stats_basedomain( false );
@@ -153,7 +153,14 @@ if( count( $res_stats ) )
 		{
 			$chart [ 'chart_data' ][ 0 ][ $count ] = 'Others'; // Needs UTF-8
 		}
-		$chart [ 'chart_data' ][ 1 ][ $count ] = stats_hit_count( false );
+		if( isset($chart [ 'chart_data' ][ 1 ][ $count ]) )
+		{
+			$chart['chart_data'][1][$count]	+= stats_hit_count( false );
+		}
+		else
+		{
+			$chart [ 'chart_data' ][ 1 ][ $count ] = stats_hit_count( false );
+		}
 	} // End stat loop
 
 	// Include common chart properties:

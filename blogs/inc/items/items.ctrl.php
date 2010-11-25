@@ -1118,7 +1118,7 @@ switch( $action )
 				break;
 		}
 
-		$AdminUI->global_icon( T_('Cancel editing!'), 'close', $redirect_to, T_('cancel'), 4, 2 );
+		$AdminUI->global_icon( T_('Cancel editing!'), 'close', htmlspecialchars($redirect_to), T_('cancel'), 4, 2 );
 
 		break;
 

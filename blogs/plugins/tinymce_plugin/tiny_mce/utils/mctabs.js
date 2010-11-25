@@ -1,12 +1,3 @@
-/**
- * $Id$
- *
- * Moxiecode DHTML Tabs script.
- *
- * @author Moxiecode
- * @copyright Copyright © 2004-2008, Moxiecode Systems AB, All rights reserved.
- */
-
 function MCTabs() {
 	this.settings = [];
 };

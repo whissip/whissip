@@ -178,16 +178,6 @@ $Form->begin_fieldset( T_('Meta data').get_manual_link('blog_meta_data') );
 		T_('Additional info. Appears in the backoffice.'), 50, 'large' );
 $Form->end_fieldset();
 
-$Form->begin_fieldset( T_('Software credits') );
-	$max_credits = $edited_Blog->get_setting( 'max_footer_credits' );
-	$note = T_('You get the b2evolution software for <strong>free</strong>. We do appreciate you giving us credit. <strong>Thank you for your support!</strong>');
-	if( $max_credits < 1 )
-	{
-		$note = '<img src="'.$rsc_url.'smilies/icon_sad.gif" alt="" class="bottom"> '.$note;
-	}
-	$Form->text( 'max_footer_credits', $max_credits, 1, T_('Max footer credits'), $note, 1 );
-$Form->end_fieldset();
-
 
 $Form->end_form( array(
 	array( 'submit', 'submit', T_('Save !'), 'SaveButton' ),

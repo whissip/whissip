@@ -12,6 +12,7 @@ if( !defined('EVO_MAIN_INIT') ) die( 'Please, do not access this page directly.'
 			'0099ff',
 			'3333ff',
 			'9900ff',
+			'9999ff',
 		);
 
 	$chart[ 'canvas_bg' ] = array (

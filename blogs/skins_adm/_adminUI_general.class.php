@@ -605,7 +605,7 @@ class AdminUI_general extends Menu
 	{
 		global $current_User, $blog, $pagenow;
 
-		$max_buttons = 7;
+		$max_buttons = 12;
 
 		if( empty( $this->coll_list_permname ) )
 		{	// We have not requested a list of blogs to be displayed
@@ -626,6 +626,7 @@ class AdminUI_general extends Menu
 		$BlogCache = & get_BlogCache();
 
 		$blog_array = $BlogCache->load_user_blogs( $this->coll_list_permname, $this->coll_list_permlevel );
+		// TODO: sort, so that blogs owned by the user are displayed first
 
 
 		$buttons = '';

@@ -47,8 +47,6 @@ global $Plugins;
  */
 global $Settings;
 
-global $pagenow;
-
 global $mode;
 global $post_comment_status, $trackback_url, $item_tags;
 global $bozo_start_modified, $creating;

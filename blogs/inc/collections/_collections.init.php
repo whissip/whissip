@@ -184,6 +184,23 @@ function & get_ItemTagsCache()
 }
 
 /**
+ * Get the ItemAttachmentsCache
+ *
+ * @return ItemAttachmentsCache
+ */
+function & get_ItemAttachmentsCache()
+{
+	global $ItemAttachmentsCache;
+
+	if( ! isset( $ItemAttachmentsCache ) )
+	{	// Cache doesn't exist yet:
+		$ItemAttachmentsCache = array();
+	}
+
+	return $ItemAttachmentsCache;
+}
+
+/**
  * Get the ItemStatusCache
  *
  * @return ItemStatusCache
@@ -347,7 +364,7 @@ class collections_Module extends Module
 		load_class( 'items/model/_itemquery.class.php', 'ItemQuery' );
 		load_class( 'comments/model/_commentquery.class.php', 'CommentQuery' );
 	}
-	
+
 	/**
 	 * Get default module permissions
 	 *
@@ -355,7 +372,7 @@ class collections_Module extends Module
 	 * @return array
 	 */
 	function get_default_group_permissions( $grp_ID )
-	{	
+	{
 		switch( $grp_ID )
 		{
 			case 1:		// Administrators (group ID 1) have permission by default:
@@ -376,7 +393,7 @@ class collections_Module extends Module
 				$permgetblog = 'denied';
 				break;
 
-			default: 
+			default:
 				// Other groups have no permission by default
 				$permname = 'never';
 				$permcreateblog = 'denied';
@@ -465,7 +482,7 @@ class collections_Module extends Module
 			case 'always':
 				// Users can use APIs
 				if( $permlevel == 'always' )
-				{ 
+				{
 					$perm = true;
 					break;
 				}
@@ -514,7 +531,7 @@ class collections_Module extends Module
 		if( $current_User->check_perm( 'blogs', 'create' ) || $current_User->check_perm( 'perm_createblog', 'allowed' ))
 		{
 			$entries['newblog'] = array(
-					'text' => T_('Create new blog').'&hellip;',
+					'text' => T_('Create new blog').'…',
 					'href' => $admin_url.'?ctrl=collections&amp;action=new',
 				);
 			$entries['minfo_sep'] = array(

@@ -614,6 +614,7 @@ class File extends DataObject
 	/**
 	 * Get the absolute file url if the file is public
 	 * Get the getfile.php url if we need to check permission before delivering the file
+	 * @return string
 	 */
 	function get_url()
 	{
@@ -1661,6 +1662,8 @@ class File extends DataObject
 	 * Get the thumbnail URL for this file
 	 *
 	 * @param string
+	 * @param string
+	 * @return string
 	 */
 	function get_thumb_url( $size_name = 'fit-80x80', $glue = '&amp;' )
 	{
@@ -1780,6 +1783,7 @@ class File extends DataObject
 		{ // We want src to link to a thumbnail
 			$img_attribs['src'] = $this->get_thumb_url( $size_name, '&' );
 			$thumb_path = $this->get_af_thumb_path($size_name, NULL, true);
+			// TODO: write file here already to get width/height attributes
 			if( substr($thumb_path, 0, 1) != '!'
 				&& ( $size_arr = imgsize($thumb_path, 'widthheight_assoc') ) )
 			{ // no error, add width and height attribs

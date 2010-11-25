@@ -98,7 +98,8 @@ $schema_queries['T_hitlog'] = array(
 			INDEX hit_uri            ( hit_uri ),
 			INDEX hit_referer_dom_ID ( hit_referer_dom_ID ),
 			INDEX hit_remote_addr    ( hit_remote_addr ),
-			INDEX hit_sess_ID        ( hit_sess_ID )
+			INDEX hit_sess_ID        ( hit_sess_ID ),
+			INDEX check_for_reload   ( hit_datetime, hit_remote_addr, hit_uri, hit_agent_type )
 		) ENGINE = myisam DEFAULT CHARACTER SET = $db_storage_charset" );
 		// Note: hit_remote_addr is used for goal matching stats
 		// fp> needed? 			INDEX hit_keyphrase_keyp_ID( hit_keyphrase_keyp_ID ),

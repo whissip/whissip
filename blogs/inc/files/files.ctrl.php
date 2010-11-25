@@ -194,16 +194,17 @@ elseif( !empty($edited_Item) )
 	// already attached files from. Otherwise the next block below will default to the Blog's fileroot.
 	// Get list of attached files:
 	$FileList = $edited_Item->get_attachment_FileList( 1 );
-	// Get first file:
-	/**
-	 * @var File
-	 */
-	$File = & $FileList->get_next();
-	if( !empty( $File ) )
-	{	// Obtain and use file root of first file:
+	if( count($FileList) )
+	{
+		/**
+		* @var File
+		*/
+		$File = $FileList[0];
+		// Obtain and use file root of first file:
 		$fm_FileRoot = & $File->get_FileRoot();
 		$path = dirname( $File->get_rdfs_rel_path() ).'/';
 	}
+	unset($FileList);
 }
 
 
@@ -1002,16 +1003,7 @@ switch( $action )
 		}
 
 		$full_path = $edited_File->get_full_path();
-		if( $size = filesize($full_path) )
-		{
-			$rsc_handle = fopen( $full_path, 'r');
-			$edited_File->content = fread( $rsc_handle, $size );
-			fclose( $rsc_handle );
-		}
-		else
-		{	// Empty file
-			$edited_File->content = '';
-		}
+		$edited_File->content = file_get_contents($full_path);
 		break;
 
 

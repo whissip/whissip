@@ -83,7 +83,7 @@ $GLOBALS['debug_params'] = false;
 function param( $var, $type = 'raw', $default = '', $memorize = false,
 								$override = false, $use_default = true, $strict_typing = 'allow_empty' )
 {
-	global $Debuglog, $debug, $evo_charset, $io_charset;
+	global $Debuglog, $debug;
 	// NOTE: we use $GLOBALS[$var] instead of $$var, because otherwise it would conflict with param names which are used as function params ("var", "type", "default", ..)!
 
 	/*
@@ -136,11 +136,6 @@ function param( $var, $type = 'raw', $default = '', $memorize = false,
 		$GLOBALS[$var] = remove_magic_quotes($GLOBALS[$var]);
 
 		// if( isset($Debuglog) ) $Debuglog->add( 'param(-): '.$var.' already set to ['.var_export($GLOBALS[$var], true).']!', 'params' );
-	}
-
-	if( isset($io_charset) && ! empty($evo_charset) )
-	{
-		$GLOBALS[$var] = convert_charset( $GLOBALS[$var], $evo_charset, $io_charset );
 	}
 
 	/*
@@ -1786,11 +1781,11 @@ function param_check_html( $var, $err_msg = '#', $field_err_msg = '#', $autobr =
 /**
  * DEPRECATED Stub for plugin compatibility:
  */
-function format_to_post( $content, $autobr = 0, $is_comment = 0, $encoding = NULL )
+function format_to_post( $content, $autobr = 0, $is_comment = 0 )
 {
 	global $current_User;
 
-	$ret = check_html_sanity( $content, ( $is_comment ? 'commenting' : 'posting' ), $autobr, $current_User, $encoding );
+	$ret = check_html_sanity( $content, ( $is_comment ? 'commenting' : 'posting' ), $autobr, $current_User );
 	if( $ret === false )
 	{	// ERROR
 		return $content;
@@ -1819,13 +1814,12 @@ function format_to_post( $content, $autobr = 0, $is_comment = 0, $encoding = NUL
  * @param string
  * @param integer Create automated <br /> tags?
  * @param User User (used for "posting" and "xmlrpc_posting" context). Default: $current_User
- * @param string Encoding (used for XHTML_Validator only!); defaults to $io_charset
  * @return boolean|string
  */
-function check_html_sanity( $content, $context = 'posting', $autobr = false, $User = NULL, $encoding = NULL )
+function check_html_sanity( $content, $context = 'posting', $autobr = false, $User = NULL )
 {
 	global $use_balanceTags, $admin_url;
-	global $io_charset, $use_xhtmlvalidation_for_comments, $comment_allowed_tags, $comments_allow_css_tweaks;
+	global $use_xhtmlvalidation_for_comments, $comment_allowed_tags, $comments_allow_css_tweaks;
 	global $Messages;
 
 	if( empty($User) )
@@ -1916,7 +1910,7 @@ function check_html_sanity( $content, $context = 'posting', $autobr = false, $Us
 	{ // We want to validate XHTML:
 		load_class( 'xhtml_validator/_xhtml_validator.class.php', 'XHTML_Validator' );
 
-		$XHTML_Validator = new XHTML_Validator( $context, $allow_css_tweaks, $allow_iframes, $allow_javascript, $allow_objects, $encoding );
+		$XHTML_Validator = new XHTML_Validator( $context, $allow_css_tweaks, $allow_iframes, $allow_javascript, $allow_objects );
 
 		if( ! $XHTML_Validator->check( $content ) ) // TODO: see if we need to use convert_chars( $content, 'html' )
 		{

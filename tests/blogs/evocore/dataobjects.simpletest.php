@@ -40,7 +40,7 @@ class TestDataObject extends DataObject
  */
 class DataobjectsTestCase extends EvoMockDbUnitTestCase
 {
-	var $mocked_DB_methods = array('get_results', 'query');
+	var $mocked_DB_methods = array('get_row', 'query');
 
 	function __construct()
 	{
@@ -58,13 +58,15 @@ class DataobjectsTestCase extends EvoMockDbUnitTestCase
 
 	function test_dataobjectcache_getnext()
 	{
-		$this->MockDB->expectOnce( 'get_results', array(new PatternExpectation('/SELECT \*\s+FROM T_foobar\s+ORDER BY ID/'), '*', '*') );
+		$this->MockDB->expectCallCount( 'get_row', 4 );
 
 		$r = array(
 			(object)array('ID' => 1, 'key2' => 2,  'key3' => 3, 'val' => 4 ),
 			(object)array('ID' => 2, 'key2' => 22, 'key3' => 3, 'val' => 44),
 			(object)array('ID' => 3, 'key2' => 2,  'key3' => 2, 'val' => 2 ));
-		$this->MockDB->setReturnValueAt(0, 'get_results', $r);
+		$this->MockDB->setReturnValueAt(0, 'get_row', $r[0]);
+		$this->MockDB->setReturnValueAt(1, 'get_row', $r[1]);
+		$this->MockDB->setReturnValueAt(2, 'get_row', $r[2]);
 
 		$DC = new TestDataObjectCache();
 

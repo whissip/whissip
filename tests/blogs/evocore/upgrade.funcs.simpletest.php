@@ -1201,11 +1201,15 @@ class UpgradeFuncsTestCase extends EvoDbUnitTestCase
 	/**
 	 * Assert that there are no DB changes required (via live and db_delta).
 	 */
-	function assertNoDbChanges($sql)
+	function assertNoDbChanges($sql, $sql2 = NULL)
 	{
+		global $debug;
+		if( ! isset($sql2) )
+			$sql2 = $sql;
 		$this->test_DB->query($sql);
-		$r = $this->db_delta_wrapper($sql);
-		$this->assertIdentical( $r, array() );
+		$r = $this->db_delta_wrapper($sql2);
+		if( ! $this->assertIdentical( $r, array() ) && $debug )
+			pre_dump('assertNoDbChanges:', $r);
 	}
 
 
@@ -1221,8 +1225,48 @@ class UpgradeFuncsTestCase extends EvoDbUnitTestCase
 				a VARCHAR(50) COLLATE 'binary'
 			)" );
 
-		$this->assertEqual( $r["$GLOBALS[tableprefix]test_1"][0]['queries'][0],
-			"ALTER TABLE $GLOBALS[tableprefix]test_1 CHANGE COLUMN a a VARCHAR(50) COLLATE 'binary'" );
+		if( $this->assertTrue( count($r) ) )
+			$this->assertEqual( $r["$GLOBALS[tableprefix]test_1"][0]['queries'][0],
+				"ALTER TABLE $GLOBALS[tableprefix]test_1 CHANGE COLUMN a a VARCHAR(50) COLLATE 'binary'" );
+	}
+
+
+	function test_precision_scale()
+	{
+		$this->assertNoDbChanges("
+			CREATE TABLE $GLOBALS[tableprefix]test_1 (
+		    inv_price Float(10,2) NOT NULL,
+		    inv_weight DECIMAL(10,4) NOT NULL,
+		    inv_stock INT(10) UNSIGNED NULL
+		);");
+
+		$this->assertNoDbChanges("
+			CREATE TABLE $GLOBALS[tableprefix]test_2 (
+		    inv_price Float(10,2) NOT NULL,
+		    inv_weight DECIMAL(10,4) NOT NULL,
+		    inv_stock INT(10) UNSIGNED NULL
+		);", "
+			CREATE TABLE $GLOBALS[tableprefix]test_2 (
+		    inv_price Float( 10 , 2 ) NOT NULL,
+		    inv_weight DECIMAL( 10 , 4 ) NOT NULL,
+		    inv_stock INT(  10 ) UNSIGNED NULL
+		);");
+
+		$this->test_DB->query( "
+			CREATE TABLE $GLOBALS[tableprefix]test_3 (
+				f float(2,2),
+				d decimal(2,2)
+			)" );
+
+		$r = $this->db_delta_wrapper( "
+			CREATE TABLE $GLOBALS[tableprefix]test_3 (
+				f float( 3 , 3 ),
+				d decimal( 2 , 2 )
+			)" );
+
+		if( $this->assertTrue( count($r) ) )
+			$this->assertEqual( $r["$GLOBALS[tableprefix]test_3"][0]['queries'][0],
+				"ALTER TABLE $GLOBALS[tableprefix]test_3 CHANGE COLUMN f f float( 3 , 3 )" );
 	}
 }
 

@@ -54,7 +54,7 @@ class Filetype extends DataObject
 	 *
 	 * @param table Database row
 	 */
-	function Filetype( $db_row = NULL )
+	function Filetype( stdClass $db_row = NULL )
 	{
 
 		// Call parent constructor:
