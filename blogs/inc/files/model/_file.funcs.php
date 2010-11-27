@@ -107,10 +107,12 @@ function bytesreadable( $bytes, $htmlabbr = true )
  * @param boolean flat (return an one-dimension-array)
  * @param boolean Recurse into subdirectories?
  * @param boolean Get the basename only.
+ * @param boolean
+ * @param boolean Include hidden files/directories? (starting with a dot)
  * @return false|array false if the first directory could not be accessed,
  *                     array of entries otherwise
  */
-function get_filenames( $path, $inc_files = true, $inc_dirs = true, $flat = true, $recurse = true, $basename = false, $trailing_slash = false )
+function get_filenames( $path, $inc_files = true, $inc_dirs = true, $flat = true, $recurse = true, $basename = false, $trailing_slash = false, $hiddens = true )
 {
 	$r = array();
 
@@ -122,6 +124,10 @@ function get_filenames( $path, $inc_files = true, $inc_dirs = true, $flat = true
 		{
 			if( $file == '.' || $file == '..' )
 			{
+				continue;
+			}
+			if( ! $hiddens && $file[0] == '.' )
+			{ // continue
 				continue;
 			}
 			if( is_dir($path.$file) )
@@ -140,7 +146,7 @@ function get_filenames( $path, $inc_files = true, $inc_dirs = true, $flat = true
 					}
 					if( $recurse )
 					{
-						$rSub = get_filenames( $path.$file, $inc_files, $inc_dirs, $flat, $recurse, $basename, $trailing_slash );
+						$rSub = get_filenames( $path.$file, $inc_files, $inc_dirs, $flat, $recurse, $basename, $trailing_slash, $hiddens );
 						if( $rSub )
 						{
 							$r = array_merge( $r, $rSub );
@@ -149,7 +155,7 @@ function get_filenames( $path, $inc_files = true, $inc_dirs = true, $flat = true
 				}
 				else
 				{
-					$r[$file] = get_filenames( $path.$file, $inc_files, $inc_dirs, $flat, $recurse, $basename, $trailing_slash );
+					$r[$file] = get_filenames( $path.$file, $inc_files, $inc_dirs, $flat, $recurse, $basename, $trailing_slash, $hiddens );
 				}
 			}
 			elseif( $inc_files )
@@ -520,7 +526,7 @@ function validate_filename( $filename, $allow_locked_filetypes = false )
 			}
 			else
 			{	// Filename hasn't an allowed extension
-				return sprintf( T_('&laquo;%s&raquo; is a locked extension.'), htmlentities($match[1]) );
+				return sprintf( T_('&laquo;%s&raquo; is a locked extension.'), utf8_htmlspecialchars($match[1]) );
 			}
 		}
 		else
@@ -796,7 +802,7 @@ function get_directory_tree( $Root = NULL, $ads_full_path = NULL, $ads_selected_
 /**
  * Create a directory recursively.
  *
- * NOTE: this can be done with the "recursive" param in PHP5
+ * NOTE: this is a wrapper for PHP4 compatibility in b2evo (CVS HEAD).
  *
  * @todo dh> simpletests for this (especially for open_basedir)
  *
@@ -804,9 +810,9 @@ function get_directory_tree( $Root = NULL, $ads_full_path = NULL, $ads_selected_
  * @param integer permissions
  * @return boolean
  */
-function mkdir_r( $dirName, $chmod = NULL )
+function mkdir_r( $dir, $chmod = NULL )
 {
-	if( is_dir($dirName) )
+	if( is_dir($dir) )
 	{ // already exists:
 		return true;
 	}
@@ -816,41 +822,11 @@ function mkdir_r( $dirName, $chmod = NULL )
 		global $Settings;
 		$chmod = $Settings->get('fm_default_chmod_dir');
 	}
-
-	/*
-	if( version_compare(PHP_VERSION, 5, '>=') )
+	if( ! @mkdir( $dir, octdec($chmod), true ) ) # XXX: use exception / unsilent
 	{
-		return mkdir( $dirName, $chmod, true );
-	}
-	*/
-
-	$dirName = trailing_slash($dirName);
-
-	$parts = array_reverse( explode('/', $dirName) );
-	$loop_dir = $dirName;
-	$create_dirs = array();
-	foreach($parts as $part)
-	{
-		if( ! strlen($part) )
-		{
-			continue;
-		}
-		// We want to create this dir:
-		array_unshift($create_dirs, $loop_dir);
-		$loop_dir = substr($loop_dir, 0, 0 - strlen($part)-1);
-
-		if( is_dir($loop_dir) )
-		{ // found existing dir:
-			foreach($create_dirs as $loop_dir )
-			{
-				// Tblue> Note: The chmod value for mkdir() is affected by the user's umask.
-				if( ! @mkdir($loop_dir, octdec($chmod)) )
-				{
-					return false;
-				}
-			}
-			return true;
-		}
+		global $Debuglog;
+		$Debuglog->add('mkdir_r failed for: %s', array($dir), 'error'); // TODO: param idea! Won't work!
+		return false;
 	}
 	return true;
 }

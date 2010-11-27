@@ -624,6 +624,16 @@ function db_delta( $queries, $exclude_types = array(), $execute = false )
 					$fieldtype = 'DECIMAL';
 				}
 
+				// Build pattern to match type: Length is optional (for int types) or precision/scale (must match exactly):
+				if( substr($fieldtype, -3) == 'INT' )
+				{ // length is optional/not relevant
+					$matches_pattern = '~^'.preg_replace( '~\((\d+)\)~', '(\(\d+\))?', $tablefield->Type ).'$~i';
+				}
+				else
+				{
+					$matches_pattern = '~^'.preg_quote($tablefield->Type, '~').'$~i';
+				}
+
 				if( isset($match[2]) )
 				{ // append optional "length" param (trimmed)
 					$fieldtype .= preg_replace( '~\s+~', '', $match[2] );
@@ -639,11 +649,6 @@ function db_delta( $queries, $exclude_types = array(), $execute = false )
 
 				$field_to_parse = $match[5];
 
-				// The length param is optional:
-				if( substr($fieldtype, 0, 7) == 'DECIMAL' )
-					$matches_pattern = '~^'.preg_quote($tablefield->Type, '~').'$~i';
-				else
-					$matches_pattern = '~^'.preg_replace( '~\((\d+)\)~', '(\(\d+\))?', $tablefield->Type ).'$~i';
 				$type_matches = preg_match( $matches_pattern, $fieldtype );
 			}
 			elseif( preg_match( '~^'.$pattern_field.'\s+(DATETIME|DATE|TIMESTAMP|TIME|YEAR|TINYBLOB|BLOB|MEDIUMBLOB|LONGBLOB|TINYTEXT|TEXT|MEDIUMTEXT|LONGTEXT) ( \s+ BINARY )? (.*)$~ix', $column_definition, $match ) )

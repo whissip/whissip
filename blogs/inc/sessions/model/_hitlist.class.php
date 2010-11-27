@@ -108,7 +108,7 @@ class Hitlist
 	 *
 	 * Note: we're using {@link $localtimenow} to log hits, so use this for pruning, too.
 	 *
-	 * NOTE: do not call this directly, but only in conjuction with auto_prune_stats_mode.
+	 * NOTE: do not call this directly, but only in conjuction with auto_prune_stats_mode ("page").
 	 *
 	 * @static
 	 * @return string Empty, if ok.

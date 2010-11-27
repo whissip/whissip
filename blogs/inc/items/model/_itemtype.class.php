@@ -56,7 +56,7 @@ class ItemType extends DataObject
 	 *
 	 * @param table Database row
 	 */
-	function ItemType( $db_row = NULL )
+	function ItemType( stdClass $db_row = NULL )
 	{
 		// Call parent constructor:
 		parent::DataObject( 'T_items__type', 'ptyp_', 'ptyp_ID' );

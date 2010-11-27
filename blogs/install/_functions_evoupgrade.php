@@ -144,9 +144,9 @@ function db_add_index( $table, $name, $def, $type = 'INDEX' )
 	global $DB;
 	if( db_index_exists($table, $name) )
 	{
-		$DB->query( 'ALTER TABLE '.$table.' DROP INDEX '.$name );
+		$DB->query( "ALTER TABLE `$table` DROP INDEX `$name`" );
 	}
-	$DB->query( 'ALTER TABLE '.$table.' ADD '.$type.' '.$name.' ('.$def.')' );
+	$DB->query( "ALTER TABLE `$table` ADD $type `$name` ($def)" );
 }
 
 
@@ -258,7 +258,8 @@ function upgrade_b2evo_tables()
 
 	if( empty($old_db_version) )
 	{
-		echo '<p><strong>OOPS! b2evolution doesn\'t seem to be installed yet.</strong></p>';
+		global $app_name;
+		echo '<p><strong>OOPS! '.$app_name.' doesn\'t seem to be installed yet.</strong></p>';
 		return;
 	}
 
@@ -2727,35 +2728,37 @@ function upgrade_b2evo_tables()
 		task_end();
 
 		// New perms for comment moderation depending on status:
-		task_begin( 'Upgrading Blog-User permissions...' );
-		db_add_col( 'T_coll_user_perms', 'bloguser_perm_draft_cmts', 'tinyint NOT NULL default 0 AFTER bloguser_perm_comments' );
-		db_add_col( 'T_coll_user_perms', 'bloguser_perm_publ_cmts', 'tinyint NOT NULL default 0 AFTER bloguser_perm_comments' );
-		db_add_col( 'T_coll_user_perms', 'bloguser_perm_depr_cmts', 'tinyint NOT NULL default 0 AFTER bloguser_perm_comments' );
-
 		if( db_col_exists( 'T_coll_user_perms', 'bloguser_perm_comments' ) )
-		{ // if user had perm_comments he now gets all 3 new perms also:
+		{
+			task_begin( 'Upgrading Blog-User permissions...' );
+			db_add_col( 'T_coll_user_perms', 'bloguser_perm_draft_cmts', 'tinyint NOT NULL default 0 AFTER bloguser_perm_comments' );
+			db_add_col( 'T_coll_user_perms', 'bloguser_perm_publ_cmts', 'tinyint NOT NULL default 0 AFTER bloguser_perm_comments' );
+			db_add_col( 'T_coll_user_perms', 'bloguser_perm_depr_cmts', 'tinyint NOT NULL default 0 AFTER bloguser_perm_comments' );
+
+			// if user had perm_comments he now gets all 3 new perms also:
 			$DB->query( 'UPDATE T_coll_user_perms
 						SET bloguser_perm_draft_cmts = bloguser_perm_comments,
 							bloguser_perm_publ_cmts = bloguser_perm_comments,
 							bloguser_perm_depr_cmts = bloguser_perm_comments');
 			db_drop_col( 'T_coll_user_perms', 'bloguser_perm_comments' );
+			task_end();
 		}
-		task_end();
-
-		task_begin( 'Upgrading Blog-Group permissions...' );
-		db_add_col( 'T_coll_group_perms', 'bloggroup_perm_draft_cmts', 'tinyint NOT NULL default 0 AFTER bloggroup_perm_comments' );
-		db_add_col( 'T_coll_group_perms', 'bloggroup_perm_publ_cmts', 'tinyint NOT NULL default 0 AFTER bloggroup_perm_comments' );
-		db_add_col( 'T_coll_group_perms', 'bloggroup_perm_depr_cmts', 'tinyint NOT NULL default 0 AFTER bloggroup_perm_comments' );
 
 		if( db_col_exists( 'T_coll_group_perms', 'bloggroup_perm_comments' ) )
-		{ // if group had perm_comments he now gets all 3 new perms also:
+		{
+			task_begin( 'Upgrading Blog-Group permissions...' );
+			db_add_col( 'T_coll_group_perms', 'bloggroup_perm_draft_cmts', 'tinyint NOT NULL default 0 AFTER bloggroup_perm_comments' );
+			db_add_col( 'T_coll_group_perms', 'bloggroup_perm_publ_cmts', 'tinyint NOT NULL default 0 AFTER bloggroup_perm_comments' );
+			db_add_col( 'T_coll_group_perms', 'bloggroup_perm_depr_cmts', 'tinyint NOT NULL default 0 AFTER bloggroup_perm_comments' );
+
+			// if group had perm_comments he now gets all 3 new perms also:
 			$DB->query( 'UPDATE T_coll_group_perms
 						SET bloggroup_perm_draft_cmts = bloggroup_perm_comments,
 							bloggroup_perm_publ_cmts = bloggroup_perm_comments,
 							bloggroup_perm_depr_cmts = bloggroup_perm_comments');
 			db_drop_col( 'T_coll_group_perms', 'bloggroup_perm_comments' );
+			task_end();
 		}
-		task_end();
 
 		task_begin( 'Upgrading messaging permissions...' );
 		$DB->query( 'ALTER TABLE T_users ALTER COLUMN user_allow_msgform SET DEFAULT "2"' );
@@ -2765,7 +2768,7 @@ function upgrade_b2evo_tables()
 		task_end();
 
 		task_begin( 'Upgrading currency table...' );
-		$DB->query( 'ALTER TABLE T_currency ADD COLUMN curr_enabled tinyint(1) NOT NULL DEFAULT 1 AFTER curr_name' );
+		db_add_col( 'T_currency', 'curr_enabled', 'tinyint(1) NOT NULL DEFAULT 1 AFTER curr_name' );
 		task_end();
 
 		task_begin( 'Upgrading default blog access type for new blogs...' );
@@ -2778,39 +2781,42 @@ function upgrade_b2evo_tables()
 
 		// fp> I don't understand why we need to carry this out "again" but I observed the installer barking on
 		// this setting missing when upgrading from older 2.x versions. I figured it would be no big deal to do it twice...
-		task_begin( 'Makin sure usersettings table is InnoDB...' );
+		task_begin( 'Making sure usersettings table is InnoDB...' );
 		$DB->query( 'ALTER TABLE T_users__usersettings ENGINE=innodb' );
 		task_end();
 
 		// set_upgrade_checkpoint( '10000' );
 	}
 
-	task_begin( 'Convert group permissions to pluggable permissions...' );
-	// asimo>This delete query needs just in case if this version of b2evo was used, before upgrade process call
-	$DB->query( 'DELETE FROM T_groups__groupsettings 
-					WHERE gset_name = "perm_files" OR gset_name = "perm_options" OR gset_name = "perm_templates"' );
-	// Get current permission values from groups table 
-	$sql = 'SELECT grp_ID, grp_perm_spamblacklist, grp_perm_slugs, grp_perm_files, grp_perm_options, grp_perm_templates
-			      FROM T_groups';
-	$rows = $DB->get_results( $sql, OBJECT, 'Get groups converted permissions' );
-	// Insert values into groupsettings table
-	foreach( $rows as $row )
-	{
-		$DB->query( 'INSERT INTO T_groups__groupsettings( gset_grp_ID, gset_name, gset_value )
-						VALUES( '.$row->grp_ID.', "perm_spamblacklist", "'.$row->perm_spamblacklist.'" ),
-							( '.$row->grp_ID.', "perm_slugs", "'.$row->grp_perm_slugs.'" ),
-							( '.$row->grp_ID.', "perm_files", "'.$row->grp_perm_files.'" ),
-							( '.$row->grp_ID.', "perm_options", "'.$row->grp_perm_options.'" ),
-							( '.$row->grp_ID.', "perm_templates", "'.$row->grp_perm_templates.'" )' );
-	}
+	if( db_col_exists('T_groups', 'grp_perm_templates') )
+	{ // only do this once
+		task_begin( 'Convert group permissions to pluggable permissions...' );
+		// asimo>This delete query needs just in case if this version of b2evo was used, before upgrade process call
+		$DB->query( 'DELETE FROM T_groups__groupsettings 
+						WHERE gset_name = "perm_files" OR gset_name = "perm_options" OR gset_name = "perm_templates"' );
+		// Get current permission values from groups table 
+		$sql = 'SELECT grp_ID, grp_perm_spamblacklist, grp_perm_slugs, grp_perm_files, grp_perm_options, grp_perm_templates
+							FROM T_groups';
+		$rows = $DB->get_results( $sql, OBJECT, 'Get groups converted permissions' );
+		// Insert values into groupsettings table
+		foreach( $rows as $row )
+		{
+			$DB->query( 'INSERT INTO T_groups__groupsettings( gset_grp_ID, gset_name, gset_value )
+							VALUES( '.$row->grp_ID.', "perm_spamblacklist", "'.$row->grp_perm_spamblacklist.'" ),
+								( '.$row->grp_ID.', "perm_slugs", "'.$row->grp_perm_slugs.'" ),
+								( '.$row->grp_ID.', "perm_files", "'.$row->grp_perm_files.'" ),
+								( '.$row->grp_ID.', "perm_options", "'.$row->grp_perm_options.'" ),
+								( '.$row->grp_ID.', "perm_templates", "'.$row->grp_perm_templates.'" )' );
+		}
 
-	// Drop all converted permissin colums from groups table
-	db_drop_col( 'T_groups', 'grp_perm_spamblacklist' );
-	db_drop_col( 'T_groups', 'grp_perm_slugs' );
-	db_drop_col( 'T_groups', 'grp_perm_files' );
-	db_drop_col( 'T_groups', 'grp_perm_options' );
-	db_drop_col( 'T_groups', 'grp_perm_templates' );
-	task_end();
+		// Drop all converted permissin colums from groups table
+		db_drop_col( 'T_groups', 'grp_perm_spamblacklist' );
+		db_drop_col( 'T_groups', 'grp_perm_slugs' );
+		db_drop_col( 'T_groups', 'grp_perm_files' );
+		db_drop_col( 'T_groups', 'grp_perm_options' );
+		db_drop_col( 'T_groups', 'grp_perm_templates' );
+		task_end();
+	}
 
 	task_begin( 'Upgrading users table, add user gender...' );
 	db_add_col( 'T_users', 'user_gender', 'char(1) NULL DEFAULT NULL AFTER user_showonline' );
@@ -2825,6 +2831,7 @@ function upgrade_b2evo_tables()
 	 * NOTE: every change that gets done here, should bump {@link $new_db_version} (by 100).
 	 */
 
+	db_add_index( 'T_hitlog', 'check_for_reload', 'hit_datetime, hit_remote_addr, hit_uri, hit_agent_type' );
 
 
 	/* Wait until we're sure and no longer experimental for that one...

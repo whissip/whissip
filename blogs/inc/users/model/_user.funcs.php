@@ -625,8 +625,6 @@ function get_avatar_imgtag( $user_login, $show_login = true, $link = true, $size
 
 		if( $link && $current_User->check_perm( 'users', 'view', false ) )
 		{	// Permission to view user details
-			global $admin_url;
-	// fp>dh why did you add $admin_url here? If this is gonna be used outside of admin, it should not point to the profile in the admin but rather to the profile disp in the public blog skin
 			$img_tag = '<a href="?ctrl=user&amp;user_tab=identity&amp;user_ID='.$User->ID.'">'.$img_tag.'</a>';
 		}
 

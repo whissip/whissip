@@ -243,8 +243,8 @@ global $fm_FileRoot;
 			<ul id="uploadfileinputs">
 				<?php
 					if( empty($failedFiles) && empty($renamedMessages) )
-					{ // No failed files, no renamed files display 5 empty input blocks:
-						$displayFiles = array( NULL, NULL, NULL, NULL, NULL );
+					{ // No failed files, no renamed files display a single empty input block:
+						$displayFiles = array( NULL );
 					}
 					elseif ( ! empty($failedFiles) )
 					{ // Display failed files:

@@ -183,7 +183,7 @@ switch( $action )
 		// Redirect to the user's profile in the "users" controller:
 		// TODO: This will probably fail if the user has no admin-access permission! Redirect to profile page in blog instead!?
 		// redirect Will save $Messages into Session:
-		header_redirect( url_add_param( $admin_url, 'ctrl=users&user_ID='.$ForgetfulUser->ID, '&' ) ); // display user's profile
+		header_redirect( url_add_param( $admin_url, 'ctrl=user&user_tab=password&user_ID='.$ForgetfulUser->ID, '&' ) ); // display user's profile
 		/* exited */
 		break;
 

@@ -61,7 +61,7 @@ class GenericElement extends DataObject
 	 * @param string Name of the ID field (including prefix)
 	 * @param object DB row
 	 */
-	function GenericElement( $tablename, $prefix = '', $dbIDname = 'ID', $db_row = NULL )
+	function GenericElement( $tablename, $prefix = '', $dbIDname = 'ID', stdClass $db_row = NULL )
 	{
 		global $Debuglog;
 

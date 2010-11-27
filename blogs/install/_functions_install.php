@@ -735,13 +735,6 @@ function load_db_schema()
 	global $schema_queries;
 	global $modules, $inc_path;
 
-	global $db_storage_charset, $DB;
-	if( empty($db_storage_charset) )
-	{	// If no specific charset has been requested for datstorage, use the one of the current connection (optimize for speed - no conversions)
-		$db_storage_charset = $DB->connection_charset;
-	}
-	//pre_dump( 'db_storage_charset', $db_storage_charset );
-
 	// Load modules:
 	foreach( $modules as $module )
 	{

@@ -40,8 +40,6 @@ global $Plugins;
  */
 global $Settings;
 
-global $pagenow;
-
 global $Session;
 
 global $mode;
@@ -207,7 +205,7 @@ $Form->begin_form( '', '', $params );
 	}
 
 	echo '<table cellspacing="0" class="compose_layout">';
-	echo '<tr><td class="label"><label for="item_tags">'.T_('Tags').':</strong> <span class="notes">'.T_('sep by ,').'</span></label></label></td>';
+	echo '<tr><td class="label"><label for="item_tags">'.T_('Tags').':</strong> <span class="notes">'.T_('sep by ,').'</span></label></td>';
 	echo '<td class="input">';
 	$Form->text_input( 'item_tags', $item_tags, 40, '', '', array('maxlength'=>255, 'style'=>'width: 100%;') );
 	echo '</td><td width="1"><!-- for IE7 --></td></tr>';

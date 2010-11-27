@@ -267,9 +267,71 @@ if( empty($tab) )
 			$Messages->add( sprintf( T_('Created %d comments.'), $count - 1 ), 'success' );
 			break;
 
+
+		case 'del_rscbundlecache':
+			// TODO: dh> this should really be a separate permission.. ("tools", "exec") or similar!
+			$current_User->check_perm('options', 'edit', true);
+
+			$ResourceBundles->cleanup_cache_dir();
+
+			$Messages->add( sprintf( T_('Removed cached resource bundles.') ), 'success' );
+			break;
+
+
+		case 'create_tagsfromcats':
+			$count_tags = 0;
+
+			$cats = $DB->get_results('
+				SELECT cat_ID, cat_name
+				  FROM T_categories');
+			foreach( $cats as $cat )
+			{
+				// Is there a tag for this category name already?
+				$tag_ID = $DB->get_var('
+					SELECT tag_ID
+					  FROM T_items__tag
+					 WHERE tag_name = '.$DB->quote($cat->cat_name));
+				// Create tag, if new:
+				if( ! $tag_ID )
+				{
+					$DB->query('
+						INSERT INTO T_items__tag ( tag_name )
+						VALUES ('.$DB->quote($cat->cat_name).')');
+					$tag_ID = $DB->insert_id;
+					$count_tags++;
+				}
+
+				// Get posts in this cat:
+				$post_IDs = $DB->get_col('
+					SELECT postcat_post_ID
+					  FROM T_postcats
+					 WHERE postcat_cat_ID = '.$cat->cat_ID );
+
+				if( $post_IDs )
+				{
+					// Link posts to tag:
+					$query = "
+						REPLACE INTO T_items__itemtag ( itag_itm_ID, itag_tag_ID )
+						VALUES \n";
+					foreach( $post_IDs as $post_ID )
+					{
+						$query .= "($post_ID, $tag_ID),\n";
+					}
+					$query = substr($query, 0, -2);
+
+					$DB->query( $query );
+				}
+			}
+
+			$Messages->add( sprintf('Created %d tags from %d categories.', $count_tags, count($cats)), 'success' );
+			break;
+
+
 		case 'recreate_itemslugs':
 			$ItemCache = get_ItemCache();
-			$ItemCache->load_where( '( post_title != "" ) AND ( post_urltitle = "title" OR post_urltitle LIKE "title-%" )');
+			$SlugCache = get_SlugCache();
+			$ItemCache->load_all();
+			$SlugCache->load_all();
 			$items = $ItemCache->get_ID_array();
 			$count_slugs = 0;
 			@set_time_limit(0);
@@ -277,24 +339,26 @@ if( empty($tab) )
 			{
 				$Item = $ItemCache->get_by_ID($item_ID);
 
-				$prev_urltitle = $Item->get( 'urltitle' );
 				$item_title = $Item->get( 'title' );
+				if( ! strlen($item_title) ) {
+					continue;
+				}
+				$prev_urltitle = $Item->get( 'urltitle' );
 
-				// check if post title is not empty and urltitle was auto generated ( equals title or title-[0-9]+ )
-				// Note: urltitle will be auto generated on this form (title-[0-9]+), if post title wass empty and, urltitle was not set
-				// Note: Even if a post title was set to 'title' on purpose it's possible, that this tool will change the post urltitle
-				if( ( ! empty( $item_title ) ) && ( ( $prev_urltitle == 'title' ) || ( preg_match( '#^title-[0-9]+$#', $prev_urltitle ) ) ) )
+				$DB->begin();
+				if( $Item->update_slug('') || $prev_urltitle != $Item->get('urltitle') /* might happen when urltitle is different from associated slug (e.g. manual table update) */ )
 				{
-					// set urltitle empty, so the item update function will regenerate the item slug
-					$Item->set( 'urltitle', '' );
-					$result = $Item->dbupdate(/* do not autotrack modification */ false, /* update slug */ true, /* do not update excerpt */ false); 
+					$result = $Item->dbupdate(/* do not autotrack modification */ false, /* update slug */ false, /* do not update excerpt */ false); 
 					if( ( $result ) && ( $prev_urltitle != $Item->get( 'urltitle' ) ) )
 					{ // update was successful, and item urltitle was changed
 						$count_slugs++;
+						$DB->commit();
+						continue;
 					}
 				}
+				$DB->rollback();
 			}
-			$Messages->add( sprintf( 'Created %d new URL slugs.', $count_slugs ), 'success' );
+			$Messages->add( sprintf('Created %d new URL slugs for %d total posts.', $count_slugs, count($items)), 'success' );
 			break;
 
 		case 'del_obsolete_tags':

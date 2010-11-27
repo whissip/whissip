@@ -54,7 +54,7 @@ class Cronjob extends DataObject
 	 *
 	 * @param table Database row
 	 */
-	function Cronjob( $db_row = NULL )
+	function Cronjob( stdClass $db_row = NULL )
 	{
 		// Call parent constructor:
 		parent::DataObject( 'T_cron__task', 'ctsk_', 'ctsk_ID', '', '', '', '' );

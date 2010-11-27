@@ -61,12 +61,26 @@ class Timer
 
 
 	/**
+	 * Timestamp of object creation.
+	 * @var float
+	 */
+	protected $total_start;
+
+	/**
+	 * Timestamp of last Debuglog entry; used for relative measurement.
+	 * @var float
+	 */
+	protected $last_log_ts;
+
+
+	/**
 	 * Constructor.
 	 *
 	 * @param string|NULL If a category is given the timer starts right away.
 	 */
 	function Timer( $category = NULL )
 	{
+		$this->total_start = $this->get_current_microtime();
 		if( is_string($category) )
 		{
 			$this->start( $category );
@@ -79,7 +93,7 @@ class Timer
 	 */
 	function reset( $category )
 	{
-		$this->_times[$category] = array( 'total' => 0, 'count' => 0 );
+		$this->_times[$category] = array( 'total' => 0, 'count' => 0, 'resumed' => array() );
 	}
 
 
@@ -88,7 +102,6 @@ class Timer
 	 */
 	function start( $category, $log = true )
 	{
-		global $Debuglog;
 		$this->reset( $category );
 		$this->resume( $category, $log );
 	}
@@ -97,16 +110,18 @@ class Timer
 	/**
 	 * Stops a timer category. It may me resumed later on, see {@link resume()}. This is an alias for {@link pause()}.
 	 *
+	 * @param string Category
+	 * @param boolean|string Add info about this to Debuglog. String gets used as additional message.
 	 * @return boolean false, if the timer had not been started.
 	 */
-	function stop( $category )
+	function stop( $category, $log = true )
 	{
 		global $Debuglog;
 
-		if( ! $this->pause( $category ) )
+		if( ! $this->pause( $category, $log ) )
 			return false;
 
-		$Debuglog->add( str_repeat('&nbsp;', $this->indent*4).$category.' stopped at '.$this->get_duration( $category, 3 ), 'timer' );
+		$this->debug_log( $category, 'stopped', $log );
 
 		return true;
 	}
@@ -117,25 +132,32 @@ class Timer
 	 *
 	 * NOTE: The timer needs to be started, either through the {@link Timer() Constructor} or the {@link start()} method.
 	 *
+	 * @param string Category
+	 * @param boolean|string Add info about this to Debuglog. String gets used as additional message.
 	 * @return boolean false, if the timer had not been started.
 	 */
 	function pause( $category, $log = true )
 	{
 		global $Debuglog;
-		$since_resume = $this->get_current_microtime() - $this->_times[$category]['resumed'];
-		if( $log ) 
+
+		if( $log )
 		{
-			$this->indent--;
-			$Debuglog->add( str_repeat('&nbsp;', $this->indent*4).$category.' paused at '.$this->get_duration( $category, 3 ).' (<strong>+'.number_format($since_resume, 4).'</strong>)', 'timer' );
+			if( $this->indent ) $this->indent--;
+			$this->debug_log( $category, 'paused', $log );
 		}
 		if( $this->get_state($category) != 'running' )
 		{ // Timer is not running!
-			$Debuglog->add("Warning: tried to pause already paused '$category'.", 'timer');
+			$Debuglog->add("Warning: tried to pause already paused '$category'.<br />".debug_get_backtrace(), 'timer');
 			return false;
 		}
 
+		$since_resume = $this->get_current_microtime() - array_pop($this->_times[$category]['resumed']);
+
 		$this->_times[$category]['total'] += $since_resume;
-		$this->_times[$category]['state'] = 'paused';
+		if( count($this->_times[$category]['resumed']) < 1 )
+		{ // innermost level paused, change state of category to "paused".
+			$this->_times[$category]['state'] = 'paused';
+		}
 
 		return true;
 	}
@@ -143,6 +165,8 @@ class Timer
 
 	/**
 	 * Resumes the timer on a category.
+	 * @param string Category
+	 * @param boolean|string Add info about this to Debuglog. String gets used as additional message.
 	 */
 	function resume( $category, $log = true )
 	{
@@ -154,14 +178,14 @@ class Timer
 			return;
 		}
 
-		$this->_times[$category]['resumed'] = $this->get_current_microtime();
+		$this->_times[$category]['resumed'][] = $this->get_current_microtime();
 		$this->_times[$category]['count']++;
 
 		$this->_times[$category]['state'] = 'running';
 
-		if( $log ) 
+		if( $log )
 		{
-			$Debuglog->add( str_repeat('&nbsp;', $this->indent*4).$category.' resumed at '.$this->get_duration( $category, 3 ), 'timer' );
+			$this->debug_log( $category, 'resumed', $log );
 			$this->indent++;
 		}
 	}
@@ -207,8 +231,8 @@ class Timer
 		{
 			case 'running':
 				// The timer is running, we need to return the additional time since the last resume.
-				return $this->_times[$category]['total']
-					+ $this->get_current_microtime() - $this->_times[$category]['resumed'];
+				$resumed = array_pop(array_slice($this->_times[$category]['resumed'], -1));
+				return $this->_times[$category]['total'] + $this->get_current_microtime() - $resumed;
 
 			case 'paused':
 				return $this->_times[$category]['total'];
@@ -260,6 +284,43 @@ class Timer
 	{
 		list($usec, $sec) = explode(' ', microtime());
 		return ((float)$usec + (float)$sec);
+	}
+
+
+	/**
+	 * Wrapper around {@link $Debuglog} to prefix messages with relative timestamp.
+	 * @param string Category
+	 * @param string Status message ("stopped", "resumed", "paused")
+	 * @param boolean|string Add info about this to Debuglog? String gets used as additional message.
+	 */
+	function debug_log($category, $state, $log)
+	{
+		global $Debuglog;
+
+		if( ! $log ) {
+			return;
+		}
+
+		$lcount = count($this->_times[$category]['resumed']);
+		if( $lcount > 1 ) {
+			$category .= '('.$lcount.')';
+		}
+
+		// build message
+		$msg = str_repeat('&nbsp;', $this->indent*4).$category.' '.$state;
+		if( is_string($log) ) {
+			$msg .= ': '.$log;
+		}
+
+		$cur = $this->get_current_microtime();
+
+		$dur_rel = $cur - $this->total_start;
+		$dur_prev = ( isset($this->last_log_ts) ? $cur - $this->last_log_ts : 0 );
+
+		$msg = sprintf( '<span title="Relative total time">%.2f</span> (<span title="Time since last log message">+%.4f</span>) (<span title="Total time in category">%.4f</span>): %s', $dur_rel, $dur_prev, $this->get_microtime($category), $msg );
+		$Debuglog->add($msg, 'timer');
+
+		$this->last_log_ts = $cur;
 	}
 }
 

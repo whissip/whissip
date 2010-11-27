@@ -124,15 +124,14 @@ var tinyMCE_GZ = {
 	},
 
 	eval : function(co) {
-		var w = window;
+		var se = document.createElement('script');
 
-		// Evaluate script
-		if (!w.execScript) {
-			if (/Gecko/.test(navigator.userAgent))
-				eval(co, w); // Firefox 3.0
-			else
-				eval.call(w, co);
-		} else
-			w.execScript(co); // IE
+		// Create script
+		se.type = 'text/javascript';
+		se.text = co;
+
+		// Add it to evaluate it and remove it
+		document.body.appendChild(se);
+		se.parentNode.removeChild(se);
 	}
 };

@@ -124,7 +124,7 @@ class CollectionSettings extends AbstractSettings
 			'rss2_redirect' => '',
 			'feed_content'   => 'normal',
 			'posts_per_feed' => '8',
-			'xml_item_footer_text' => '<p><small><a href="$item_perm_url$">Original post</a> blogged on <a href="http://b2evolution.net/">b2evolution</a>.</small></p>',
+			'xml_item_footer_text' => '',
 			'image_size'	=> 'fit-320x320',
 
 		// Sitemaps settings:
@@ -154,26 +154,6 @@ class CollectionSettings extends AbstractSettings
 	{
 		parent::AbstractSettings( 'T_coll_settings', array( 'cset_coll_ID', 'cset_name' ), 'cset_value', 1 );
 	}
-
-	/**
-	 * Loads the settings. Not meant to be called directly, but gets called
-	 * when needed.
-	 *
-	 * @access protected
-	 * @param string First column key
-	 * @param string Second column key
-	 * @return boolean
-	 */
-	function _load( $coll_ID, $arg )
-	{
-		if( empty( $coll_ID ) )
-		{
-			return false;
-		}
-
-		return parent::_load( $coll_ID, $arg );
-	}
-
 }
 
 

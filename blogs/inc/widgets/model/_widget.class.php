@@ -84,7 +84,7 @@ class ComponentWidget extends DataObject
 	 *
 	 * @param object data row from db
 	 */
-	function ComponentWidget( $db_row = NULL, $type = 'core', $code = NULL )
+	function ComponentWidget( stdClass $db_row = NULL, $type = 'core', $code = NULL )
 	{
 		// Call parent constructor:
 		parent::DataObject( 'T_widget', 'wi_', 'wi_ID' );
@@ -502,6 +502,7 @@ class ComponentWidget extends DataObject
 				$this->display( $params );
 
 				// Save collected cached data if needed:
+				$Timer->resume( 'BlockCache' );
 				$this->BlockCache->end_collect();
 			}
 

@@ -48,7 +48,7 @@ class Userfield extends DataObject
 	 *
 	 * @param object Database row
 	 */
-	function Userfield( $db_row = NULL )
+	function Userfield( stdClass $db_row = NULL )
 	{
 		// Call parent constructor:
 		parent::DataObject( 'T_users__fielddefs', 'ufdf_', 'ufdf_ID' );

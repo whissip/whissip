@@ -174,9 +174,6 @@ class Session
 							// Brutally load all classes that we might need:
  							session_unserialize_load_all_classes();
 						}
-						// TODO: dh> This can fail, if there are special chars in sess_data:
-						//       It will be encoded in $evo_charset _after_ "SET NAMES", but
-						//       get retrieved here, _before_ any "SET NAMES" (if $db_config['connection_charset'] is not set (default))!
 						$this->_data = @unserialize($row->sess_data);
 
 						if( $old_callback !== false )
@@ -187,7 +184,6 @@ class Session
 						if( ! is_array($this->_data) )
 						{
 							$Debuglog->add( 'Session: Session data corrupted!<br />
-								connection_charset: '.var_export($DB->connection_charset, true).'<br />
 								Serialized data was: --['.var_export($row->sess_data, true).']--', array('session','error') );
 							$this->_data = array();
 						}

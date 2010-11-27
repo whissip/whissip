@@ -115,8 +115,7 @@ $Form->begin_form( 'fform' );
 
 	$Form->text_input( 'login', $login, 16, T_('Login'), '', array( 'maxlength' => 20, 'class' => 'input_text' ) );
 
-	$pwd_note = '<a href="'.$htsrv_url_sensitive.'login.php?action=lostpassword&amp;redirect_to='
-		.rawurlencode( url_rel_to_same_host($redirect_to, $htsrv_url_sensitive) );
+	$pwd_note = '<a href="'.$htsrv_url_sensitive.'login.php?action=lostpassword&amp;redirect_to='.rawurlencode( url_rel_to_same_host($redirect_to, $htsrv_url_sensitive) );
 	if( !empty($login) )
 	{
 		$pwd_note .= '&amp;login='.rawurlencode($login);

@@ -209,14 +209,6 @@ class DB
 	 */
 	var $dbhost = 'localhost';
 
-	/**
-	 * Current connection charset
-	 * @var string
-	 * @access protected
-	 * @see DB::set_connection_charset()
-	 */
-	var $connection_charset;
-
 
 	// DEBUG:
 
@@ -243,7 +235,7 @@ class DB
 	 *
 	 * @var boolean
 	 */
-	var $debug_explain_joins = false;
+	var $debug_explain_joins = true;
 
 	/**
 	 * Do we want to profile queries?
@@ -264,7 +256,7 @@ class DB
 	 *
 	 * @var integer
 	 */
-	var $debug_dump_function_trace_for_queries = 0;
+	var $debug_dump_function_trace_for_queries = true;
 
 	/**
 	 * Number of rows we want to dump in debug output (0 disables it)
@@ -355,9 +347,9 @@ class DB
 
 		if( ! extension_loaded('mysql') )
 		{ // The mysql extension is not loaded, try to dynamically load it:
+			$mysql_ext_file = is_windows() ? 'php_mysql.dll' : 'mysql.so';
 			if( function_exists('dl') )
 			{
-				$mysql_ext_file = is_windows() ? 'php_mysql.dll' : 'mysql.so';
 				$php_errormsg = null;
 				$old_track_errors = ini_set('track_errors', 1);
 				$old_html_errors = ini_set('html_errors', 0);
@@ -375,6 +367,7 @@ class DB
 				$this->print_error( 'The PHP MySQL module could not be loaded.', '
 					<p><strong>Error:</strong> '.$error_msg.'</p>
 					<p>You probably have to edit your php configuration (php.ini) and enable this module ('.$mysql_ext_file.').</p>
+					<p>You may have to install it first (e.g. php5-mysql on Debian/Ubuntu).</p>
 					<p>Do not forget to restart your webserver (if necessary) after editing the PHP conf.</p>', false );
 				return;
 			}
@@ -412,9 +405,10 @@ class DB
 			$this->select($this->dbname);
 		}
 
-		if( !empty($params['connection_charset']) )
-		{	// Specify which charset we are using on the client:
-			$this->set_connection_charset( $params['connection_charset'] );
+
+		if( $this->query( 'SET NAMES UTF8' ) === false )
+		{
+			debug_die( 'Could not "SET NAMES UTF8"! (MySQL error: '.strip_tags($this->last_error).')' );
 		}
 
 		/*
@@ -490,23 +484,26 @@ class DB
 	 */
 	function quote($str)
 	{
-		if( is_null( $str ) )
+		if( $str === NULL )
 		{
 			return 'NULL';
 		}
-		elseif( is_array( $str ) )
+
+		$type = gettype($str);
+		if( $type == 'array' )
 		{
-			$r = '';
-			foreach( $str as $elt )
-			{
-				$r .= $this->quote($elt).',';
+			return implode(',', array_map( array('DB', 'quote'), $str )); // TODO: should be 'self' (PHP 5.3?)
+		}
+
+		// Add Debuglog warning when quoting integers (not necessary):
+		if( $type == 'integer' )
+		{
+			global $Debuglog;
+			if( $Debuglog ) {
+				$Debuglog->add('DB::quote: quoting integer: '.$str.' (performance drawback) '.debug_get_backtrace(), 'debug');
 			}
-			return substr( $r, 0, -1 );
 		}
-		else
-		{
-			return "'".$this->escape($str)."'";
-		}
+		return "'".$this->escape($str)."'";
 	}
 
 
@@ -835,6 +832,11 @@ class DB
 			$this->result = @mysql_query( $query, $this->dbhandle );
 		}
 
+		if( $this->log_queries && $this->debug_dump_function_trace_for_queries )
+		{	// Log backtrace, also for invalid queries:
+			$this->queries[ $this->num_queries - 1 ]['function_trace'] = debug_get_backtrace( $this->debug_dump_function_trace_for_queries, array( array( 'class' => 'DB' ) ), 1 ); // including first stack entry from class DB
+		}
+
 		// If there is an error then take note of it..
 		if( is_resource($this->dbhandle) && mysql_error($this->dbhandle) )
 		{
@@ -882,11 +884,6 @@ class DB
 		}
 		if( $this->log_queries )
 		{	// We want to log queries:
-			if( $this->debug_dump_function_trace_for_queries )
-			{
-				$this->queries[ $this->num_queries - 1 ]['function_trace'] = debug_get_backtrace( $this->debug_dump_function_trace_for_queries, array( array( 'class' => 'DB' ) ), 1 ); // including first stack entry from class DB
-			}
-
 			if( $this->debug_dump_rows && $this->num_rows )
 			{
 				$this->queries[ $this->num_queries - 1 ]['results'] = $this->debug_get_rows_table( $this->debug_dump_rows );
@@ -1112,8 +1109,7 @@ class DB
 	{
 		$r = '';
 
-		if( ! $this->result || ! $this->num_rows )
-		{
+		if( ! $this->result || ! $this->num_rows ) {
 			return '<p>No Results.</p>';
 		}
 
@@ -1121,8 +1117,7 @@ class DB
 		$col_info = array();
 		$n = mysql_num_fields($this->result);
 		$i = 0;
-		while( $i < $n )
-		{
+		while( $i < $n ) {
 			$col_info[$i] = mysql_fetch_field($this->result, $i);
 			$i++;
 		}
@@ -1137,50 +1132,37 @@ class DB
 		}
 		$r .= '</tr>';
 
-
 		// ======================================================
-		// print main results
+		// Print main results
 		$i=0;
 		// Rewind to first row (should be there already).
 		mysql_data_seek($this->result, 0);
 		while( $one_row = $this->get_row(NULL, ARRAY_N) )
 		{
 			$i++;
-			if( $i >= $max_lines )
-			{
+			if( $i >= $max_lines ) {
 				break;
 			}
 			$r .= '<tr>';
-			foreach( $one_row as $item )
-			{
-				if( $i % 2 )
-				{
+			foreach( $one_row as $item ) {
+				if( $i % 2 ) {
 					$r .= '<td class="odd">';
-				}
-				else
-				{
+				}	else {
 					$r .= '<td>';
 				}
 
-				if( $break_at_comma )
-				{
-					$item = str_replace( ',', '<br />', $item );
-					$item = str_replace( ';', '<br />', $item );
-					$r .= $item;
-				}
-				else
-				{
-					$r .= strmaxlen($item, 50, NULL, 'htmlspecialchars');
+				if( $break_at_comma ) {
+					$r .= str_replace( array(',', ';'), '<br />', htmlspecialchars($item) );
+				} else {
+					$r .= strmaxlen($item, 100, NULL, 'htmlspecialchars');
 				}
 				$r .= '</td>';
 			}
-
 			$r .= '</tr>';
 		}
 		// Rewind to first row again.
 		mysql_data_seek($this->result, 0);
-		if( $i >= $max_lines )
-		{
+		if( $i >= $max_lines ) {
 			$r .= '<tr><td colspan="'.(count($col_info)+1).'">Max number of dumped rows has been reached.</td></tr>';
 		}
 
@@ -1249,12 +1231,30 @@ class DB
 		}
 		$sql = trim($new.$word);
 
-		if( $html )
+		if( ! $html )
+		{
+			return $sql;
+		}
+
+		if( empty($GLOBALS['db_use_geshi_highlighting']) )
 		{ // poor man's indent
+			$sql = htmlspecialchars($sql);
 			$sql = preg_replace_callback("~^(\s+)~m", create_function('$m', 'return str_replace(" ", "&nbsp;", $m[1]);'), $sql);
 			$sql = nl2br($sql);
+			return $sql;
 		}
-		return $sql;
+
+		# Parse/Highlight SQL using GeSHi
+		static $geshi;
+		if( ! isset($geshi) ) {
+			load_funcs( '_ext/geshi/geshi.php' );
+			$geshi = new GeSHi($sql, 'mysql');
+			$geshi->set_header_type(GESHI_HEADER_NONE);
+			$geshi->set_tab_width(2);
+		} else {
+			$geshi->set_source($sql);
+		}
+		return $geshi->parse_code();
 	}
 
 
@@ -1412,7 +1412,7 @@ class DB
 
 				$this->result = mysql_query( 'EXPLAIN '.$query['sql'], $this->dbhandle );
 				if( is_resource($this->result) )
-				{
+				{ // will be false for invalid SQL
 					$this->num_rows = mysql_num_rows($this->result);
 
 					if( $html )
@@ -1427,8 +1427,8 @@ class DB
 					{ // TODO: dh> contains html.
 						echo $this->debug_get_rows_table( 100, true );
 					}
+					mysql_free_result($this->result);
 				}
-				mysql_free_result($this->result);
 			}
 
 			// Profile:
@@ -1585,111 +1585,6 @@ class DB
 				$this->transaction_nesting_level--;
 			}
 		}
-	}
-
-
-	/**
-	 * Convert a PHP charset to its MySQL equivalent.
-	 *
-	 * @param string PHP charset
-	 * @return string MYSQL charset or unchanged
-	 */
-	function php_to_mysql_charmap( $php_charset )
-	{
-		$php_charset = strtolower($php_charset);
-
-		/**
-		 * This is taken from phpMyAdmin (libraries/select_lang.lib.php).
-		 */
-		static $mysql_charset_map = array(
-				'big5'         => 'big5',
-				'cp-866'       => 'cp866',
-				'euc-jp'       => 'ujis',
-				'euc-kr'       => 'euckr',
-				'gb2312'       => 'gb2312',
-				'gbk'          => 'gbk',
-				'iso-8859-1'   => 'latin1',
-				'iso-8859-2'   => 'latin2',
-				'iso-8859-7'   => 'greek',
-				'iso-8859-8'   => 'hebrew',
-				'iso-8859-8-i' => 'hebrew',
-				'iso-8859-9'   => 'latin5',
-				'iso-8859-13'  => 'latin7',
-				'iso-8859-15'  => 'latin1',
-				'koi8-r'       => 'koi8r',
-				'shift_jis'    => 'sjis',
-				'tis-620'      => 'tis620',
-				'utf-8'        => 'utf8',
-				'windows-1250' => 'cp1250',
-				'windows-1251' => 'cp1251',
-				'windows-1252' => 'latin1',
-				'windows-1256' => 'cp1256',
-				'windows-1257' => 'cp1257',
-			);
-
-		if( isset($mysql_charset_map[$php_charset]) )
-		{
-			return $mysql_charset_map[$php_charset];
-		}
-
-		// for lack of a better answer:
-		return $php_charset;
-	}
-
-	/**
-	 * Set the charset of the connection.
-	 *
-	 * WARNING: this will fail on MySQL 3.23
-	 *
-	 * @staticvar array "regular charset => mysql charset map"
-	 * @param string Charset
-	 * @param boolean Use the "regular charset => mysql charset map"?
-	 * @return boolean true on success, false on failure
-	 */
-	function set_connection_charset( $charset, $use_map = true )
-	{
-		global $Debuglog;
-
-		// pre_dump( 'set_connection_charset', $charset );
-
-		$charset = strtolower($charset);
-
-		if( $use_map )
-		{	// We want to use the map
-			$charset = $this->php_to_mysql_charmap( $charset );
-		}
-
-		$r = true;
-		if( $charset != $this->connection_charset )
-		{
-			// SET NAMES is not supported by MySQL 3.23 and for a non-supported charset even not in MySQL 5 probably..
-
-			$save_show_errors = $this->show_errors;
-			$save_halt_on_error = $this->halt_on_error;
-			$this->show_errors = false;
-			$this->halt_on_error = false;
-			$last_error = $this->last_error;
-			$error = $this->error;
-			if( $this->query( 'SET NAMES '.$charset ) === false )
-			{
-				$Debuglog->add( 'Could not "SET NAMES '.$charset.'"! (MySQL error: '.strip_tags($this->last_error).')', 'locale' );
-
-				$r = false;
-			}
-			else
-			{
-				$Debuglog->add( 'Set DB connection charset: '.$charset, 'locale' );
-
-				$this->connection_charset = $charset;
-			}
-			$this->show_errors = $save_show_errors;
-			$this->halt_on_error = $save_halt_on_error;
-			// Blatantly ignore any error generated by SET NAMES...
-			$this->last_error = $last_error;
-			$this->error = $error;
-		}
-
-		return $r;
 	}
 
 }

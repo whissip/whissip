@@ -46,7 +46,7 @@ else
 }
 
 
-echo '<?xml version="1.0" encoding="'.$io_charset.'"?'.'>';
+echo '<?xml version="1.0" encoding="utf-8"?'.'>';
 ?>
 <feed xml:lang="<?php $Blog->disp( 'locale', 'xml' ) ?>" xmlns="http://www.w3.org/2005/Atom">
 	<title><?php

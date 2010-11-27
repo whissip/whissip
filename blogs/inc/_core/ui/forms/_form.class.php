@@ -473,16 +473,11 @@ class Form extends Widget
 	{
 		if( !isset($field_params['class']) )
 		{
-			$field_params['class'] = ' fieldset';
+			$field_params['class'] = 'fieldset';
 		}
 		else
 		{
 			$field_params['class'] = ' '.$field_params['class'];
-		}
-
-		if( !isset($field_params['id']) )
-		{
-			$field_params['id'] = '';
 		}
 
 		switch( $this->layout )
@@ -510,7 +505,7 @@ class Form extends Widget
 				// $r = '<fieldset'.get_field_attribs_as_string($field_params).'>'."\n";
 
 				$r = str_replace( '$fieldset_title$', $title, $r );
-				$r = str_replace( '$id$', $field_params['id'], $r );
+				$r = str_replace( '$id$', isset($field_params['id']) ? $field_params['id'] : '', $r );
 				$r = str_replace( '$class$', $field_params['class'], $r );
 
 				if( empty($legend_params) )
@@ -743,13 +738,9 @@ class Form extends Widget
 		// dh> TODO: should probably also get ported to use jquery.ui.autocomplete (or its successor)
 		global $rsc_url;
 		$r .= '<script type="text/javascript" src="'.$rsc_url.'js/jquery/jquery.hintbox.min.js"></script>';
-		$r .= '<script type="text/javascript">$("<link>").appendTo("head").attr({
-			rel: "stylesheet",
-			type: "text/css",
-			href: "'.$rsc_url.'css/jquery/jquery.hintbox.css"
-			});</script>';
+		$r .= '<script type="text/javascript"> /* <![CDATA[ */'
+			.'$("<link>").appendTo("head").attr({rel: "stylesheet", type: "text/css", href: "'.$rsc_url.'css/jquery/jquery.hintbox.css"});';
 
-		$r .= '<script type="text/javascript">';
 		$r .= 'jQuery(function(){';
 		$r .= 'jQuery(\'#'.$field_name.'\').hintbox({';
 		$r .= ' url: \''.$htsrv_url.'async.php?action=get_login_list\',';
@@ -757,7 +748,7 @@ class Form extends Widget
 		$r .= ' autoDimentions: true';
 		$r .= '});';
 		$r .= '});';
-		$r .= '</script>';
+		$r .= '/* ]]> */</script>';
 		$r .= '<input type="text" class="form_text_input" value="'.$User->login.'" name="'.$field_name.'" id="'.$field_name.'" />';
 
 		$r .= $this->end_field();

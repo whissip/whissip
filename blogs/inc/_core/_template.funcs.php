@@ -39,22 +39,13 @@ if( !defined('EVO_MAIN_INIT') ) die( 'Please, do not access this page directly.'
  *
  * @param string content-type; override for RSS feeds
  */
-function header_content_type( $type = 'text/html', $charset = '#' )
+function header_content_type( $type = 'text/html', $charset = 'utf-8' )
 {
-	global $io_charset;
 	global $content_type_header;
 
 	$content_type_header = 'Content-type: '.$type;
 
-	if( !empty($charset) )
-	{
-		if( $charset == '#' )
-		{
-			$charset = $io_charset;
-		}
-
-		$content_type_header .= '; charset='.$charset;
-	}
+	$content_type_header .= '; charset='.$charset;
 
 	header( $content_type_header );
 }
@@ -66,7 +57,7 @@ function header_content_type( $type = 'text/html', $charset = '#' )
  * @param string content-type; override for RSS feeds
  * @param integer seconds
  */
-function headers_content_mightcache( $type = 'text/html', $max_age = '#', $charset = '#' )
+function headers_content_mightcache( $type = 'text/html', $max_age = '#', $charset = 'utf-8' )
 {
 	global $is_admin_page;
 
@@ -517,22 +508,24 @@ function blog_home_link( $before = '', $after = '', $blog_text = 'Blog', $home_t
 
 
 /**
- * Memorize that a specific javascript file will be required by the current page.
- * All requested files will be included in the page head only once (when headlines is called)
+ * Require/Include a given JavaScript file.
  *
- * Accepts absolute urls, filenames relative to the rsc/js directory and certain aliases, like 'jquery' and 'jquery_debug'
- * If 'jquery' is used and $debug is set to true, the 'jquery_debug' is automatically swapped in.
- * Any javascript added to the page is also added to the $required_js array, which is then checked to prevent adding the same code twice
+ * This gets added to the HTML headlines and multiple includes
+ * are detected.
  *
- * @todo dh>merge with require_css()
- * @param string alias, url or filename (relative to rsc/js) for javascript file
+ * Accepts aliases (e.g. 'jquery'), absolute filenames, absolute
+ * urls, filenames relative to rsc/js or {@link $basepath}.
+ *
+ * If 'jquery' is used and $debug is set to true, the 'jquery_debug'
+ * is automatically swapped in.
+ *
+ * @param string URL or filename/path (can be absolute, relative to rsc/js or basepath)
  * @param boolean Is the file's path relative to the base path/url?
- *                Use false if file is in $rsc_url/js/
+ *                NOTE: not used in whissip (autodetected).
  */
 function require_js( $js_file, $relative_to_base = false )
 {
-	global $rsc_url, $debug, $app_version;
-	static $required_js;
+	global $debug;
 
 	$js_aliases = array(
 		'#jquery#' => 'jquery.min.js',
@@ -551,99 +544,53 @@ function require_js( $js_file, $relative_to_base = false )
 		require_js( '#jquery#' );
 	}
 
-	// First get the real filename or url
-	$absolute = FALSE;
-	if( preg_match('~^https?://~', $js_file ) )
-	{ // It's an absolute url
-		$js_url = $js_file;
-		$absolute = TRUE;
-	}
-	elseif( !empty( $js_aliases[$js_file]) )
+	$attribs = array();
+	if( !empty( $js_aliases[$js_file]) )
 	{ // It's an alias
 		if ( $js_file == '#jquery#' && $debug ) $js_file = '#jquery_debug#';
 		$js_file = $js_aliases[$js_file];
+
+		// HACK: put it to the front, since inline code (rsc_pack=inline, added in add_js_headline)
+		//       may depend on it (jQuery).
+		//       Probably all libs should get included in a "first bundle".
+		//       This is only required since we (have to) use the "add rsc_pack=inline" hack.
+		$attribs['rsc_order'] = 10;
 	}
 
-	if( $relative_to_base || $absolute )
-	{
-		$js_url = $js_file;
-	}
-	else
-	{
-		$js_url = $rsc_url.'js/'.$js_file;
-	}
-
-	// Be sure to get a fresh copy of this JS file after application upgrades:
-	$js_url = url_add_param( $js_url, 'v='.$app_version );
-
-	// Add to headlines, if not done already:
-	if( empty( $required_js ) || ! in_array( strtolower($js_url), $required_js ) )
-	{
-		$required_js[] = strtolower($js_url);
-		add_headline( '<script type="text/javascript" src="'.$js_url.'"></script>' );
-	}
+	$GLOBALS['ResourceBundles']->add_file('js', $js_file, $attribs);
 }
 
 
 /**
- * Memorize that a specific css that file will be required by the current page.
- * All requested files will be included in the page head only once (when headlines is called)
+ * Require/Include a given CSS file.
  *
- * Accepts absolute urls, filenames relative to the rsc/css directory.
- * Set $relative_to_base to TRUE to prevent this function from adding on the rsc_path
+ * This gets added to the HTML headlines and multiple includes
+ * are detected.
  *
- * @todo dh>merge with require_js()
- * @param string alias, url or filename (relative to rsc/css) for CSS file
+ * Accepts absolute filename, absolute urls, filenames relative
+ * to rsc/js or {@link $basepath}.
+ *
+ * @param string URL or filename/path (can be absolute, relative to rsc/js or basepath)
  * @param boolean|string Is the file's path relative to the base path/url?
  *                Use true to not add any prefix ("$rsc_url/css/").
+ *                NOTE: not used in whissip (autodetected).
  * @param string title.  The title for the link tag
  * @param string media.  ie, 'print'
  */
-function require_css( $css_file, $relative_to_base = false, $title = NULL, $media = NULL, $version = '#' )
+function require_css( $css_file, $relative_to_base = false, $title = NULL, $media = NULL )
 {
-	global $rsc_url, $debug, $app_version;
-	static $required_css;
-
-	// First get the real filename or url
-	$absolute = FALSE;
-	if( preg_match('~^https?://~', $css_file ) )
-	{ // It's an absolute url
-		$css_url = $css_file;
-		$absolute = TRUE;
-	}
-
-	if( $relative_to_base || $absolute )
+	$attribs = array();
+	if( isset($title) )
 	{
-		$css_url = $css_file;
+		$attribs['title'] = $title;
 	}
-	else
+	if( isset($media) )
 	{
-		$css_url = $rsc_url . 'css/' . $css_file;
+		$attribs['media'] = $media;
 	}
 
-	if( !empty($version) )
-	{	// Be sure to get a fresh copy of this CSS file after application upgrades:
-		if( $version == '#' )
-		{
-			$version = $app_version;
-		}
-		$css_url = url_add_param( $css_url, 'v='.$version );
-	}
 
-	// Add to headlines, if not done already:
-	// fp> TODO: check for url without version to avoid duplicate load due to lack of verison in @import statements
-	if( empty( $required_css ) || ! in_array( strtolower($css_url), $required_css ) )
-	{
-		$required_css[] = strtolower($css_url);
-
-		$start_link_tag = '<link rel="stylesheet"';
-		if ( !empty( $title ) ) $start_link_tag .= ' title="' . $title . '"';
-		if ( !empty( $media ) ) $start_link_tag .= ' media="' . $media . '"';
-		$start_link_tag .= ' type="text/css" href="';
-		$end_link_tag = '" />';
-		add_headline( $start_link_tag . $css_url . $end_link_tag );
-	}
-
+	$GLOBALS['ResourceBundles']->add_file('css', $css_file, $attribs);
 }
 
 
@@ -738,8 +685,9 @@ function add_headline($headline)
  */
 function add_js_headline($headline)
 {
-	add_headline("<script type=\"text/javascript\">\n\t/* <![CDATA[ */\n\t\t"
-		.$headline."\n\t/* ]]> */\n\t</script>");
+	// FIXME: workaround for b2evo, which has no $attribs yet; keep inline code in a separate bundle.
+	$attribs['rsc_pack'] = 'inline';
+	$GLOBALS['ResourceBundles']->add_inline('js', $headline, $attribs);
 }
 
 
@@ -752,7 +700,9 @@ function add_js_headline($headline)
  */
 function add_css_headline($headline)
 {
-	add_headline("<style type=\"text/css\">\n\t".$headline."\n\t</style>");
+	// FIXME: workaround for b2evo, which has no $attribs yet; keep inline code in a separate bundle.
+	$attribs['rsc_pack'] = 'inline';
+	$GLOBALS['ResourceBundles']->add_inline('css', $headline, $attribs);
 }
 
 
@@ -796,11 +746,23 @@ function add_js_for_toolbar()
 function include_headlines()
 {
 	global $headlines;
+	global $ResourceBundles;
+
+	// Output links for resource bundles (CSS/JS), if there are any:
+	if( $ResourceBundles )
+	{ // only if the class has been loaded, it is relevant here
+		if( $rsc_bundle_lines = $ResourceBundles->get_html_headlines() )
+		{
+			echo "\n\t<!-- Resource bundles: -->";
+			echo "\n\t".implode("\n\t", $rsc_bundle_lines);
+			echo "\n";
+		}
+	}
 
 	if( $headlines )
 	{
 		echo "\n\t<!-- headlines: -->\n\t".implode( "\n\t", $headlines );
-		echo "\n\n";
+		echo "\n";
 	}
 }
 
@@ -954,41 +916,15 @@ function display_if_empty( $params = array() )
 
 
 /**
- * Template tag for credits
- *
- * Note: You can limit (and even disable) the number of links being displayed here though the Admin interface:
- * Blog Settings > Advanced > Software credits
+ * COMPATIBILITY FUNCTION: Template tag for credits
+ * Does nothing in whissip, since "creds" in global_Cache is considered spam,
+ * controlled by b2evolution.net/FP.
  *
  * @param array
  */
 function credits( $params = array() )
 {
-	/**
-	 * @var AbstractSettings
-	 */
-	global $global_Cache;
-	global $Blog;
-
-	// Make sure we are not missing any param:
-	$params = array_merge( array(
-			'list_start'  => ' ',
-			'list_end'    => ' ',
-			'item_start'  => ' ',
-			'item_end'    => ' ',
-			'separator'   => ',',
-			'after_item'  => '#',
-		), $params );
-
-
-	$cred_links = $global_Cache->get( 'creds' );
-	if( empty( $cred_links ) )
-	{	// Use basic default:
-		$cred_links = unserialize('a:2:{i:0;a:2:{i:0;s:24:"http://b2evolution.net/r";i:1;s:18:"free blog software";}i:1;a:2:{i:0;s:36:"http://b2evolution.net/web-hosting/r";i:1;s:19:"quality web hosting";}}');
-	}
-
-	$max_credits = (empty($Blog) ? NULL : $Blog->get_setting( 'max_footer_credits' ));
-
-	display_list( $cred_links, $params['list_start'], $params['list_end'], $params['separator'], $params['item_start'], $params['item_end'], NULL, $max_credits );
+	return;
 }
 
 
@@ -1021,44 +957,20 @@ function star_rating( $stars, $class = 'middle' )
 
 
 /**
- * Display "powered by b2evolution" logo
+ * Display "Powered by $appname." link.
  */
 function powered_by( $params = array() )
 {
-	/**
-	 * @var AbstractSettings
-	 */
-	global $global_Cache;
-
-	global $rsc_url;
+	global $app_name;
 
 	// Make sure we are not missing any param:
 	$params = array_merge( array(
 			'block_start' => '<div class="powered_by">',
 			'block_end'   => '</div>',
-			'img_url'     => '$rsc$img/powered-by-b2evolution-120t.gif',
-			'img_width'   => '',
-			'img_height'  => '',
 		), $params );
 
 	echo $params['block_start'];
-
-	$img_url = str_replace( '$rsc$', $rsc_url, $params['img_url'] );
-
-	$evo_links = $global_Cache->get( 'evo_links' );
-	if( empty( $evo_links ) )
-	{	// Use basic default:
-		$evo_links = unserialize('a:1:{s:0:"";a:1:{i:0;a:3:{i:0;i:100;i:1;s:23:"http://b2evolution.net/";i:2;a:2:{i:0;a:2:{i:0;i:55;i:1;s:36:"powered by b2evolution blog software";}i:1;a:2:{i:0;i:100;i:1;s:29:"powered by free blog software";}}}}}');
-	}
-
-	echo resolve_link_params( $evo_links, NULL, array(
-			'type'        => 'img',
-			'img_url'     => $img_url,
-			'img_width'   => $params['img_width'],
-			'img_height'  => $params['img_height'],
-			'title'       => 'b2evolution: next generation blog software',
-		) );
-
+	echo '<a href="http://b2evolution.net/" target="_blank">Powered by '.$app_name.'.</a>';
 	echo $params['block_end'];
 }
 

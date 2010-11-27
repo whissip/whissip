@@ -37,7 +37,7 @@ $CommentList->display_init();
 
 headers_content_mightcache( 'application/xml' );		// In most situations, you do NOT want to cache dynamic content!
 
-echo '<?xml version="1.0" encoding="'.$io_charset.'"?'.'>';
+echo '<?xml version="1.0" encoding="utf-8"?'.'>';
 ?>
 <!-- generator="<?php echo $app_name; ?>/<?php echo $app_version ?>" -->
 <rss version="0.92">

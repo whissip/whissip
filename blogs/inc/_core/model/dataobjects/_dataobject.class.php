@@ -72,6 +72,7 @@ class DataObject
 	var $datemodified_field;
 	var $creator_field;
 	var $lasteditor_field;
+	var $name_field_member;
 	var $dbchanges = array();
 	/**#@-*/
 
@@ -96,8 +97,9 @@ class DataObject
 	 * @param string datetime field name
 	 * @param string User ID field name
 	 * @param string User ID field name
+	 * @param string Name member name (name of object property that represents the DB name field (used with *Cache objects))
 	 */
-	function DataObject( $tablename, $prefix = '', $dbIDname = 'ID', $datecreated_field = '', $datemodified_field = '', $creator_field = '', $lasteditor_field = '' )
+	function DataObject( $tablename, $prefix = '', $dbIDname = 'ID', $datecreated_field = '', $datemodified_field = '', $creator_field = '', $lasteditor_field = '', $name_field_member = '' )
 	{
 		$this->dbtablename        = $tablename;
 		$this->dbprefix           = $prefix;
@@ -106,6 +108,7 @@ class DataObject
 		$this->datemodified_field = $datemodified_field;
 		$this->creator_field      = $creator_field;
 		$this->lasteditor_field   = $lasteditor_field;
+		$this->name_field_member  = $name_field_member;
 	}
 
 

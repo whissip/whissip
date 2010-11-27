@@ -62,7 +62,7 @@ class Thread extends DataObject
 	 * Constructor
 	 * @param db_row database row
 	 */
-	function Thread( $db_row = NULL )
+	function Thread( stdClass $db_row = NULL )
 	{
 		// Call parent constructor:
 		parent::DataObject( 'T_messaging__thread', 'thrd_', 'thrd_ID', 'datemodified' );

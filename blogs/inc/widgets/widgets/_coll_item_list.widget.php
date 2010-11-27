@@ -88,7 +88,7 @@ class coll_item_list_Widget extends ComponentWidget
 					'label' => T_('Follow Main List'),
 					'note' => T_('Do you want to restrict to contents related to what is displayed in the main area?'),
 					'type' => 'radio',
-					'options' => array( array ('no', T_('No') ), 
+					'options' => array( array ('no', T_('No') ),
 										array ('tags', T_('By tags') ) ), // may be extended
 					'defaultvalue' => 'no',
 				),
@@ -108,7 +108,7 @@ class coll_item_list_Widget extends ComponentWidget
 					'label' => T_('Group by'),
 					'note' => T_('Do you want to group the Items?'),
 					'type' => 'radio',
-					'options' => array( array( 'none', T_('None') ), 
+					'options' => array( array( 'none', T_('None') ),
 										array( 'chapter', T_('By category/chapter') ) ),
 					'defaultvalue' => 'none',
 				),
@@ -123,7 +123,7 @@ class coll_item_list_Widget extends ComponentWidget
 					'label' => T_('Direction'),
 					'note' => T_('How to sort the items'),
 					'type' => 'radio',
-					'options' => array( array( 'ASC', T_('Ascending') ), 
+					'options' => array( array( 'ASC', T_('Ascending') ),
 										array( 'DESC', T_('Descending') ) ),
 					'defaultvalue' => 'DESC',
 				),
@@ -395,7 +395,7 @@ class coll_item_list_Widget extends ComponentWidget
 			{ // limit number of words
 				$content = strmaxwords( $content, $words, array(
 						'continued_link' => $Item->get_permanent_url(),
-						'continued_text' => '&hellip;',
+						'continued_text' => '…',
 					 ) );
 			}
 			echo '<div class="item_content">'.$content.'</div>';

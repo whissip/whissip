@@ -982,24 +982,21 @@ div.system_check {
 }
 
 /*
- * Footer (60 pixels)
+ * Footer (30 pixels)
  */
 .footer {
 	clear: both;
 	margin: 0;
-	height: 60px;
+	height: 30px;
 }
 .footer a {
 	color: #000;
 }
 
-.footer_logo {
-	float: right;
-	margin: 10px 30px 0 0;
-}
 .footer .copyright {
-	padding: 32px 0 0 35px;
+	padding: 10px 0 0 35px;
 	font-size: 74%;
+	text-align:center;
 }
 
 div.breadcrumbpath {

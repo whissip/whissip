@@ -188,7 +188,7 @@ function antispam_report_abuse( $abuse_string )
 	{ // Remote operation successful:
 		antispam_update_source( $abuse_string, 'reported' );
 
-		$Messages->add( sprintf( T_('Reported abuse to %s.'), $antispamsrv_host ), 'success' );
+		$Messages->add( sprintf( /* %s refers to antispam server host */ T_('Reported abuse to %s.'), $antispamsrv_host ), 'success' );
 	}
 	else
 	{
@@ -232,7 +232,7 @@ function antispam_poll_abuse()
 								)
 							);
 
-	$Messages->add( sprintf( T_('Requesting abuse list from %s...'), $antispamsrv_host ), 'note' );
+	$Messages->add( /* %s refers to antispam server host */ sprintf( T_('Requesting abuse list from %s...'), $antispamsrv_host ), 'note' );
 
 	$result = $client->send($message);
 
@@ -411,11 +411,11 @@ function echo_affected_comments( $affected_comments, $status, $keyword, $noperms
 	{
 		if( $noperms_count == 0 )
 		{ // There isn't any affected comment witch corresponding status
-			printf( '<p>'.T_('No %s comments match the keyword [%s].').'</p>', '<strong>'.$status.'</strong>', htmlspecialchars($keyword) );
+			printf( /* TRANS: first %s refers to comment status adjective, second to the keyword */ '<p>'.T_('No %s comments match the keyword [%s].').'</p>', '<strong>'.$status.'</strong>', htmlspecialchars($keyword) );
 		}
 		else
 		{ // There are affected comment witch corresponding status, but current user has no permission
-			printf( '<p>'.T_('There are %d matching %s comments, but you have no permission to edit them.').'</p>', $noperms_count, '<strong>'.$status.'</strong>' );
+			printf( /* TRANS: first %s refers to number of comments, second is the status adjective */ '<p>'.T_('There are %d matching %s comments, but you have no permission to edit them.').'</p>', $noperms_count, '<strong>'.$status.'</strong>' );
 		}
 		return;
 	}
@@ -423,7 +423,7 @@ function echo_affected_comments( $affected_comments, $status, $keyword, $noperms
 	echo '<p>';
 	echo '<input type="checkbox" name="del'.$status.'" id="del'.$status.'_cb" value="1" checked="checked"/>';
 	echo '<label for="del'.$status.'_cb"> ';
-	echo sprintf ( T_('Delete the following %s %s comments:'), $num_comments == 500 ? '500+' : $num_comments, '<strong>'.$status.'</strong>' );
+	echo sprintf ( /* TRANS: first %s refers to number of comments (may be "500+"), second is the status adjective */ T_('Delete the following %s %s comments:'), $num_comments == 500 ? '500+' : $num_comments, '<strong>'.$status.'</strong>' );
 	echo '</label>';
 	echo '</p>';
 

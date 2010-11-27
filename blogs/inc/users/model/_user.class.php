@@ -151,7 +151,7 @@ class User extends DataObject
 	 *
 	 * @param object DB row
 	 */
-	function User( $db_row = NULL )
+	function User( stdClass $db_row = NULL )
 	{
 		global $default_locale, $Settings, $localtimenow;
 

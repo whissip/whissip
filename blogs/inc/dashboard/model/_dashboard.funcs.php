@@ -28,7 +28,7 @@
 function b2evonet_get_updates( $force_short_delay = false )
 {
 	global $allow_evo_stats; // Possible values: true, false, 'anonymous'
-	global $DB, $debug, $evonetsrv_host, $evonetsrv_port, $evonetsrv_uri, $servertimenow, $evo_charset;
+	global $DB, $debug, $evonetsrv_host, $evonetsrv_port, $evonetsrv_uri, $servertimenow;
 	global $Messages, $Settings, $baseurl, $instance_name, $app_name, $app_version, $app_date;
 	global $Debuglog;
 	global $Timer;
@@ -121,7 +121,7 @@ function b2evonet_get_updates( $force_short_delay = false )
 											'last_update' => new xmlrpcval( $servertime_last_update, 'string' ),
 											'db_version' => new xmlrpcval( $DB->get_version(), 'string'),	// If a version >95% we make it the new default.
 											'db_utf8' => new xmlrpcval( system_check_db_utf8() ? 1 : 0, 'int' ),	// if support >95%, we'll make it the default
-											'evo_charset' => new xmlrpcval( $evo_charset, 'string' ),
+											'evo_charset' => new xmlrpcval( 'utf-8', 'string' ),
 											'php_version' => new xmlrpcval( PHP_VERSION, 'string' ),
 											'php_xml' => new xmlrpcval( extension_loaded('xml') ? 1 : 0, 'int' ),
 											'php_mbstring' => new xmlrpcval( extension_loaded('mbstring') ? 1 : 0, 'int' ),

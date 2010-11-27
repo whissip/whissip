@@ -42,10 +42,6 @@ if( $display_mode != 'js' )
 {
 	$AdminUI->set_path( 'tools', 'antispam' );
 }
-else
-{
-	header_content_type( 'text/html', $io_charset );
-}
 
 param_action( '' );
 param( 'confirm', 'string' );

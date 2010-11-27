@@ -74,7 +74,7 @@ class XHTML_Validator
 	 * @param boolean Allow IFrames?
 	 * @param boolean Allow Javascript?
 	 * @param boolean Allow Objects?
-	 * @param string Input encoding to use ('ISO-8859-1', 'UTF-8', 'US-ASCII' or '' for auto-detect)
+	 * @param string Input encoding to use (ignored on whissip, uses "UTF-8")
 	 * @param string Message type for errors
 	 */
 	function XHTML_Validator( $context = 'posting', $allow_css_tweaks = false, $allow_iframes = false, $allow_javascript = false, $allow_objects = false, $encoding = NULL, $msg_type = 'error' )
@@ -123,21 +123,7 @@ class XHTML_Validator
 
 		$this->msg_type = $msg_type;
 
-		if( empty($encoding) )
-		{
-			global $io_charset;
-			$encoding = $io_charset;
-		}
-		$encoding = strtoupper($encoding); // we might get 'iso-8859-1' for example
-		$this->encoding = $encoding;
-		if( ! in_array( $encoding, array( 'ISO-8859-1', 'UTF-8', 'US-ASCII' ) ) )
-		{ // passed encoding not supported by xml_parser_create()
-			$this->xml_parser_encoding = ''; // auto-detect (in PHP4, in PHP5 anyway)
-		}
-		else
-		{
-			$this->xml_parser_encoding = $this->encoding;
-		}
+		$this->xml_parser_encoding = 'UTF-8';
 		$this->parser = xml_parser_create( $this->xml_parser_encoding );
 
 		$this->last_checked_pos = 0;
@@ -160,25 +146,6 @@ class XHTML_Validator
 	 */
 	function check($xhtml)
 	{
-		// Convert encoding:
-		// TODO: use convert_encoding()
-		if( empty($this->xml_parser_encoding) || $this->encoding != $this->xml_parser_encoding )
-		{ // we need to convert encoding:
-			if( function_exists( 'mb_convert_encoding' ) )
-			{ // we can convert encoding to UTF-8
-				$this->encoding = 'UTF-8';
-
-				// Convert XHTML:
-				$xhtml = mb_convert_encoding( $xhtml, 'UTF-8' );
-			}
-			elseif( ($this->encoding == 'ISO-8859-1' || empty($this->encoding)) && function_exists('utf8_encode') )
-			{
-				$this->encoding = 'UTF-8';
-
-				$xhtml = utf8_encode( $xhtml );
-			}
-		}
-
 		// Open comments or '<![CDATA[' are dangerous
 		$xhtml = str_replace('<!', '', $xhtml);
 

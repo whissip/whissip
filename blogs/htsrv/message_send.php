@@ -41,7 +41,7 @@ require_once $inc_path.'_main.inc.php';
 
 global $Session;
 
-header( 'Content-Type: text/html; charset='.$io_charset );
+header( 'Content-Type: text/html; charset=utf-8' );
 
 // Check that this action request is not a CSRF hacked request:
 $Session->assert_received_crumb( 'newmessage' );

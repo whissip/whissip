@@ -49,11 +49,13 @@ input.checkbox {border:1px none #000000; background:transparent; vertical-align:
 	-khtml-border-radius: 3px;
 	-webkit-border-radius: 3px;
 	border-radius: 3px;
+	float:left;
 }
 #insert:hover, #cancel:hover, input.mceButton:hover, .updateButton:hover,
 #insert:focus, #cancel:focus, input.mceButton:focus, .updateButton:focus {
 	border: 1px solid #555;
 }
+#cancel {float:right}
 
 /* Browse */
 a.pickcolor, a.browse {text-decoration:none}

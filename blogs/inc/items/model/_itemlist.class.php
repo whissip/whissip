@@ -169,6 +169,7 @@ class ItemList2 extends ItemListLight
 			$preview_userid AS post_creator_user_ID,
 			$preview_userid AS post_lastedit_user_ID,
 			'$item_issue_date' AS post_datestart,
+			'$item_issue_date' AS post_dateset,
 			'$item_issue_date' AS post_datecreated,
 			'$item_issue_date' AS post_datemodified,
 			0 AS post_dateset,
@@ -532,7 +533,8 @@ class ItemList2 extends ItemListLight
 		$current_Item = $this->get_by_idx(0);
 
 		if( is_null($current_Item) )
-		{	// This happens if we are on a single post that we do not actually have permission to view
+		{	// This happens if we are on a single post that we do not actually have permission to view,
+			// or if there's no item in the list!
 			$r = NULL;
 			return $r;
 		}

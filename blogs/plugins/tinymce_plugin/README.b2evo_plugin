@@ -1,0 +1,22 @@
+Information about this directory:
+---------------------------------
+
+This is the jscripts/tiny_mce/ directory from TinyMCE 3.3.8+.
+Source: http://github.com/blueyed/tinymce/tree/evocms_tinymce_plugin
+
+The tiny_mce_gzip.php from tinymce_compressor_php 2.0.3+ is included and used by default.
+Source: http://github.com/blueyed/tinymce_compressor/tree/evocms_tinymce_plugin
+
+Patched files: (might be incomplete, refer to the source branches)
+--------------
+
+ - tiny_mce_gzip.php
+ - skins/o2k7/ui_silver.css
+ - skins/o2k7/dialog.css (based on wp_theme)
+ 
+Added:
+ - skins/o2k7/img/fade-butt.css (based on wp_theme)
+
+
+Included TinyMCE language packages:
+de, es, fr, pt, ru

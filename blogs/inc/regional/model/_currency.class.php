@@ -49,7 +49,7 @@ class Currency extends DataObject
 	 *
 	 * @param object database row
 	 */
-	function Currency( $db_row = NULL )
+	function Currency( stdClass $db_row = NULL )
 	{
 		// Call parent constructor:
 		parent::DataObject( 'T_currency', 'curr_', 'curr_ID' );

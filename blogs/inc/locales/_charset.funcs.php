@@ -122,19 +122,14 @@ function replace_special_chars( $str, $post_locale = NULL )
 		// Tblue> htmlentities() does not know anything about ASCII?! ISO-8859-1 will work too, though.
 		$newstr_charset = 'ISO-8859-1';
 	}
-	else if( can_convert_charsets('UTF-8', $evo_charset) && can_convert_charsets('UTF-8', 'ISO-8859-1') /* source */ )
+	else if( can_convert_charsets('UTF-8', $evo_charset) )
 	{	// Fallback to the limited old method: Transliterate only a few known chars.
 		$newstr = convert_charset( $str, 'UTF-8', $evo_charset );
 		$newstr_charset = 'UTF-8';
 
 		// TODO: add more...?!
-		$search = array( 'Ä', 'ä', 'Ö', 'ö', 'Ü', 'ü', 'ß', 'à', 'ç', 'è', 'é', 'ì', 'ò', 'ô', 'ù' ); // iso-8859-1
+		$search = array( 'Ã„', 'Ã¤', 'Ã–', 'Ã¶', 'Ãœ', 'Ã¼', 'ÃŸ', 'Ã ', 'Ã§', 'Ã¨', 'Ã©', 'Ã¬', 'Ã²', 'Ã´', 'Ã¹' ); // utf8
 		$replace = array( 'Ae', 'ae', 'Oe', 'oe', 'Ue', 'ue', 'ss', 'a', 'c', 'e', 'e', 'i', 'o', 'o', 'u' );
-
-		foreach( $search as $k => $v )
-		{ // convert $search to UTF-8
-			$search[$k] = convert_charset( $v, 'UTF-8', 'ISO-8859-1' );
-		}
 
 		$newstr = str_replace( $search, $replace, $newstr );
 	}

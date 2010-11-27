@@ -30,7 +30,7 @@ require_once dirname(__FILE__).'/../conf/_config.php';
 
 require_once $inc_path.'_main.inc.php';
 
-header( 'Content-Type: text/html; charset='.$io_charset );
+header( 'Content-Type: text/html; charset=utf-8' );
 
 // Getting GET or POST parameters:
 param( 'comment_post_ID', 'integer', true ); // required
@@ -277,7 +277,7 @@ if( $Messages->has_errors() )
 	<head>
 		<title><?php echo $app_shortname.' &rsaquo; '.$page_title ?></title>
 		<meta name="ROBOTS" content="NOINDEX" />
-		<meta http-equiv="Content-Type" content="text/html; charset=<?php echo $io_charset ?>" />
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	</head>
 	<body>
 	<?php

@@ -33,14 +33,14 @@
  */
 if( !defined('EVO_MAIN_INIT') ) die( 'Please, do not access this page directly.' );
 
-global $io_charset, $rsc_url, $UserSettings, $Debuglog, $Plugins, $generating_static;
+global $rsc_url, $UserSettings, $Debuglog, $Plugins, $generating_static;
 global $month, $month_abbrev, $weekday, $weekday_abbrev; /* for localized calendar */
 global $debug, $Hit;
 
 headers_content_mightcache( 'text/html', 0 );		// Make extra sure we don't cache the admin pages!
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xml:lang="<?php locale_lang() ?>" lang="<?php locale_lang() ?>">
+<html xml:lang="<?php locale_lang() ?>" lang="<?php locale_lang() ?>" xmlns="http://www.w3.org/1999/xhtml">
 <head>
 	<title><?php echo $this->get_html_title(); ?></title>
 	<?php

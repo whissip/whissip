@@ -271,7 +271,6 @@ class Filelist
 	 *
 	 * @param FileRoot See FileRootCache::get_by_type_and_ID()
 	 * @param boolean|string Default path for the files, false if you want to create an arbitrary list; NULL for the Fileroot's ads_path.
-	 * @param integer ID of the user, the group or the collection the file belongs to...
 	 */
 	function Filelist( $FileRoot, $path = NULL )
 	{
@@ -329,7 +328,7 @@ class Filelist
 		$this->_order_index = array();
 
 		// Attempt list files for requested directory: (recursively if flat mode):
-		if( ($filepath_array = get_filenames( $this->_ads_list_path, $this->include_files, $this->include_dirs, true, $this->flatmode )) === false )
+		if( ($filepath_array = get_filenames( $this->_ads_list_path, $this->include_files, $this->include_dirs, true, $this->flatmode, false, false, $this->_show_hidden_files )) === false )
 		{
 			$Messages->add( sprintf( T_('Cannot open directory &laquo;%s&raquo;!'), $this->_ads_list_path ), 'error' );
 			return false;
@@ -340,12 +339,6 @@ class Filelist
 		{
 			// Extract the filename from the full path
 			$name = basename( $adfp_path );
-
-			// Check for hidden status...
-			if( ( ! $this->_show_hidden_files) && (substr($name, 0, 1) == '.') )
-			{ // Do not load & show hidden files (prefixed with .)
-				continue;
-			}
 
 			// Check for _evocache...
 			if( ( ! $this->_show_evocache ) && ( $name == '_evocache') )

@@ -50,7 +50,7 @@ class Link extends DataObject
 	 *
 	 * @param table Database row
 	 */
-	function Link( $db_row = NULL )
+	function Link( stdClass $db_row = NULL )
 	{
 		// Call parent constructor:
 		parent::DataObject( 'T_links', 'link_', 'link_ID',

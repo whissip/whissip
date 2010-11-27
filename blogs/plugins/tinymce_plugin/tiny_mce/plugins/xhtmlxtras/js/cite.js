@@ -1,10 +1,3 @@
- /**
- * $Id$
- *
- * @author Moxiecode - based on work by Andrew Tetlaw
- * @copyright Copyright © 2004-2008, Moxiecode Systems AB, All rights reserved.
- */
-
 function init() {
 	SXE.initElementDialog('cite');
 	if (SXE.currentAction == "update") {

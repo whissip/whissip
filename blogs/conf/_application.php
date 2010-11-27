@@ -7,8 +7,8 @@
 if( !defined('EVO_CONFIG_LOADED') ) die( 'Please, do not access this page directly.' );
 
 
-$app_name = 'b2evolution';
-$app_shortname = 'b2evo';
+$app_name = 'whissip';
+$app_shortname = 'whissip';
 
 /**
  * The version of the application.
@@ -36,10 +36,10 @@ $new_db_version = 10000;
 /**
  * Is displayed on the login screen:
  */
-$app_banner = '<a href="http://b2evolution.net/"><img src="'.$rsc_url.'img/b2evolution8.png" width="221" height="65" alt="b2evolution" /></a>';
+$app_banner = '<a href="http://whissip.net/"><img src="'.$rsc_url.'img/whissip-221x70-trans.png" width="221" height="70" alt="whissip" /></a>';
 
 $app_footer_text = '<a href="http://b2evolution.net/" title="'.T_("visit b2evolution's website")
-		.'"><strong>b2evolution '.$app_version.'</strong></a>
+		.'"><strong>'.$app_name.' '.$app_version.'</strong></a>
 		&ndash;
 		<a href="http://b2evolution.net/about/license.html" class="nobr">'.T_('GPL License').'</a>';
 

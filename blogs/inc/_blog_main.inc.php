@@ -83,18 +83,13 @@ $disp_detail = '';
 fp>there is no blog defined in _main and there should not be any
 blueyed> Sure, but that means we should either split it, or use the locale here only, if there's no-one given with higher priority.
 */
-// Activate matching locale:
-$Debuglog->add( 'Activating blog locale: '.$Blog->get('locale'), 'locale' );
-locale_activate( $Blog->get('locale') );
 
-
-// Re-Init charset handling, in case current_charset has changed:
-if( init_charsets( $current_charset ) )
+// For now, do not use Blog's locale, if "locale" param is used.
+if( ! $locale_from_get )
 {
-  // Reload Blog(s) (for encoding of name, tagline etc):
-  $BlogCache->clear();
-
-  $Blog = & $BlogCache->get_by_ID( $blog );
+	// Activate matching locale:
+	$Debuglog->add( 'Activating blog locale: '.$Blog->get('locale'), 'locale' );
+	locale_activate( $Blog->get('locale') );
 }
 
 
@@ -136,10 +131,9 @@ if( $resolve_extra_path )
 
 		// Replace encoded ";" and ":" with regular chars (used for tags)
 		// TODO: dh> why not urldecode it altogether? fp> would prolly make sense but requires testing -- note: check with tags (move urldecode from tags up here)
-		// TODO: PHP5: use str_ireplace
-		$path_string = str_replace(
-			array('%3b', '%3B', '%3a', '%3A'),
-			array(';', ';', ':', ':'),
+		$path_string = str_ireplace(
+			array('%3b', '%3a'),
+			array(';', ';'),
 			$path_string );
 
 		// Slice the path:
@@ -639,6 +633,7 @@ if( !empty( $skin ) )
 		}
 
 		// Save collected cached data if needed:
+		$Timer->resume( 'PageCache' );
 		$PageCache->end_collect();
 	}
 	$Timer->pause( 'PageCache' );

@@ -120,27 +120,13 @@ class ItemFuncsTestCase extends EvoMockDbUnitTestCase
 	 */
 	function test_bpost_count_words()
 	{
-		global $evo_charset;
+		$this->assertEqual( bpost_count_words( 'eine gleichung wie 1 + 2 = 9 /' ), 3 );
+		$this->assertEqual( bpost_count_words( 'mixed with the 3 ümläuts: äää ööö üüü ÄÄÄ ÖÖÖ	ÜÜÜ' ), 10 );
 
-		if( ! can_convert_charsets( 'ISO-8859-1', 'UTF-8' ) )
-		{
-			echo 'Skipping tests (cannot convert charsets)...<br />', "\n";
-			return;
-		}
-
-		$old_evo_charset = $evo_charset;
-		$evo_charset = 'ISO-8859-1';
-
-		$this->assertEqual( bpost_count_words( convert_charset( 'eine gleichung wie 1 + 2 = 9 /', 'ISO-8859-1', 'UTF-8' ) ), 3 );
-		$this->assertEqual( bpost_count_words( convert_charset( 'mixed with the 3 ümläuts: äää ööö üüü ÄÄÄ ÖÖÖ	ÜÜÜ', 'ISO-8859-1', 'UTF-8' ) ), 10 );
-
-		$evo_charset = 'UTF-8';
 		$this->assertEqual( bpost_count_words( 'möre (again 3) ümläüts... öö üü ää ÄÄ ÖÖ ÜÜ' ), 9 );
 		$this->assertEqual( bpost_count_words( 'russian: Расширенные возможности - это удобный' ), 5 );
 		$this->assertEqual( bpost_count_words( 'A versão foi apelidade de Tilqi, porque era aniversário dele. numbers: 42' ), 11 );
 		$this->assertEqual( bpost_count_words( 'HTML tags -> <a href="http://b2evolution.net" target="_blank">visit b2evo!</a>. Some other chars: "\' \' " <<< < >>> > ``` -- versão удобный überladen' ), 10 );
-
-		$evo_charset = $old_evo_charset;
 	}
 }
 

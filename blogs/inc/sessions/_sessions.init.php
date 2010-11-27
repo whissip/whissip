@@ -118,7 +118,7 @@ class sessions_Module extends Module
 				'separator' => true,
 			);
 			$entries['stats'] = array(
-				'text' => T_('Blog stats').'&hellip;',
+				'text' => T_('Blog stats').'…',
 				'href' => $admin_url.'?ctrl=stats&amp;tab=summary&amp;tab3=global&amp;blog='.$Blog->ID,
 			);
 
@@ -144,15 +144,15 @@ class sessions_Module extends Module
 
 			$entries = array(
 				'stats' => array(
-						'text' => T_('Global Stats').'&hellip;',
+						'text' => T_('Global Stats').'…',
 						'href' => $admin_url.'?ctrl=stats&amp;tab=summary&amp;tab3=global&amp;blog=0',
 					 ),
 				'sessions' => array(
-						'text' => T_('User sessions').'&hellip;',
+						'text' => T_('User sessions').'…',
 						'href' => $admin_url.'?ctrl=stats&amp;tab=sessions&amp;tab3=login&amp;blog=0',
 					 ),
 				'goals' => array(
-						'text' => T_('Goals').'&hellip;',
+						'text' => T_('Goals').'…',
 						'href' => $admin_url.'?ctrl=goals',
 					 ),
 				);

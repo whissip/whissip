@@ -1034,8 +1034,8 @@ class Plugin
 	function AfterCollectionDelete( & $params )
 	{
 	}
-	
-	
+
+
 	/**
 	 * Event handler: Defines blog kinds, their names and description.
 	 * Define blog settings in {@link Plugin::InitCollectionKinds()} method of your plugin.
@@ -1050,8 +1050,8 @@ class Plugin
 	{
 		return array();
 	}
-	
-	
+
+
 	/**
 	 * Event handler: Defines blog settings by its kind. Use {@link get_collection_kinds()} to return
 	 * an array of available blog kinds and their names.
@@ -2583,11 +2583,13 @@ class Plugin
 	{
 		global $htsrv_url, $htsrv_url_sensitive;
 		global $ReqHost, $Blog;
+		global $base_tag_set;
 
 		$base = substr($ReqHost, 0, 6) == 'https:' ? $htsrv_url_sensitive : $htsrv_url;
 
-		if( ! $abs && strpos( $base, $ReqHost ) === 0 )
-		{ // cut off $ReqHost if the resulting URL starts with it:
+		if( ! $abs && strpos( $base, $ReqHost ) === 0
+			&& (empty($base_tag_set) || strpos($base, $base_tag_set) === 0) )
+		{ // cut off $ReqHost if the resulting URL starts with it (and we're not on a BASE url (or it is the same)):
 			$base = substr($base, strlen($ReqHost));
 		}
 
@@ -2596,7 +2598,6 @@ class Plugin
 		{
 			$r .= $glue.'params='.rawurlencode(serialize( $params ));
 		}
-
 		return $r;
 	}
 
@@ -2906,8 +2907,6 @@ class Plugin
 	/**
 	 * Get the help file for a Plugin ID. README.LOCALE.html will take
 	 * precedence above the general (english) README.html.
-	 *
-	 * @todo Handle encoding of files (to $io_charset)
 	 *
 	 * @return false|string
 	 */

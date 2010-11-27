@@ -244,7 +244,6 @@ class tinymce_plugin extends Plugin
 		if( $this->Settings->get('use_gzip_compressor') )
 		{
 			$url = $base_path.'tiny_mce_gzip.js';
-			// dh> suffix of the file to compress. Looking at tiny_mce_gzip.php it only allows "_src". Needs investigation - maybe the tiny_mce_jquery.js would actually work when "_jquery" would be allowed.
 		}
 		else
 		{

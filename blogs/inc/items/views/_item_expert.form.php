@@ -46,8 +46,6 @@ global $Plugins;
  */
 global $Settings;
 
-global $pagenow;
-
 global $Session;
 
 global $mode, $admin_url, $rsc_url;
@@ -213,9 +211,6 @@ $Form->begin_form( '', '', $params );
 		}
 	}
 
-	//add slug_changed field - needed for slug trim, if this field = 0 slug will trimmed
-	$Form->hidden( 'slug_changed', 0 );
-
 	echo '<tr><td class="label"><label for="post_urltitle" title="'.T_('&quot;slug&quot; to be used in permalinks').'"><strong>'.T_('URL title "slug"').':</strong></label></td>';
 	echo '<td class="input" width="97%">';
 	$Form->text_input( 'post_urltitle', $edited_Item->get('urltitle'), 40, '', '', array('maxlength'=>210, 'style'=>'width: 100%;') );
@@ -236,7 +231,7 @@ $Form->begin_form( '', '', $params );
 	$Form->text_input( 'metakeywords', $edited_Item->get('metakeywords'), 40, '', '', array('maxlength'=>255, 'style'=>'width: 100%;') );
 	echo '</td><td width="1"><!-- for IE7 --></td></tr>';
 
-	echo '<tr><td class="label"><label for="item_tags"><strong>'.T_('Tags').':</strong> <span class="notes">'.T_('sep by ,').'</span></label></label></td>';
+	echo '<tr><td class="label"><label for="item_tags"><strong>'.T_('Tags').':</strong> <span class="notes">'.T_('sep by ,').'</span></label></td>';
 	echo '<td class="input" width="97%">';
 	$Form->text_input( 'item_tags', $item_tags, 40, '', '', array('maxlength'=>255, 'style'=>'width: 100%;') );
 	echo '</td><td width="1"><!-- for IE7 --></td></tr>';
@@ -435,10 +430,6 @@ echo_autocomplete_tags();
 if( empty( $edited_Item->ID ) )
 { // if we creating new post - we add slug autofiller JS
 	echo_slug_filler();
-}
-else
-{	// if we are editing the post
-	echo_set_slug_changed();
 }
 // New category input box:
 echo_onchange_newcat();

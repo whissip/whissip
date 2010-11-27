@@ -79,7 +79,7 @@ if( $use_l10n )
 		static $_trans = array();
 
 		global $current_locale, $locales, $locales_path, $plugins_path;
-		global $evo_charset, $Debuglog;
+		global $Debuglog;
 
 		$params = array_merge( array(
 								'ext_transarray' => NULL,
@@ -97,14 +97,16 @@ if( $use_l10n )
 			$req_locale = $current_locale;
 		}
 
+		// short circuit: no translation nor conversation necessary:
+		if( $req_locale == 'en-US' ) {
+			return $string;
+		}
+
 		if( ! isset( $locales[$req_locale]['messages'] ) )
 		{
-			$Debuglog->add( 'No messages file path for locale. $locales["'
-					.$req_locale.'"] is '.var_export( @$locales[$req_locale], true ), 'locale' );
-
-			if( ! empty( $evo_charset ) ) // this extra check is needed, because $evo_charset may not yet be determined.. :/
-			{
-				$string = convert_charset( $string, $evo_charset, 'iso-8859-1' );
+			if( is_a($Debuglog, 'Log') ) {
+				$Debuglog->add( 'No messages file path for locale. $locales["'
+						.$req_locale.'"] is '.var_export( @$locales[$req_locale], true ), 'locale' );
 			}
 			return $string;
 		}
@@ -152,7 +154,7 @@ if( $use_l10n )
 			{
 				if( ! isset($trans[$messages]['__meta__']) )
 				{ // Unknown/old messages format (< version 1):
-					$Debuglog->add( 'Found deprecated messages format (no __meta__ info).', 'locale' );
+					$Debuglog->add( 'Found deprecated messages format (no __meta__ info): '.$messages, 'locale' );
 					// Translate keys (e.g. 'foo\nbar') to real strings ("foo\nbar")
 					// Doing this here for all strings, is actually faster than doing it on key lookup (like it has been done before always)
 					foreach($trans[$messages] as $k => $v)
@@ -201,16 +203,14 @@ if( $use_l10n )
 			//$Debuglog->add( 'String ['.$string.'] not found', 'locale' );
 			// Return the English string:
 			$r = $string;
-			$messages_charset = 'iso-8859-1'; // our .php file encoding
+			$messages_charset = 'utf-8'; // our .php file encoding
 		}
 
-		if( ! empty($evo_charset) ) // this extra check is needed, because $evo_charset may not yet be determined.. :/
+		if( strtolower($messages_charset) != 'utf-8' )
 		{
-			$r = convert_charset( $r, $evo_charset, $messages_charset );
-		}
-		else
-		{
-			$Debuglog->add(sprintf('Warning: evo_charset not set to translate "%s"', htmlspecialchars($string)), 'locale');
+			$GLOBALS['Timer']->resume('T_(): convert_charset');
+			$r = convert_charset( $r, 'utf-8', $messages_charset );
+			$GLOBALS['Timer']->pause('T_(): convert_charset');
 		}
 
 		if( $params['for_helper'] )
@@ -324,8 +324,7 @@ function locale_activate( $locale )
 
 	// Memorize new locale:
 	$current_locale = $locale;
-	// Memorize new charset:
-	$current_charset = $locales[ $locale ][ 'charset' ];
+	// NOTE: no $current_charset switching in whissip
 	return true;
 }
 
@@ -888,7 +887,7 @@ function convert_charset( $string, $dest_charset, $src_charset )
 	{
 		$GLOBALS['Timer']->resume('convert_charset', false );
 	}
-	if( $dest_charset == $src_charset || $dest_charset == '' /* may happen if $evo_charset is not defined yet */ )
+	if( $dest_charset == $src_charset )
 	{ // no conversation required
 		if( isset($GLOBALS['Timer']) )
 		{
@@ -897,11 +896,7 @@ function convert_charset( $string, $dest_charset, $src_charset )
 		return $string;
 	}
 
-	if( function_exists('mb_convert_variables') )
-	{ // mb_string extension:
-		mb_convert_variables( $dest_charset, $src_charset, $string );
-	}
-	// pre_dump( $dest_charset, $src_charset, $string );
+	mb_convert_variables( $dest_charset, $src_charset, $string );
 
 	if( isset($GLOBALS['Timer']) )
 	{
@@ -924,22 +919,18 @@ function can_convert_charsets( $dest_charset, $src_charset )
 		return false;
 	}
 
-	if( function_exists('mb_internal_encoding') )
-	{ // mb_string extension:
-		$orig = mb_internal_encoding();
+	$orig = mb_internal_encoding();
 
-		$r = false;
-		if( @mb_internal_encoding($dest_charset) && @mb_internal_encoding($src_charset) )
-		{ // we can set both encodings, so we should be able to convert:
-			$r = true;
-		}
-
-		mb_internal_encoding($orig);
-		return $r;
+	$r = false;
+	if( @mb_internal_encoding($dest_charset) && @mb_internal_encoding($src_charset) )
+	{ // we can set both encodings, so we should be able to convert:
+		$r = true;
 	}
 
-	return false;
+	mb_internal_encoding($orig);
+	return $r;
 }
+
 
 
 /**
@@ -966,101 +957,20 @@ function check_encoding($str, $encoding)
 	{
 		return mb_check_encoding($str, $encoding);
 	}
-	
+
 	return NULL;
 }
-
 
 /**
  * Init charset handling between Input/Output ($io_charset) and the internal
  * handling ($evo_charset).
- *
- * Check and possibly adjust {@link $evo_charset}.
- *
- * @staticvar boolean Used to only start mb_output_handler once
- * @param string I/O (input/output) charset to use
- * @return boolean true, if encoding has been changed
+ * Compatibility function for legacy b2evo code.
+ * DOES NOTHING.
+ * @deprecated
+ * @return boolean true
  */
 function init_charsets( $req_io_charset )
 {
-	static $mb_output_handler_started;
-	global $io_charset, $evo_charset, $Debuglog, $DB;
-	global $force_io_charset_if_accepted;
-
-	if( $req_io_charset == $io_charset )
-	{ // no conversation/init needed
-		return false;
-	}
-
-	// check, if we want to force a specific charset (e.g. 'utf-8'):
-	if( ! empty($force_io_charset_if_accepted) )
-	{ // we want to force a specific charset:
-		if( ! isset($_SERVER['HTTP_ACCEPT_CHARSET']) // all allowed
-			|| preg_match( '~\b(\*|'.$force_io_charset_if_accepted.')\b~', $_SERVER['HTTP_ACCEPT_CHARSET'] ) )
-		{
-			$req_io_charset = $force_io_charset_if_accepted; // pretend that the first one has been requested
-		}
-	}
-
-	if( $req_io_charset == $io_charset )
-	{ // no conversation/init needed
-		return false;
-	}
-
-	$io_charset = $req_io_charset;
-
-	if( empty($evo_charset) )
-	{ // empty evo_charset follows I/O charset:
-		// TODO: $evo_charset will not follow, if it has followed before.. (because not empty anymore)
-		$Debuglog->add( '$evo_charset follows $io_charset ('.$io_charset.').', array('locale') );
-		$evo_charset = $io_charset;
-	}
-	elseif( $evo_charset != $io_charset )
-	{ // we have to convert for I/O
-		// TODO: dh> $io_charset has to forcefully follow $evo_charset, if we cannot convert, e.g. utf-8/iso-8859-1
-		if( ! function_exists('mb_convert_encoding') )
-		{
-			$Debuglog->add( '$evo_charset differs from $io_charset, but mbstrings is not available - cannot convert I/O to internal charset!', array('errors','locale') );
-			$evo_charset = $io_charset; // we cannot convert I/O to internal charset
-		}
-		else
-		{ // check if the encodings are supported:
-			// NOTE: mb_internal_encoding() is the best way to find out if the encoding is supported
-			$old_mb_internal_encoding = mb_internal_encoding();
-			if( ! @mb_internal_encoding($io_charset) )
-			{
-				$Debuglog->add( 'Cannot I/O convert because I/O charset ['.$io_charset.'] is not supported by mbstring!', array('error','locale') );
-				$evo_charset = $io_charset;
-				mb_internal_encoding($old_mb_internal_encoding);
-			}
-			elseif( ! @mb_internal_encoding($evo_charset) )
-			{
-				$Debuglog->add( 'Cannot I/O convert because $evo_charset='.$evo_charset.' is not supported by mbstring!', array('error','locale') );
-				$evo_charset = $io_charset;
-				mb_internal_encoding($old_mb_internal_encoding);
-			}
-			else
-			{ // we can convert between I/O
-				mb_http_output( $io_charset );
-				if( ! $mb_output_handler_started )
-				{
-					ob_start( 'mb_output_handler' ); // NOTE: this will send a Content-Type header by itself for "text/..."
-					$mb_output_handler_started = true;
-					$Debuglog->add( 'Started mb_output_handler.', 'locale' );
-				}
-			}
-		}
-	}
-
-	// Make sure the DB send us text in the same charset as $evo_charset (override whatever may have been set before)
-	if( isset($DB) ) // not available in /install/index.php
-	{	// Set encoding for MySQL connection:
-		$DB->set_connection_charset( $evo_charset );
-	}
-
-	$Debuglog->add( 'evo_charset: '.$evo_charset, 'locale' );
-	$Debuglog->add( 'io_charset: '.$io_charset, 'locale' );
-
 	return true;
 }
 

@@ -79,7 +79,7 @@ class ping_b2evonet_plugin extends Plugin
 	function ItemSendPing( & $params )
 	{
 		global $evonetsrv_host, $evonetsrv_port, $evonetsrv_uri;
-		global $debug, $baseurl, $instance_name, $evo_charset;
+		global $debug, $baseurl, $instance_name;
 
     /**
 		 * @var Blog
@@ -93,10 +93,10 @@ class ping_b2evonet_plugin extends Plugin
 				new xmlrpcval($item_Blog->ID),    // id
 				new xmlrpcval($baseurl),		      // user -- is this unique enough?
 				new xmlrpcval($instance_name),		// pass -- fp> TODO: do we actually want randomly generated instance names?
-				new xmlrpcval(convert_charset( $item_Blog->get('name'), 'utf-8', $evo_charset ) ),
-				new xmlrpcval(convert_charset( $item_Blog->get('url'), 'utf-8', $evo_charset ) ),
+				new xmlrpcval($item_Blog->get('name')),
+				new xmlrpcval($item_Blog->get('url')),
 				new xmlrpcval($item_Blog->locale),
-				new xmlrpcval(convert_charset( $params['Item']->get('title'), 'utf-8', $evo_charset ) ),
+				new xmlrpcval($params['Item']->get('title')),
 			)  );
 		$result = $client->send($message);
 

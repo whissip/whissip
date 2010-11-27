@@ -64,6 +64,19 @@ $db_config['aliases'] = array(
 	);
 
 
+// Whissip hack: setup encoding and appropriate vars used by b2evo
+mb_internal_encoding('UTF-8');
+
+/**
+ * For compatibility, define $io_charset, $evo_charset and $current_charset
+ * Especially $io_charset gets used by plugins on custom output pages.
+ */
+$evo_charset = 'utf-8';
+$io_charset = 'utf-8';
+$current_charset = 'utf-8';
+$db_storage_charset = 'utf8';
+
+
 /**
  * Controller mappings.
  *
@@ -503,35 +516,35 @@ class _core_Module extends Module
 			$entries['manage']['title'] = T_('Manage the contents of this blog');
 			$entries['manage']['entries'] = array(
 					'posts' => array(
-							'text' => T_('Posts').'&hellip;',
+							'text' => T_('Posts').'…',
 							'href' => $items_url.'&amp;tab=list',
 						),
 					'pages' => array(
-							'text' => T_('Pages').'&hellip;',
+							'text' => T_('Pages').'…',
 							'href' => $items_url.'&amp;tab=pages',
 						),
 					'intros' => array(
-							'text' => T_('Intro posts').'&hellip;',
+							'text' => T_('Intro posts').'…',
 							'href' => $items_url.'&amp;tab=intros',
 						),
 					'podcasts' => array(
-							'text' => T_('Podcast episodes').'&hellip;',
+							'text' => T_('Podcast episodes').'…',
 							'href' => $items_url.'&amp;tab=podcasts',
 						),
 					'links' => array(
-							'text' => T_('Sidebar links').'&hellip;',
+							'text' => T_('Sidebar links').'…',
 							'href' => $items_url.'&amp;tab=links',
 						),
 				);
 			if( $Blog->get_setting( 'use_workflow' ) )
 			{	// We want to use workflow properties for this blog:
 				$entries['manage']['entries']['tracker'] = array(
-						'text' => T_('Tracker').'&hellip;',
+						'text' => T_('Tracker').'…',
 						'href' => $items_url.'&amp;tab=tracker',
 					);
 			}
 			$entries['manage']['entries']['full'] = array(
-					'text' => T_('All Items').'&hellip;',
+					'text' => T_('All Items').'…',
 					'href' => $items_url.'&amp;tab=full',
 				);
 		}
@@ -556,7 +569,7 @@ class _core_Module extends Module
 			if( $perm_comments )
 			{	// Comments:
 				$entries['manage']['entries']['comments'] = array(
-						'text' => T_('Comments').'&hellip;',
+						'text' => T_('Comments').'…',
 						'href' => $admin_url.'?ctrl=comments&amp;blog='.$Blog->ID.'&amp;filter=restore',
 					);
 			}
@@ -564,7 +577,7 @@ class _core_Module extends Module
 			if( $perm_files )
 			{	// FM enabled and permission to view files:
 				$entries['manage']['entries']['files'] = array(
-						'text' => T_('Files').'&hellip;',
+						'text' => T_('Files').'…',
 						'href' => $admin_url.'?ctrl=files&amp;blog='.$blog,
 					);
 			}
@@ -572,7 +585,7 @@ class _core_Module extends Module
 			if( $perm_chapters )
 			{	// Chapters:
 				$entries['manage']['entries']['chapters'] = array(
-						'text' => T_('Categories').'&hellip;',
+						'text' => T_('Categories').'…',
 						'href' => $admin_url.'?ctrl=chapters&amp;blog='.$Blog->ID,
 					);
 			}
@@ -583,7 +596,7 @@ class _core_Module extends Module
 		if( $current_User->check_perm( 'options', 'view' ) )
 		{	// Permission to access system info
 			$entries['b2evo']['entries']['system'] = array(
-					'text' => T_('About this system').'&hellip;',
+					'text' => T_('About this system').'…',
 					'href' => $admin_url.'?ctrl=system',
 				);
 			$entries['b2evo']['entries'][] = array(
@@ -602,23 +615,23 @@ class _core_Module extends Module
 
 			$entries['customize']['entries'] = array(
 				'general' => array(
-						'text' => T_('Blog properties').'&hellip;',
+						'text' => T_('Blog properties').'…',
 						'href' => $admin_url.'?ctrl=coll_settings'.$blog_param,
 					),
 				'features' => array(
-						'text' => T_('Blog features').'&hellip;',
+						'text' => T_('Blog features').'…',
 						'href' => $admin_url.'?ctrl=coll_settings&amp;tab=features'.$blog_param,
 					),
 				'skin' => array(
-						'text' => T_('Blog skin').'&hellip;',
+						'text' => T_('Blog skin').'…',
 						'href' => $admin_url.'?ctrl=coll_settings&amp;tab=skin'.$blog_param,
 					),
 				'widgets' => array(
-						'text' => T_('Blog widgets').'&hellip;',
+						'text' => T_('Blog widgets').'…',
 						'href' => $admin_url.'?ctrl=widgets'.$blog_param,
 					),
 				'urls' => array(
-						'text' => T_('Blog URLs').'&hellip;',
+						'text' => T_('Blog URLs').'…',
 						'href' => $admin_url.'?ctrl=coll_settings&amp;tab=urls'.$blog_param,
 					),
 			);
@@ -634,7 +647,7 @@ class _core_Module extends Module
 			if( $perm_spam )
 			{
 				$entries['tools']['entries']['antispam'] = array(
-						'text' => T_('Antispam blacklist').'&hellip;',
+						'text' => T_('Antispam blacklist').'…',
 						'href' => $admin_url.'?ctrl=antispam',
 					);
 			}
@@ -642,7 +655,7 @@ class _core_Module extends Module
 			if( $perm_options )
 			{
 				$entries['tools']['entries']['crontab'] = array(
-						'text' => T_('Scheduler').'&hellip;',
+						'text' => T_('Scheduler').'…',
 						'href' => $admin_url.'?ctrl=crontab',
 					);
 			}
@@ -650,7 +663,7 @@ class _core_Module extends Module
 			if( $perm_slugs )
 			{
 				$entries['tools']['entries']['slugs'] = array(
-						'text' => T_('Slugs').'&hellip;',
+						'text' => T_('Slugs').'…',
 						'href' => $admin_url.'?ctrl=slugs' );
 			}
 		}
@@ -698,7 +711,7 @@ class _core_Module extends Module
 					'href' => get_user_profile_url(),
 					'entries' => array(
 						'profile' => array(
-								'text' => T_('Edit user profile').'&hellip;',
+								'text' => T_('Edit user profile').'…',
 								'href' => get_user_profile_url(),
 							),
 						),
@@ -714,7 +727,7 @@ class _core_Module extends Module
 		if( $subs_url = get_user_subs_url() )
 		{
 			$entries['userprefs']['entries']['subscriptions'] = array(
-					'text' => T_('Email subscriptions').'&hellip;',
+					'text' => T_('Email subscriptions').'…',
 					'href' => $subs_url,
 				);
 		}

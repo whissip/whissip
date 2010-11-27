@@ -103,18 +103,18 @@ $Debuglog->add( 'vars: $ReqPath: '.$ReqPath, 'request' );
 
 // on which page are we ?
 /* old:
-$pagenow = explode( '/', $_SERVER['PHP_SELF'] );
+$pagenow = explode( '/', $_SERVER['SCRIPT_NAME'] );
 $pagenow = trim( $pagenow[(count($pagenow) - 1)] );
 $pagenow = explode( '?', $pagenow );
 $pagenow = $pagenow[0];
 */
-// find precisely the first occurrence of something.php in PHP_SELF, extract that and ignore any extra path.
-if( ! preg_match( '#/([A-Za-z0-9_\-]+\.php[0-9]?)#', $_SERVER['PHP_SELF'], $matches ))
+// find precisely the first occurrence of something.php in SCRIPT_NAME, extract that and ignore any extra path.
+if( ! preg_match( '#/([A-Za-z0-9_\-]+\.php[0-9]?)#', $_SERVER['SCRIPT_NAME'], $matches ))
 {
-	debug_die('Can\'t identify current .php script name in PHP_SELF.');
+	debug_die('Can\'t identify current .php script name in SCRIPT_NAME ('.htmlspecialchars($_SERVER['SCRIPT_NAME']).').');
 }
 $pagenow = $matches[1];
-//pre_dump( '', $_SERVER['PHP_SELF'], $pagenow );
+//pre_dump( '', $_SERVER['SCRIPT_NAME'], $pagenow );
 
 
 /**
@@ -176,9 +176,6 @@ if( ($locale_from_get = param( 'locale', 'string', NULL, true )) )
  * Activate default locale:
  */
 locale_activate( $default_locale );
-
-// Set encoding for MySQL connection:
-$DB->set_connection_charset( $current_charset );
 
 
 /**

@@ -49,7 +49,7 @@ if( ! isset($GLOBALS['files_Module']) )
 // Check permission (#1):
 if( ! isset($current_User) )
 {
-	debug_die( 'No permissions to view file (not logged in)!' );
+	debug_die( 'No permissions to view file (not logged in)!', '403 Forbidden' );
 }
 
 // We need this param early to check blog perms, if possible
@@ -88,7 +88,7 @@ $selected_File = new File( $FileRoot->type , $FileRoot->in_type_ID, $path, true 
 headers_content_mightcache( 'text/html' );		// In most situations, you do NOT want to cache dynamic content!
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xml:lang="<?php locale_lang() ?>" lang="<?php locale_lang() ?>">
+<html xml:lang="<?php locale_lang() ?>" lang="<?php locale_lang() ?>" xmlns="http://www.w3.org/1999/xhtml">
 <head>
 	<title><?php echo $selected_File->dget('name').' ('.T_('Preview').')'; ?></title>
 	<link href="<?php echo $rsc_url ?>css/viewfile.css" rel="stylesheet" type="text/css" />
@@ -140,114 +140,60 @@ switch( $viewtype )
  		/*
 		 * Text file view:
 		 */
-		if( ($buffer = @file( $selected_File->get_full_path() )) !== false )
-		{ // Display raw file
-			param( 'showlinenrs', 'integer', 0 );
+		// Display raw file, highlighted
 
-			$buffer_lines = count( $buffer );
+		$showlines = param( 'l', 'integer', 0, true );
 
-			echo '<div class="fileheader">';
-
-			echo '<p>';
-			echo T_('File').': <strong>'.$selected_File->dget('name').'</strong>';
-			echo ' &middot; ';
-			echo T_('Title').': <strong>'.$selected_File->dget( 'title' ).'</strong>';
-			echo '</p>';
-
-	 		echo '<p>';
-			echo T_('Description').': '.$selected_File->dget( 'desc' );
-			echo '</p>';
-
-
-			if( !$buffer_lines )
-			{
-				echo '<p>** '.T_('Empty file!').' ** </p></div>';
-			}
-			else
-			{
-				echo '<p>';
-				printf( T_('%d lines'), $buffer_lines );
-
-				$linenr_width = strlen( $buffer_lines+1 );
-
-				echo ' [';
-				?>
-				<noscript type="text/javascript">
-					<a href="<?php echo $selected_File->get_url().'&amp;showlinenrs='.(1-$showlinenrs); ?>">
-
-					<?php echo $showlinenrs ? T_('Hide line numbers') : T_('Show line numbers');
-					?></a>
-				</noscript>
-				<script type="text/javascript">
-					<!--
-					document.write('<a id="togglelinenrs" href="javascript:toggle_linenrs()">toggle</a>');
-
-					showlinenrs = <?php var_export( !$showlinenrs ); ?>;
-
-					toggle_linenrs();
-
-					function toggle_linenrs()
-					{
-						if( showlinenrs )
-						{
-							var replace = document.createTextNode('<?php echo TS_('Show line numbers') ?>');
-							showlinenrs = false;
-							var text = document.createTextNode( '' );
-							for( var i = 0; i<document.getElementsByTagName("span").length; i++ )
-							{
-								if( document.getElementsByTagName("span")[i].hasChildNodes() )
-									document.getElementsByTagName("span")[i].firstChild.data = '';
-								else
-								{
-									document.getElementsByTagName("span")[i].appendChild( text );
-								}
-							}
-						}
-						else
-						{
-							var replace = document.createTextNode('<?php echo TS_('Hide line numbers') ?>');
-							showlinenrs = true;
-							for( var i = 0; i<document.getElementsByTagName("span").length; i++ )
-							{
-								var text = String(i+1);
-								var upto = <?php echo $linenr_width ?>-text.length;
-								for( var j=0; j<upto; j++ ){ text = ' '+text; }
-								if( document.getElementsByTagName("span")[i].hasChildNodes() )
-									document.getElementsByTagName("span")[i].firstChild.data = ' '+text+' ';
-								else
-									document.getElementsByTagName("span")[i].appendChild( document.createTextNode( ' '+text+' ' ) );
-							}
-						}
-
-						document.getElementById('togglelinenrs').replaceChild(replace, document.getElementById( 'togglelinenrs' ).firstChild);
-					}
-					-->
-				</script>
-				<?php
-
-				echo ']</p>';
-				echo '</div>';
-
-				echo '<pre class="rawcontent">';
-
-				for( $i = 0; $i < $buffer_lines; $i++ )
-				{
-					echo '<span name="linenr" class="linenr">';
-					if( $showlinenrs )
-					{
-						echo ' '.str_pad($i+1, $linenr_width, ' ', STR_PAD_LEFT).' ';
-					}
-					echo '</span>'.htmlspecialchars( str_replace( "\t", '  ', $buffer[$i] ) );  // TODO: customize tab-width
-				}
-
-	  		echo '</pre>';
-
-				echo '<div class="eof">** '.T_('End Of File').' **</div>';
-			}
+		load_funcs( '_ext/geshi/geshi.php' );
+		$geshi = new GeSHi();
+		$geshi->load_from_file($selected_File->get_full_path()); // autodetects language from ext
+		if( $geshi->error == GESHI_ERROR_FILE_NOT_READABLE )
+		{
+			echo '<p class="error">'.sprintf( T_('The file &laquo;%s&raquo; could not be accessed!'), $selected_File->get_rdfs_rel_path( $selected_File ) ).'</p>';
 		}
 		else
 		{
-			echo '<p class="error">'.sprintf( T_('The file &laquo;%s&raquo; could not be accessed!'), $selected_File->get_rdfs_rel_path( $selected_File ) ).'</p>';
+			// Setup GeSHi
+			// TODO: dh> abstract this into some central method, e.g. get_Geshi.
+			$geshi->set_header_type(GESHI_HEADER_NONE);
+			$geshi->set_tab_width(2);
+			if( $showlines ) {
+				$geshi->enable_line_numbers(GESHI_NORMAL_LINE_NUMBERS);
+			}
+			$geshi->set_link_target('_blank');
+			$geshi->set_line_style('');
+
+			# File header
+			echo '<div class="fileheader">';
+			echo '<span class="file">';
+			echo T_('File').': <strong>'.$selected_File->dget('name').'</strong>';
+			echo '</span> ';
+
+			# Get title and description of file - if any
+			$info = array();
+			foreach( array('title'=>T_('Title'), 'desc'=>T_('Description')) as $k => $kdesc ) {
+				$v = $selected_File->dget($k);
+				if( ! strlen($v) )
+					continue;
+				$info[] = sprintf('<span class="file%s">', $k)
+					.htmlspecialchars($kdesc).': <strong>'.$selected_File->dget($k).'</strong>';
+			}
+
+			# Number of lines
+			$info[] = '<span class="filelines"><a href="'.regenerate_url('l', 'l='.(int)!$showlines).'">'
+				.( $showlines ? T_('Hide line numbers') : T_('Display line numbers') )
+				.'</a></span>';
+
+			# Implode additional info - if any
+			if( $info ) {
+				echo ' &middot; '.implode(' &middot; ', $info);
+			}
+			echo '</div>'; // fileheader
+
+			// BODY/CODE:
+			echo '<div class="filecode filebody">'.$geshi->parse_code().'</div>';
+
+			echo '<div class="eof">** '.T_('End Of File').' **</div>';
 		}
 		echo '</div>';
 		break;

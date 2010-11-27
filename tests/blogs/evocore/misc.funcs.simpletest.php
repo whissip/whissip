@@ -82,6 +82,7 @@ class MiscFuncsTestCase extends EvoUnitTestCase
 				),
 			'all' => array(
 				'my.name@example.org',
+				'user@123host.com',
 				),
 			);
 
@@ -105,6 +106,9 @@ class MiscFuncsTestCase extends EvoUnitTestCase
 				'a @ example.org',
 				'a@example.org ',
 				' example.org',
+				'foo@-example.com',
+				'user@.example.com',
+				'user@example..com',
 				),
 			);
 
@@ -162,8 +166,6 @@ class MiscFuncsTestCase extends EvoUnitTestCase
 
 	function test_validate_url()
 	{
-		$this->change_global('evo_charset', 'latin1');
-
 		// valid:
 		foreach( array(
 			'http://b2evolution.net',
@@ -172,8 +174,8 @@ class MiscFuncsTestCase extends EvoUnitTestCase
 			'http://user:pass@example.com/path',
 			'mailto:example@example.org',
 			'mailto:example@example.org?subject=TEST',
-			'http://l�u.de/',
-			'http://l�u.de/foo bar',
+			'http://läu.de/',
+			'http://läu.de/foo bar',
 			) as $url )
 		{
 			$r = validate_url( $url, 'commenting' );
@@ -188,7 +190,7 @@ class MiscFuncsTestCase extends EvoUnitTestCase
 			'http://user:pass@example.com/path',
 			'mailto:example@example.org',
 			'mailto:example@example.org?subject=TEST',
-			'http://l�u.de/',
+			'http://läu.de/',
 			'/foobar',
 			'/foobar#anchor',
 			'#anchor',
@@ -279,10 +281,10 @@ class MiscFuncsTestCase extends EvoUnitTestCase
 		$this->assertEqual( get_base_domain('www-2.host-name.tld'), 'host-name.tld' );
 
 		// IDN:
-		$this->assertEqual( get_base_domain('k�se'), 'k�se' );
-		$this->assertEqual( get_base_domain('�l.de'), '�l.de' );
-		$this->assertEqual( get_base_domain('www-�l.k�se-�l.de'), 'k�se-�l.de' );
-		$this->assertEqual( get_base_domain('sub1.sub2.pr�hl.de'), 'sub2.pr�hl.de' );
+		$this->assertEqual( get_base_domain('käse'), 'käse' );
+		$this->assertEqual( get_base_domain('öl.de'), 'öl.de' );
+		$this->assertEqual( get_base_domain('www-öl.käse-öl.de'), 'käse-öl.de' );
+		$this->assertEqual( get_base_domain('sub1.sub2.pröhl.de'), 'sub2.pröhl.de' );
 
 		// Numerical, should be kept:
 		$this->assertIdentical( get_base_domain( '123.123.123.123' ), '123.123.123.123' );
@@ -340,14 +342,6 @@ class MiscFuncsTestCase extends EvoUnitTestCase
 	 */
 	function test_format_to_output()
 	{
-		$this->change_global('evo_charset', 'latin1');
-
-		$this->assertEqual( format_to_output('<a href="">link</a>  text', 'text'), 'link text' );
-		$this->assertEqual( format_to_output('<b>���</b>', 'htmlbody'), '<b>&#233;&#234;&#232;</b>' );
-		$this->assertEqual( format_to_output('<b>���</b>', 'xml'), '&#233;&#234;&#232;' );
-		$this->assertEqual( format_to_output( chr(128).'&#128;' ), '&#8364;&#8364;' ); // Euro sign, Windows style
-
-		$this->change_global('evo_charset', 'utf-8');
 		$this->assertEqual( format_to_output('<a href="">link</a>  text', 'text'), 'link text' );
 		$this->assertEqual( format_to_output('<b>éêèë</b>', 'htmlbody'), '<b>éêèë</b>' );
 		$this->assertEqual( format_to_output('<b>éêèë</b>', 'xml'), 'éêèë' );
@@ -375,13 +369,13 @@ class MiscFuncsTestCase extends EvoUnitTestCase
 	 */
 	function test_convert_charset()
 	{
-		$this->assertEqual( convert_charset( '����', 'utf-8', 'latin1' ), 'éêèë' );
-		$this->assertEqual( convert_charset( 'éêèë', 'latin1', 'utf-8' ), '����' );
-		$this->assertEqual( convert_charset( 'éêèë', 'Latin1', 'UTF-8' ), '����' );
-		$this->assertEqual( convert_charset( 'éêèë', 'Latin1', 'Utf8' ), '����' );
+		$this->assertEqual( convert_charset( 'éêèë', 'utf-8', 'latin1' ), 'Ã©ÃªÃ¨Ã«' );
+		$this->assertEqual( convert_charset( 'Ã©ÃªÃ¨Ã«', 'latin1', 'utf-8' ), 'éêèë' );
+		$this->assertEqual( convert_charset( 'Ã©ÃªÃ¨Ã«', 'Latin1', 'UTF-8' ), 'éêèë' );
+		$this->assertEqual( convert_charset( 'Ã©ÃªÃ¨Ã«', 'Latin1', 'Utf8' ), 'éêèë' );
 
 		// THIS ONE will produce NO conversion because 'latin-1' is not a valid charset name for this func
-		$this->assertEqual( convert_charset( '����', 'utf-8', 'latin-1' ), '����' );
+		$this->assertEqual( convert_charset( 'éêèë', 'utf-8', 'latin-1' ), 'éêèë' );
 	}
 
 
@@ -391,11 +385,13 @@ class MiscFuncsTestCase extends EvoUnitTestCase
 	function test_strmaxlen()
 	{
 		$this->assertEqual( strmaxlen('foo', 3), 'foo' );
-		$this->assertEqual( strmaxlen('foo', 2), 'f&hellip;' );
+		$this->assertEqual( strmaxlen('foo', 2), 'f…' );
 		$this->assertEqual( strmaxlen('foo', 2, '.'), 'f.' );
 		$this->assertEqual( strmaxlen('foobar', 6, '...'), 'foobar' );
 		$this->assertEqual( strmaxlen('foobar', 5, '...'), 'fo...' );
 		$this->assertEqual( strmaxlen('foobar', 5, '&amp;&hellip;'), 'foo&amp;&hellip;' );
+
+		$this->assertEqual( strmaxlen('Mü', 2), 'Mü', 'Do not cut utf8 char in the middle' );
 
 		$this->assertEqual( strmaxlen('M?', 2), 'M?', 'Do not cut utf8 char in the middle' );
 
@@ -412,22 +408,22 @@ class MiscFuncsTestCase extends EvoUnitTestCase
 		$this->assertEqual( strmaxlen('1&amp;2', 10, NULL, 'formvalue'), '1&amp;amp;2' );
 
 		# special cases, where entities must not get cut in the middle
-		$this->assertEqual( strmaxlen('1&amp;2', 5, NULL, 'htmlbody'), '1&hellip;' );
-		$this->assertEqual( strmaxlen('1&amp;22', 7, NULL, 'htmlbody'), '1&amp;&hellip;' );
-		$this->assertEqual( strmaxlen('1&amp;2', 3, NULL, 'formvalue'), '1&hellip;' );
-		$this->assertEqual( strmaxlen('1&    2', 3, NULL, 'formvalue'), '1&amp;&hellip;' );
+		$this->assertEqual( strmaxlen('1&amp;2', 5, '&hellip;', 'htmlbody'), '1&hellip;' );
+		$this->assertEqual( strmaxlen('1&amp;22', 7, '&hellip;', 'htmlbody'), '1&amp;&hellip;' );
+		$this->assertEqual( strmaxlen('1&amp;2', 3, '&hellip;', 'formvalue'), '1&hellip;' );
+		$this->assertEqual( strmaxlen('1&    2', 3, '&hellip;', 'formvalue'), '1&amp;&hellip;' );
 		$this->assertEqual( strmaxlen('1&2', 3, NULL, 'formvalue'), '1&amp;2' );
-		$this->assertEqual( strmaxlen('12345678901234567890&amp;', 21, NULL, 'formvalue'),
-			'12345678901234567890&hellip;' );
+		$this->assertEqual( strmaxlen('12345678901234567890&amp;', 21, '…', 'formvalue'),
+			'12345678901234567890…' );
 		$this->assertEqual( strmaxlen('123456789012345&amp;', 21, NULL, 'formvalue'),
 			'123456789012345&amp;amp;' );
 
 		$this->assertEqual( strmaxlen('foo ', 3), 'foo' );
 		$this->assertEqual( strmaxlen('foo ', 4), 'foo' );
-		$this->assertEqual( strmaxlen('foo bar', 3), 'fo&hellip;' );
-		$this->assertEqual( strmaxlen('foo bar', 4), 'foo&hellip;' );
-		$this->assertEqual( strmaxlen('foo bar', 5), 'foo&hellip;' );
-		$this->assertEqual( strmaxlen('foo bar', 6), 'foo b&hellip;' );
+		$this->assertEqual( strmaxlen('foo bar', 3, '&hellip;'), 'fo&hellip;' );
+		$this->assertEqual( strmaxlen('foo bar', 4, '&hellip;'), 'foo&hellip;' );
+		$this->assertEqual( strmaxlen('foo bar', 5, '&hellip;'), 'foo&hellip;' );
+		$this->assertEqual( strmaxlen('foo bar', 6, '&hellip;'), 'foo b&hellip;' );
 
 		// test cut_at_whitespace:
 		$this->assertEqual( strmaxlen('foo bar', 5, ''), 'foo b' );
@@ -439,6 +435,8 @@ class MiscFuncsTestCase extends EvoUnitTestCase
 		$this->assertEqual( strmaxlen("foo\nbar", 2, '', 'raw', true), 'fo' );
 		$this->assertEqual( strmaxlen("foo\nbar", 3, '', 'raw', true), 'foo' );
 		$this->assertEqual( strmaxlen("foo\nbar", 4, '', 'raw', true), 'foo' );
+		$this->assertEqual( strmaxlen("müllers kuh", 9, '', 'raw', true), 'müllers' );
+		$this->assertEqual( strmaxlen("müllers kuh", 8, '', 'raw', true), 'müllers' );
 	}
 
 
@@ -452,7 +450,7 @@ class MiscFuncsTestCase extends EvoUnitTestCase
 		$this->assertEqual( strmaxwords('foo  bar  ', 2), 'foo  bar  ' );
 		$this->assertEqual( strmaxwords('  foo  bar  ', 2), '  foo  bar  ' );
 		$this->assertEqual( strmaxwords('  <img />foo  bar  ', 2), '  <img />foo  bar  ' );
-		$this->assertEqual( strmaxwords('  <img />foo  bar  ', 1), '  <img />foo  &hellip;' );
+		$this->assertEqual( strmaxwords('  <img />foo  bar  ', 1), '  <img />foo  …' );
 	}
 }
 

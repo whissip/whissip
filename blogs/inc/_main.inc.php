@@ -51,6 +51,8 @@ if( !isset($use_hacks) ) $use_hacks = false;
 
 
 if( defined( 'EVO_MAIN_INIT' ) )
+
+
 {	/*
 	 * Prevent double loading since require_once won't work in all situations
 	 * on windows when some subfolders have caps :(
@@ -61,12 +63,25 @@ if( defined( 'EVO_MAIN_INIT' ) )
 define( 'EVO_MAIN_INIT', true );
 
 
+if( version_compare(PHP_VERSION, '5', '<') )
+{
+	die("Fatal error: $app_name requires PHP version 5 or later.");
+}
+
+
 // Initialize the most basic stuff
 require dirname(__FILE__).'/_init_base.inc.php';
 
 
 if( $use_db )
 {
+	load_class( 'files/model/_resourcebundles.class.php', 'ResourceBundles' );
+	/**
+	 * @global $ResourceBundles
+	 */
+	$ResourceBundles = new ResourceBundles();
+
+
 	// Initialize DB connection
 	require dirname(__FILE__).'/_init_db.inc.php';
 

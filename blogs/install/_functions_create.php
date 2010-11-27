@@ -766,6 +766,7 @@ function create_demo_contents()
 	global $DB;
 	global $default_locale;
 	global $Plugins;
+	global $app_name;
 
   /**
    * @var FileRootCache
@@ -989,7 +990,12 @@ function create_demo_contents()
 	// Insert a post into linkblog:
 	$now = date('Y-m-d H:i:s',$timestamp++);
 	$edited_Item = new Item();
-	$edited_Item->insert( 1, 'Francois', '', $now, $cat_linkblog_contrib, array(), 'published',	 'fr-FR', '', 'http://fplanque.com/', 'disabled', array() );
+	$edited_Item->insert( 1, 'Yabba', '', $now, $cat_linkblog_contrib, array(), 'published',	'en-UK', '', 'http://www.innervisions.org.uk/babbles/', 'disabled', array() );
+
+	// Insert a post into linkblog:
+	$now = date('Y-m-d H:i:s',$timestamp++);
+	$edited_Item = new Item();
+	$edited_Item->insert( 1, 'François', '', $now, $cat_linkblog_contrib, array(), 'published',	 'fr-FR', '', 'http://fplanque.com/', 'disabled', array() );
 
 	// Insert a post into linkblog:
 	$now = date('Y-m-d H:i:s',$timestamp++);
@@ -1049,7 +1055,7 @@ function create_demo_contents()
 
 <p>If needed, an evoskin can format info pages differently from regular posts.</p>"), $now, $cat_ann_a,
 		array( $cat_ann_a, $cat_ann_b, $cat_linkblog_b2evo ), 'published', '#', '', '', 'open', array('default'), 1000 );
-	$edit_File = new File( 'shared', 0, 'logos/b2evolution8.png' );
+	$edit_File = new File( 'shared', 0, 'logos/whissip-400w-trans.png' );
 	$edit_File->link_to_Item( $edited_Item );
 
 
@@ -1212,7 +1218,7 @@ function create_demo_contents()
 	// Insert a post:
 	$now = date('Y-m-d H:i:s',$timestamp++);
 	$edited_Item = new Item();
-	$edited_Item->insert( 1, T_("Welcome to b2evolution!"), T_("<p>Four blogs have been created with sample contents:</p>
+	$edited_Item->insert( 1, sprintf( /* TRANS: %s is application name */ T_("Welcome to %s!"), $app_name), T_("<p>Four blogs have been created with sample contents:</p>
 
 <ul>
 	<li><strong>Blog A</strong>: You are currently looking at it. It contains a few sample posts, using simple features of b2evolution.</li>
@@ -1222,7 +1228,7 @@ function create_demo_contents()
 </ul>
 
 <p>You can add new blogs, delete unwanted blogs and customize existing blogs (title, sidebar, blog skin, widgets, etc.) from the Blog Settings tab in the admin interface.</p>"), $now, $cat_ann_a );
-	$edit_File = new File( 'shared', 0, 'logos/b2evolution8.png' );
+	$edit_File = new File( 'shared', 0, 'logos/whissip-400w-trans.png' );
 	$edit_File->link_to_Item( $edited_Item );
 
 

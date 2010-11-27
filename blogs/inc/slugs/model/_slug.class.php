@@ -45,10 +45,10 @@ class Slug extends DataObject
 	 *
 	 * @param object table Database row
 	 */
-	function Slug( $db_row = NULL )
+	function Slug( stdClass $db_row = NULL )
 	{
 		// Call parent constructor:
-		parent::DataObject( 'T_slug', 'slug_', 'slug_ID' );
+		parent::DataObject( 'T_slug', 'slug_', 'slug_ID', '', '', '', '', 'title' );
 
 		$this->delete_restrictions = array(
 				array( 'table'=>'T_items__item', 'fk'=>'post_canonical_slug_ID', 'fk_short'=>'canonical_slug_ID', 'msg'=>T_('%d related post') ),

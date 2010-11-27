@@ -1607,7 +1607,7 @@ class Item extends ItemLight
 				foreach( $DB->get_results('
 					SELECT itag_itm_ID, tag_name
 						FROM T_items__itemtag INNER JOIN T_items__tag ON itag_tag_ID = tag_ID
-					 WHERE itag_itm_ID IN ('.$DB->quote($prefetch_item_IDs).')
+					 WHERE itag_itm_ID IN ('.implode(',', $prefetch_item_IDs).')
 					 ORDER BY tag_name', OBJECT, 'Get tags for items' ) as $row )
 				{
 					$ItemTagsCache[$row->itag_itm_ID][] = $row->tag_name;
@@ -1673,8 +1673,7 @@ class Item extends ItemLight
 
 		if( function_exists( 'mb_strtolower' ) )
 		{	// fp> TODO: instead of those "when used" ifs, it would make more sense to redefine mb_strtolower beforehand if it doesn"t exist (it would then just be a fallback to the strtolower + a Debuglog->add() )
-			// Tblue> Note on charset: param() should have converted the tag string from $io_charset to $evo_charset.
-			array_walk( $this->tags, create_function( '& $tag', '$tag = mb_strtolower( $tag, $GLOBALS[\'evo_charset\'] );' ) );
+			array_walk( $this->tags, create_function( '& $tag', '$tag = mb_strtolower( $tag, \'utf-8\' );' ) );
 		}
 		else
 		{
@@ -1874,7 +1873,7 @@ class Item extends ItemLight
 		 * @var File
 		 */
 		$File = NULL;
-		while( $File = & $FileList->get_next() )
+		while( $File = array_shift($FileList) )
 		{
 			if( ! $File->exists() )
 			{
@@ -1959,7 +1958,7 @@ class Item extends ItemLight
 		 * @var File
 		 */
 		$File = NULL;
-		while( ( $File = & $FileList->get_next() ) && $params['limit_attach'] > $i )
+		while( ( $File = array_shift($FileList) ) && $params['limit_attach'] > $i )
 		{
 			if( $File->is_image() )
 			{	// Skip images because these are displayed inline already
@@ -2005,52 +2004,90 @@ class Item extends ItemLight
 	 *
 	 * INNER JOIN on files ensures we only get back file links
 	 *
-	 * @todo dh> Add prefetching for MainList/ItemList (get_prefetch_itemlist_IDs)
-	 *           The $limit param and DataObjectList2 makes this quite difficult
-	 *           though. Would save (N-1) queries on a blog list page for N items.
-	 *
 	 * @access protected
 	 *
-	 * @param integer
+	 * @param integer Limit (ignored while prefetching)
 	 * @param string Restrict to files/images linked to a specific position. Position can be 'teaser'|'aftermore'
-	 * @param string
-	 * @return DataObjectList2 on success or NULL if no linked files found
+	 * @return array
 	 */
-	function get_attachment_FileList( $limit = 1000, $position = NULL, $order = 'link_ID' )
+	function get_attachment_FileList( $limit = 1000, $position = NULL )
 	{
-		if( ! isset($GLOBALS['files_Module']) )
+		static $positions = array('teaser', 'aftermore'); // possible positions
+
+		$params_key = $limit.'.'.(string)$position;
+		if( isset($this->attachments[$params_key]) )
 		{
-			return NULL;
+			return $this->attachments[$params_key];
 		}
 
-		load_class( '_core/model/dataobjects/_dataobjectlist2.class.php', 'DataObjectList2' );
+		global $Timer;
+		$Timer->resume('Item::get_attachment_FileList');
+		$ItemAttachmentsCache = & get_ItemAttachmentsCache();
 
-		$FileCache = & get_FileCache();
-
-		$FileList = new DataObjectList2( $FileCache ); // IN FUNC
-
-		$SQL = new SQL();
-		$SQL->SELECT( 'file_ID, file_title, file_root_type, file_root_ID, file_path, file_alt, file_desc' );
-		$SQL->FROM( 'T_links INNER JOIN T_files ON link_file_ID = file_ID' );
-		$SQL->WHERE( 'link_itm_ID = '.$this->ID );
-		if( !empty($position) )
+		if( ! isset($ItemAttachmentsCache[$this->ID]) )
 		{
 			global $DB;
-			$SQL->WHERE_and( 'link_position = '.$DB->quote($position) );
+			/* Only try to fetch tags for items that are not yet in
+			 * the cache. This will always give at least the ID of
+			 * this Item.
+			 */
+			$prefetch_item_IDs = array_diff( $this->get_prefetch_itemlist_IDs(), array_keys( $ItemAttachmentsCache ) );
+			// Assume these items don't have any attachments:
+			$init_arr = array();
+			foreach($positions as $p)
+			{
+				$init_arr[$p] = array();
+			}
+			foreach( $prefetch_item_IDs as $item_ID )
+			{
+				$ItemAttachmentsCache[$item_ID] = $init_arr;
+			}
+
+			$SQL = new SQL();
+			$SQL->SELECT( 'link_itm_ID, link_position, file_ID, file_title, file_root_type, file_root_ID, file_path, file_alt, file_desc' );
+			$SQL->FROM( 'T_links INNER JOIN T_files ON link_file_ID = file_ID' );
+			$SQL->WHERE( 'link_itm_ID IN ('.implode(',', $prefetch_item_IDs).')' );
+			$SQL->ORDER_BY( 'link_order' );
+			# $SQL->LIMIT( $limit ); // no limit for prefetching.
+
+			// Add all files to the cache
+			$item_files = $DB->get_results($SQL->get(), OBJECT, 'get_attachment_FileList: prefetch');
+
+			foreach($item_files as $k => $row)
+			{
+				$link_itm_ID = $row->link_itm_ID;
+				$link_position = $row->link_position;
+				unset($row->link_itm_ID, $row->link_position);
+				$ItemAttachmentsCache[$link_itm_ID][$link_position][] = $row;
+				$item_files[$k] = $row;
+			}
 		}
-		//$SQL->ORDER_BY( $order );
-		$SQL->ORDER_BY( 'link_order' );
-		$SQL->LIMIT( $limit );
 
-		$FileList->sql = $SQL->get();
-
-		$FileList->query( false, false, false, 'get_attachment_FileList' );
-
-		if( $FileList->result_num_rows == 0 )
-		{	// Nothing found
-			$FileList = NULL;
+		// Build return value:
+		$FileList = array();
+		if( strlen($position) )
+		{
+			$files = $ItemAttachmentsCache[$this->ID][$position];
 		}
-
+		else
+		{
+			$files = array();
+			foreach($positions as $p)
+			{
+				$files += $ItemAttachmentsCache[$this->ID][$p];
+			}
+		}
+		// build return value (filelist)
+		$files = array_slice($files, 0, $limit);
+		$FileCache = & get_FileCache();
+		foreach( $files as $row )
+		{
+			$File = $FileCache->get_by_root_and_path($row->file_root_type, $row->file_root_ID, $row->file_path);
+			$File->load_meta(false, $row); // inject meta from cache
+			$FileList[] = $File;
+		}
+		$this->attachments[$params_key] = $FileList;
+		$Timer->pause('Item::get_attachment_FileList');
 		return $FileList;
 	}
 
@@ -2963,9 +3000,9 @@ class Item extends ItemLight
 						);
 
 		$r = implode( ' ', $classes );
-		
+
 		if( ! $output ) return $r;
-		
+
 		echo $r;
 	}
 
@@ -3569,14 +3606,12 @@ class Item extends ItemLight
 			$this->insert_update_tags( 'update' );
 
 			// Let's handle the slugs:
-			// TODO: dh> $result handling here feels wrong: when it's true already, it should not become false (add "|| $result"?)
-			// asimo>dh The result handling is in a transaction. If somehow the new slug creation fails, then the item insertion should rollback either 
 			if( isset($new_Slug) )
 			{ // if we have created a $new_Slug, we have to insert it into the database:
-				if( $result = $new_Slug->dbinsert() )
+				if( $result = ($new_Slug->dbinsert() !== false) )
 				{ // new slug was inserted successful, update item canonical_slug_ID 
 					$this->set( 'canonical_slug_ID', $new_Slug->ID );
-					$result = parent::dbupdate();
+					$result = parent::dbupdate() !== false; // NULL (no update necessary) is OK
 				}
 			}
 		}
@@ -3613,17 +3648,18 @@ class Item extends ItemLight
 	/**
 	 * Create new slug with validated title
 	 * !!!private!!! This function should be called only from Item dbupdate() function
+	 * dh> It gets called from tools.ctrl.php also, to not having set the urltitle to '' (and force a DB UPDATE via dbupdate() - since urltitle gets added to dbchanges! (DataObject design problem))
 	 *
-	 * @return Slug
+	 * @return Slug|NULL
 	 */
-	function update_slug($urltitle = NULL)
+	public function update_slug($urltitle = NULL)
 	{
 		if( ! isset($urltitle) )
 		{
 			$urltitle = $this->urltitle;
 		}
 
-		// create new slug 
+		// create new slug
 		$new_Slug = new Slug();
 		// urltitle_validate may modify the urltitle !!!
 		$new_Slug->set( 'title', urltitle_validate( $urltitle, $this->title, $this->ID, false, $new_Slug->dbprefix.'title', $new_Slug->dbprefix.'itm_ID', $new_Slug->dbtablename, $this->locale ) );
@@ -3709,7 +3745,7 @@ class Item extends ItemLight
 	 * @param string Suffix, if cropped
 	 * @return boolean true if excerpt has been changed
 	 */
-	function update_excerpt( $crop_length = 254, $suffix = '&hellip;' )
+	function update_excerpt( $crop_length = 254, $suffix = '…' )
 	{
 		if( empty($this->excerpt) || $this->excerpt_autogenerated )
 		{	// We want to regenrate the excerpt from the content:
@@ -3734,7 +3770,7 @@ class Item extends ItemLight
 	 * @param string Suffix, if cropped
 	 * @return string
 	 */
-	function get_autogenerated_excerpt( $crop_length = 254, $suffix = '&hellip;' )
+	function get_autogenerated_excerpt( $crop_length = 254, $suffix = '…' )
 	{
 		$r = str_replace( '<p>', ' <p>', $this->content );
 		$r = str_replace( '<br', ' <br', $this->content );
