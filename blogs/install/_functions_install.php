@@ -341,7 +341,7 @@ function create_default_settings( $override = array() )
 		'default_locale' => $default_locale,
 		'newusers_grp_ID' => $Group_Users->ID,
 		'default_blog_ID' => 1,
-		'evocache_foldername' => '_evocache',
+		'evocache_foldername' => '.evocache',
 	);
 
 	$settings = array_merge( array_keys($defaults), array_keys($override) );
