@@ -113,7 +113,11 @@ function cat_line( $Chapter, $level )
 		$r .= '<td class="center">'.$Chapter->dget('order').'</td>';
 	}
 
-	$r .= '<td class="center">'.(int)$number_of_posts_in_cat[$Chapter->ID].'</td>';
+	if( ! isset($number_of_posts_in_cat[$Chapter->ID]) ) {
+		$r .= '<td class="center"> - </td>';
+	} else {
+		$r .= '<td class="center">'.(int)$number_of_posts_in_cat[$Chapter->ID].'</td>';
+	}
 
 	$r .= '<td class="lastcol shrinkwrap">';
 	if( $permission_to_edit )
