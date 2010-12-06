@@ -57,7 +57,7 @@ if( file_exists(dirname(__FILE__).'/_overrides_TEST.php') )
 }
 
 // Handle debug cookie:
-if( $debug == 'pwd' )
+if( $debug === 'pwd' )
 {	// Debug *can* be enabled/disabled by cookie:
 
 	// Disabled until we find a reason to enable:
