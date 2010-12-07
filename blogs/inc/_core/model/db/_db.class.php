@@ -125,7 +125,7 @@ class DB
 	/**
 	 * Last query's resource
 	 * @access protected
-	 * @var resource
+	 * @var object
 	 */
 	var $result;
 
@@ -667,8 +667,8 @@ class DB
 		$this->result = NULL;
 		$this->last_query = NULL;
 		$this->num_rows = 0;
-		if( isset($this->result) && is_resource($this->result) )
-		{ // Free last result resource
+		if( $this->result && is_object($this->result) )
+		{ // Free last result object
 			mysqli_free_result($this->result);
 		}
 	}
@@ -873,7 +873,7 @@ class DB
 		else
 		{ // Query was a select, alter, etc...:
 			if( is_object($this->result) )
-			{ // It's not a resource for CREATE or DROP for example and can even trigger a fatal error (see http://forums.b2evolution.net//viewtopic.php?t=9529)
+			{ // It's not a object for CREATE or DROP for example and can even trigger a fatal error (see http://forums.b2evolution.net//viewtopic.php?t=9529)
 				$this->num_rows = mysqli_num_rows($this->result);
 			}
 
