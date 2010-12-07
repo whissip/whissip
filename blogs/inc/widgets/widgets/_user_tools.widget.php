@@ -66,7 +66,7 @@ class user_tools_Widget extends ComponentWidget
 				'size' => 40,
 				'note' => T_( 'Link text to display' ),
 				'type' => 'text',
-				'defaultvalue' => /* TRANS: with tailing space = action to log in */ T_( 'Login ' ),
+				'defaultvalue' => /* TRANS: with trailing space = action to log in */ T_( 'Login ' ),
 			),
 			'user_logout_link' => array(
 				'label' => T_( 'Logout link' ),

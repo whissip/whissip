@@ -723,6 +723,8 @@ class test_plugin extends Plugin
 	 */
 	function LoginAttempt()
 	{
+		// global $login_error;
+		// $login_error = 'Login prevented by setting $login_error to this message..';
 		$this->msg( 'This the TEST plugin responding to the LoginAttempt event.', 'note' );
 	}
 

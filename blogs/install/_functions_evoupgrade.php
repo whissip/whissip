@@ -2809,7 +2809,7 @@ function upgrade_b2evo_tables()
 								( '.$row->grp_ID.', "perm_templates", "'.$row->grp_perm_templates.'" )' );
 		}
 
-		// Drop all converted permissin colums from groups table
+		// Drop all converted permission colums from groups table
 		db_drop_col( 'T_groups', 'grp_perm_spamblacklist' );
 		db_drop_col( 'T_groups', 'grp_perm_slugs' );
 		db_drop_col( 'T_groups', 'grp_perm_files' );

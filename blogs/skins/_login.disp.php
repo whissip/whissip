@@ -28,7 +28,7 @@ if( $action == 'req_login' )
 
 global $admin_url, $ReqHost, $htsvr_url;
 
-if( $Messages->count() > 0 )
+if( $Messages->count() )
 { // Display messages
 	$Messages->display();
 }
