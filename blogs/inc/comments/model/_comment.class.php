@@ -522,10 +522,12 @@ class Comment extends DataObject
 			}
 		}
 
-		$params['data'] = & $r;
-		$params['Comment'] = & $this;
-
-		$Plugins->trigger_event( 'FilterCommentAuthor', $params );
+		$hook_params = array(
+			'data' => & $r,
+			'Comment' => & $this,
+			'makelink' => ! empty($params['link_to']),
+		);
+		$Plugins->trigger_event( 'FilterCommentAuthor', $hook_params );
 
 		return $r;
 	}
