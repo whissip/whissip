@@ -162,7 +162,7 @@ else
 	}
 	$sql = $SQL->get();
 }
-echo $sql;
+
 // Create result set:
 $Results = new Results( $sql, '', $split_engines ? '--D' : '-D' , NULL, $sql_count );
 
