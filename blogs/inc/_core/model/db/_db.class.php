@@ -180,7 +180,7 @@ class DB
 
 	/**
 	 * MySQL Database handle
-	 * @var object
+	 * @var object mysqli
 	 */
 	var $dbhandle;
 
@@ -290,7 +290,7 @@ class DB
 	 *    - 'user': username to connect with
 	 *    - 'password': password to connect with
 	 *    OR
-	 *    - 'handle': a MySQL Database handle (from a previous {@link mysqli_connect()})
+	 *    - 'handle': a MySQLi database handle/object (from a previous {@link mysqli_connect()})
 	 *   Optional:
 	 *    - 'name': the name of the default database, see {@link DB::select()}
 	 *    - 'host': host of the database; Default: 'localhost'
