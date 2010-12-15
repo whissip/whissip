@@ -792,7 +792,7 @@ switch( $action )
 			}
 			$action = 'list';
 			// Redirect so that a reload doesn't write to the DB twice:
-			header_redirect( '?ctrl=files&blog='.$blog.'&root='.$root.'&path='.$path, 303 ); // Will EXIT
+			header_redirect( regenerate_url( '', '', '', '&' ), 303 );
 			// We have EXITed already at this point!!
 		}
 		else
@@ -820,7 +820,7 @@ switch( $action )
 			{ // no files left in list, cancel action
 				$action = 'list';
 				// Redirect so that a reload doesn't write to the DB twice:
-				header_redirect( '?ctrl=files&blog='.$blog.'&root='.$root.'&path='.$path, 303 ); // Will EXIT
+				header_redirect( regenerate_url( '', '', '', '&' ), 303 );
 				// We have EXITed already at this point!!
 			}
 		}
@@ -1086,7 +1086,7 @@ switch( $action )
 			header_redirect( regenerate_url( 'fm_selected', 'action=edit_properties&amp;fm_selected[]='.rawurlencode($edited_File->get_rdfp_rel_path() ).'&amp;'.url_crumb('file'), '', '&' ), 303 );
 			// We have EXITed already, no need else.
 		}
-		header_redirect( '?ctrl=files&blog='.$blog.'&root='.$root.'&path='.$path, 303 ); // Will EXIT
+		header_redirect( regenerate_url( '', '', '', '&' ), 303 );
 		// We have EXITed already at this point!!
 		break;
 
@@ -1535,7 +1535,7 @@ switch( $fm_mode )
 																		$loop_src_File->get_rdfp_rel_path(), $dest_File->get_rdfp_rel_path() ) );
 					}
 					// Redirect so that a reload doesn't write to the DB twice:
-					header_redirect( '?ctrl=files&blog='.$blog.'&root='.$root.'&path='.$path, 303 ); // Will EXIT
+					header_redirect( regenerate_url( '', '', '', '&' ), 303 );
 					// We have EXITed already at this point!!
 				}
 				elseif( $fm_mode == 'file_move' )
@@ -1584,7 +1584,7 @@ switch( $fm_mode )
 
 					$DB->commit();
 					// Redirect so that a reload doesn't write to the DB twice:
-					header_redirect( '?ctrl=files&blog='.$blog.'&root='.$root.'&path='.$path, 303 ); // Will EXIT
+					header_redirect( regenerate_url( 'fm_mode', '', '', '&' ), 303 );
 					// We have EXITed already at this point!!
 				}
 				else debug_die( 'Unhandled file copy/move mode' );
