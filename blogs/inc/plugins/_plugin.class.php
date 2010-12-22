@@ -1958,10 +1958,7 @@ class Plugin
 	 *                user is anonymous ({@link $current_User current User} NOT set).
 	 *
 	 * Use this for example to read some cookie and define further handling of
-	 * this visitor or force them to login, by {@link Plugin::msg() adding a message}
-	 * of class "login_error", which will trigger the login screen.
-	 * asimo> There is no message with "login_error" class anymore, 
-	 * there is a $login_error global variable
+	 * this visitor or force them to login by setting {@link $login_error} (HTML).
 	 */
 	function AfterLoginAnonymousUser( & $params )
 	{
@@ -1977,11 +1974,9 @@ class Plugin
 	 * e.g., call {@link Plugin::forget_events()} to de-activate the plugin for
 	 * the current request.
 	 *
-	 * You can also {@link Plugin::msg() add a message} of class "login_error"
+	 * You can also set {@link $login_error} to some (HTML) error message
 	 * to prevent the user from accessing the site and triggering
 	 * the login screen.
-	 * asimo> There is no message with "login_error" class anymore, 
-	 * there is a $login_error global variable
 	 */
 	function AfterLoginRegisteredUser( & $params )
 	{
@@ -2072,8 +2067,8 @@ class Plugin
 	/**
 	 * Event handler: called when a user attemps to login.
 	 *
-	 * You can prevent the user from logging in by {@link Plugin::msg() adding a message}
-	 * of type "login_error".
+	 * You can prevent the user from logging in by setting {@link $login_error}
+	 * (HTML).
 	 *
 	 * Otherwise, this hook is meant to authenticate a user against some
 	 * external database (e.g. LDAP) and generate a new user.

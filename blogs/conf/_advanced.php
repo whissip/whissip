@@ -583,7 +583,9 @@ $cross_post_nav_in_same_blog = true;
 
 
 /**
- * Login error message
+ * Login error message (HTML).
+ *
+ * Setting this will trigger the login screen.
  *
  * @global string
  */
