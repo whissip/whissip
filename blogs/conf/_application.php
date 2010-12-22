@@ -1,6 +1,6 @@
 <?php
 /**
- * This is b2evolution's application config file.
+ * This is whissip's application config file.
  *
  * @package conf
  */
@@ -38,14 +38,14 @@ $new_db_version = 10000;
  */
 $app_banner = '<a href="http://whissip.net/"><img src="'.$rsc_url.'img/whissip-221x70-trans.png" width="221" height="70" alt="whissip" /></a>';
 
-$app_footer_text = '<a href="http://b2evolution.net/" title="'.T_("visit b2evolution's website")
+$app_footer_text = '<a href="http://whissip.net/'
 		.'"><strong>'.$app_name.' '.$app_version.'</strong></a>
 		&ndash;
-		<a href="http://b2evolution.net/about/license.html" class="nobr">'.T_('GPL License').'</a>';
+		<a href="http://www.gnu.org/licenses/gpl.html" class="nobr">'.T_('GPL License').'</a>';
 
 $copyright_text ='<span class="nobr">&copy;2001-2002 by Michel V &amp; others</span>
 		&ndash;
-		<span class="nobr">&copy;2003-2010 by <a href="http://fplanque.net/">Fran&ccedil;ois</a> <a href="http://fplanque.com/">Planque</a> &amp; <a href="http://b2evolution.net/dev/authors.html">others</a>.</span>';
+		<span class="nobr">&copy;2003-2010 by <a href="http://fplanque.com/">Fran&ccedil;ois Planque</a> &amp; <a href="http://b2evolution.net/dev/authors.html">others</a>.</span>';
 
 /**
  * Modules to load
