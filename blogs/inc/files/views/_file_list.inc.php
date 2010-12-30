@@ -424,7 +424,7 @@ $Form->begin_form();
 		{ // User can edit:
 			if( $lFile->is_editable( $current_User->check_perm( 'files', 'all' ) ) )
 			{
-				echo action_icon( T_('Edit file...'), 'edit', regenerate_url( 'fm_selected', 'action=edit_file&amp;crumb_file='.url_crumb('file').'&amp;fm_selected[]='.rawurlencode($lFile->get_rdfp_rel_path()) ) );
+				echo action_icon( T_('Edit file...'), 'edit', regenerate_url( 'fm_selected', 'action=edit_file&amp;'.url_crumb('file').'&amp;fm_selected[]='.rawurlencode($lFile->get_rdfp_rel_path()) ) );
 			}
 			else
 			{
