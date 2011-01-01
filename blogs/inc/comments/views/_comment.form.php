@@ -280,6 +280,7 @@ $Form->hidden( 'comment_ID', $edited_Comment->ID );
 		// Display IP address and allow plugins to filter it, e.g. the DNSBL plugin will add a link to check the IP:
 		echo $Plugins->get_trigger_event( 'FilterIpAddress', array('format'=>'htmlbody', 'data'=>$edited_Comment->author_IP), 'data' ); ?></p>
 	<p><strong><?php echo T_('Spam Karma') ?>:</strong> <?php $edited_Comment->spam_karma(); ?></p>
+	<p><?php $edited_Comment->permanent_link() ?></p>
 
 	<?php
 		$Form->end_fieldset();
