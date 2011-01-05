@@ -94,6 +94,9 @@ if ( false !== strpos( urldecode( $path ), '..' ) )
 // Load fileroot info:
 $FileRootCache = & get_FileRootCache();
 $FileRoot = & $FileRootCache->get_by_ID( $root );
+if( ! $FileRoot ) {
+	bad_request_die('Invalid FileRoot!');
+}
 
 // Load file object (not the file content):
 $File = new File( $FileRoot->type, $FileRoot->in_type_ID, $path );
