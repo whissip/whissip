@@ -113,10 +113,13 @@ function cat_line( $Chapter, $level )
 		$r .= '<td class="center">'.$Chapter->dget('order').'</td>';
 	}
 
-	if( ! isset($number_of_posts_in_cat[$Chapter->ID]) ) {
-		$r .= '<td class="center"> - </td>';
-	} else {
+	if( isset($number_of_posts_in_cat[$Chapter->ID]) )
+	{
 		$r .= '<td class="center">'.(int)$number_of_posts_in_cat[$Chapter->ID].'</td>';
+	}
+	else
+	{	// no posts in this category
+		$r .= '<td class="center"> - </td>';
 	}
 
 	$r .= '<td class="lastcol shrinkwrap">';
@@ -267,6 +270,12 @@ echo '<p class="note">'.sprintf( T_('<strong>Note:</strong> Ordering of categori
 $Session->delete( 'fadeout_array');
 /*
  * $Log$
+ * Revision 1.30  2011/01/02 02:25:33  sam2kb
+ * Fixed http://forums.b2evolution.net/viewtopic.php?t=21653
+ *
+ * Revision 1.29  2011/01/02 02:20:25  sam2kb
+ * typo: explicitely => explicitly
+ *
  * Revision 1.28  2010/10/19 02:00:53  fplanque
  * MFB
  *
@@ -328,7 +337,7 @@ $Session->delete( 'fadeout_array');
  * Trying to clean (a bit) our UI
  *
  * Revision 1.9  2009/01/28 22:34:21  fplanque
- * Default cat for each blog can now be chosen explicitely
+ * Default cat for each blog can now be chosen explicitly
  *
  * Revision 1.8  2009/01/28 21:23:22  fplanque
  * Manual ordering of categories
