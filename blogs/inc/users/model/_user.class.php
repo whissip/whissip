@@ -948,6 +948,11 @@ class User extends DataObject
 			$perm_target_ID = $perm_target;
 		}
 
+		$pluggable_perms = array( 'spamblacklist', 'slugs', 'templates', 'options', 'files' );
+		if( in_array( $permname, $pluggable_perms ) ) {
+			$permname = 'perm_'.$permname;
+		}
+
 		if( isset($perm_target_ID)	// if it makes sense to check the cache
 			&& isset($this->cache_perms[$permname][$permlevel][$perm_target_ID]) )
 		{ // Permission in available in Cache:
@@ -955,10 +960,6 @@ class User extends DataObject
 			return $this->cache_perms[$permname][$permlevel][$perm_target_ID];
 		}
 
-		$pluggable_perms = array( 'spamblacklist', 'slugs', 'templates', 'options', 'files' );
-		if( in_array( $permname, $pluggable_perms ) ) {
-			$permname = 'perm_'.$permname;
-		}
 		//$Debuglog->add( "Querying perm [$permname][$permlevel]".( isset( $perm_target_ID ) ? '['.$perm_target_ID.']' : '' ).']', 'perms' );
 		//pre_dump( 'Perm target: '.var_export( $perm_target, true ) );
 
