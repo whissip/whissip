@@ -1,6 +1,5 @@
 .evocache
 tags
-blogs/tags
 blogs/conf/*_TEST.php
 blogs/media/cache/rscbundles/bundle__*
 tests/simpletest/symlink
