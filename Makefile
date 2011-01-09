@@ -16,6 +16,7 @@ clearcache:
 dist: export-source remove-cvs-log
 
 export-source:
+	# Better solution might exist here: http://stackoverflow.com/questions/160608/how-to-do-a-git-export-like-svn-export
 	mkdir -p $(DIST_DIR) && \
 		cd $(DIST_DIR) && \
 		git clone .. . && \
