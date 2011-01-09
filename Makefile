@@ -4,27 +4,36 @@
 PLUGINS_DIR:=blogs/plugins
 TINYMCE_DIR:=$(PLUGINS_DIR)/tinymce_plugin
 
+DIST_DIR:=dist
+
 default:
 	@echo "This Makefile is experimental. Therefore it does nothing by default."
 	@exit 1
 
+clearcache:
+	$(RM) -rf blogs/media/cache/rscbundles/bundle_*
+
 dist: export-source remove-cvs-log
 
 export-source:
-	bzr export dist/ || true
+	mkdir -p $(DIST_DIR) && \
+		cd $(DIST_DIR) && \
+		git clone .. . && \
+		$(RM) -rf .git && \
+		find -name .gitignore -exec $(RM) {} \;
 
 # Remove CVS log comment blogs
 # EXPERIMENTAL?!
 remove-cvs-log:
-	find ./dist/ -name \*.php -print0 | xargs -0 -r php -r 'foreach( array_slice($$argv, 1) as $$file ) file_put_contents($$file, preg_replace("~^/\*[^\n]*\n \* \\\$$Log:[^\n]*\\\$$\n.* \*/\n?~sm", "", file_get_contents($$file)));'
+	find ./$(DIST_DIR)/ -name \*.php -print0 | xargs -0 -r php -r 'foreach( array_slice($$argv, 1) as $$file ) file_put_contents($$file, preg_replace("~^/\*[^\n]*\n \* \\\$$Log:[^\n]*\\\$$\n.* \*/\n?~sm", "", file_get_contents($$file)));'
 
 #TODO: should depend on directory "dist"
 distclean:
-	$(RM) -rf dist/
+	$(RM) -rf $(DIST_DIR)/
 
 # Create ctags tags file
 tags:
-	ctags --exclude=blogs/media/* --exclude=.bzr -R
+	ctags --exclude=blogs/media/* --exclude=.git -R
 
 build_tinymce:
 	# make sure we're on the expected branch
@@ -40,4 +49,4 @@ build_tinymce:
 		cp -a tinymce_compressor.git/tmp/tinymce_compressor_php/tiny_mce_gzip.js tiny_mce && \
 		cp -a tinymce_compressor.git/tmp/tinymce_compressor_php/tiny_mce_gzip.php tiny_mce
 
-.PHONY: dist export-source remove-cvs-log distclean tags
+.PHONY: clearcache dist export-source remove-cvs-log distclean tags
