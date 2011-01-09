@@ -536,10 +536,9 @@ div.log_container ul,
 div.action_messages ul,
 div.log_container ol,
 div.action_messages ol {
-	list-style: square;
-	list-style-image:none;
+	list-style: none;
 	margin:1ex 0;
-	padding-left:3ex;
+	padding-left:0;
 }
 div.log_container div,
 div.action_messages div {
