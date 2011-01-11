@@ -59,12 +59,8 @@ if( $current_User->check_perm('options', 'edit') )
 	echo '<li><a href="'.regenerate_url('action', 'action=optimize_tables&amp;'.url_crumb('tools')).'">'.T_('Optimize database tables (MyISAM tables used for sessions & logs)').'</a></li>';
 	echo '<li><a href="'.regenerate_url('action', 'action=del_obsolete_tags&amp;'.url_crumb('tools')).'">'.T_('Remove obsolete (unused) tag entries').'</a></li>';
 	// echo '<li><a href="'.regenerate_url('action', 'action=backup_db').'">'.T_('Backup database').'</a></li>';
+	echo '<li><a href="'.regenerate_url('action', 'action=create_tagsfromcats&amp;'.url_crumb('tools')).'">'.T_('Create tags from categories and tag items accordingly. All items will then have the same tags as categories.').'</a></li>';
 	echo '</ul>';
-	$block_item_Widget->disp_template_raw( 'block_end' );
-
-	$block_item_Widget->title = T_('Create tags from categories');
-	$block_item_Widget->disp_template_replaced( 'block_start' );
-	echo '&raquo; <a href="'.regenerate_url('action', 'action=create_tagsfromcats').url_crumb('tools').'">'.T_('Create tags from categories and tag items accordingly. All items will then have the same tags as categories.').'</a>';
 	$block_item_Widget->disp_template_raw( 'block_end' );
 
 	$block_item_Widget->title = T_('Database Maintenance Tools');
