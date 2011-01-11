@@ -60,6 +60,7 @@ if( $current_User->check_perm('options', 'edit') )
 	echo '<li><a href="'.regenerate_url('action', 'action=del_obsolete_tags&amp;'.url_crumb('tools')).'">'.T_('Remove obsolete (unused) tag entries').'</a></li>';
 	// echo '<li><a href="'.regenerate_url('action', 'action=backup_db').'">'.T_('Backup database').'</a></li>';
 	echo '<li><a href="'.regenerate_url('action', 'action=create_tagsfromcats&amp;'.url_crumb('tools')).'">'.T_('Create tags from categories and tag items accordingly. All items will then have the same tags as categories.').'</a></li>';
+	echo '<li><a href="'.regenerate_url('action', 'action=recreate_itemslugs&amp;'.url_crumb('tools')).'">'.T_('Recreate all item slugs. Old slugs will still work, but redirect to the new one.').'</a></li>';
 	echo '</ul>';
 	$block_item_Widget->disp_template_raw( 'block_end' );
 
@@ -77,11 +78,6 @@ if( $current_User->check_perm('options', 'edit') )
 	echo '<li><a href="'.regenerate_url('action', 'action=show_create_comments&amp;'.url_crumb('tools')).'">'.T_('Create sample comments for testing moderation').'</a></li>';
 	echo '<li><a href="'.regenerate_url('action', 'action=show_create_posts&amp;'.url_crumb('tools')).'">'.T_('Create sample posts for testing moderation').'</a></li>';
 	echo '</ul>';
-	$block_item_Widget->disp_template_raw( 'block_end' );
-
-	$block_item_Widget->title = T_('Recreate item slugs');
-	$block_item_Widget->disp_template_replaced( 'block_start' );
-	echo '&raquo; <a href="'.regenerate_url('action', 'action=recreate_itemslugs&amp;'.url_crumb('tools')).'">'.T_('Recreate all item slugs. Old slugs will still work, but redirect to the new one.').'</a>';
 	$block_item_Widget->disp_template_raw( 'block_end' );
 }
 
