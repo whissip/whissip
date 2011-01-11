@@ -1036,6 +1036,7 @@ class User extends DataObject
 					break;
 				}
 				/* continue */
+			case 'blog_edit_ts':				
 			case 'blog_admin': // This is what the owner does not have access to!
 
 				// Group may grant VIEW access, FULL access:
@@ -1120,11 +1121,12 @@ class User extends DataObject
 				}
 				break;
 
-			case 'edit_timestamp':
+			// asimo> edit_timestamp permission was converted to blog_edit_ts permission
+			/*case 'edit_timestamp':
 				// Global permission to edit timestamps...
 				// fp> TODO: merge below
 				$perm = ($this->level >= 5);
-				break;
+				break;*/
 
 			// asimo> files permission was converted to pluggable permission
 			/*case 'files':
@@ -1253,6 +1255,7 @@ class User extends DataObject
 	 *                  - blog_ismember
 	 *                  - blog_post_statuses
 	 *                  - blog_del_post
+	 *                  - blog_edit_ts
 	 *                  - blog_comments
 	 *                  - blog_cats
 	 *                  - blog_properties
@@ -1300,6 +1303,7 @@ class User extends DataObject
 						'blog_post_statuses' => array(),
 						'blog_edit' => 'no',
 						'blog_del_post' => '0',
+						'blog_edit_ts' => '0',
 						'blog_comments' => '0',
 						'blog_draft_comments' => '0',
 						'blog_published_comments' => '0',
@@ -1330,6 +1334,7 @@ class User extends DataObject
 
 				$this->blog_post_statuses[$perm_target_blog]['blog_edit'] = $row['bloguser_perm_edit'];
 				$this->blog_post_statuses[$perm_target_blog]['blog_del_post'] = $row['bloguser_perm_delpost'];
+				$this->blog_post_statuses[$perm_target_blog]['blog_edit_ts'] = $row['bloguser_perm_edit_ts'];
 				$this->blog_post_statuses[$perm_target_blog]['blog_comments'] = $row['bloguser_perm_publ_cmts']
 					+ $row['bloguser_perm_draft_cmts'] +  $row['bloguser_perm_depr_cmts'];
 				$this->blog_post_statuses[$perm_target_blog]['blog_draft_comments'] = $row['bloguser_perm_draft_cmts'];
@@ -2107,6 +2112,11 @@ class User extends DataObject
 
 /*
  * $Log$
+ * Revision 1.89  2011/01/06 14:31:47  efy-asimo
+ * advanced blog permissions:
+ *  - add blog_edit_ts permission
+ *  - make the display more compact
+ *
  * Revision 1.88  2010/12/24 01:47:12  fplanque
  * bump - changed user_notify default
  *
