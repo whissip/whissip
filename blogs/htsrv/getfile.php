@@ -215,6 +215,11 @@ if( !empty($size) && $File->is_image() )
 			$y += $line_height;
 		}
 
+		if( ! $im_handle )
+		{ // if we could not create the error image, exit with HTML:
+			debug_die("Could not create error image for the following error: $err");
+		}
+
 		header('Content-type: image/png' );
 		header_nocache();	// Do NOT cache errors! People won't see they have fixed them!!
 
