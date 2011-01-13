@@ -404,13 +404,15 @@ if( empty($tab) )
 				$prev_urltitle = $Item->get( 'urltitle' );
 
 				$DB->begin();
-				if( $Item->update_slug('') || $prev_urltitle != $Item->get('urltitle') /* might happen when urltitle is different from associated slug (e.g. manual table update) */ )
+				if( ($item_Slug = $Item->update_slug('')) || $prev_urltitle != $Item->get('urltitle') /* might happen when urltitle is different from associated slug (e.g. manual table update) */ )
 				{
-					$result = $Item->dbupdate(/* do not autotrack modification */ false, /* update slug */ false, /* do not update excerpt */ false); 
-					if( ( $result ) && ( $prev_urltitle != $Item->get( 'urltitle' ) ) )
-					{ // update was successful, and item urltitle was changed
-						$count_slugs++;
+					$result = $Item->dbupdate(/* do not autotrack modification */ false, /* update slug */ $item_Slug, /* do not update excerpt */ false); 
+					if( $result ) {
+						// Item got updated (e.g. new slug association), we need to COMMIT
 						$DB->commit();
+						if( $prev_urltitle != $Item->get( 'urltitle' ) ) {
+							$count_slugs++;
+						}
 						continue;
 					}
 				}

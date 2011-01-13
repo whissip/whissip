@@ -3545,9 +3545,10 @@ class Item extends ItemLight
 	 * Update the DB based on previously recorded changes
 	 *
 	 * @param boolean do we want to auto track the mod date?
-	 * @param boolean Update slug? - We want to PREVENT updating slug when item dbupdate is called, 
+	 * @param boolean|Slug Update slug? - We want to PREVENT updating slug when item dbupdate is called, 
 	 * 	because of the item canonical url title was changed on the slugs edit form, so slug update is already done.
 	 *  If slug update wasn't done already, then this param has to be true.
+	 *  You can inject a Slug object here (used by tools.ctrl.php)
 	 * @param boolean Update excerpt? - We want to PREVENT updating exerpts when the item content wasn't changed ( e.g. only item canonical slug was changed )
 	 * @return boolean true on success
 	 */
@@ -3565,7 +3566,11 @@ class Item extends ItemLight
 		// validate url title / slug
 		if( $update_slug )
 		{ // item canonical slug wasn't updated outside from this call, if it was changed or it wasn't set yet, we must update the slugs
-			if( empty($this->urltitle) || isset($this->dbchanges['post_urltitle'])  )
+			if( is_a($update_slug, 'slug') ) {
+				$new_Slug = $update_slug;
+				$update_slug = false;
+			}
+			elseif( empty($this->urltitle) || isset($this->dbchanges['post_urltitle'])  )
 			{ // Url title has changed or is empty, we do need to update the slug:
 				$new_Slug = $this->update_slug();
 			}
