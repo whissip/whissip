@@ -185,6 +185,12 @@ if( !empty($size) && $File->is_image() )
 
 		// Wrap error message and split it into lines:
 		$err_lines = split( "\n", wordwrap( $err, $car_width, "\n", true ) );
+
+		if( ! $thumb_height ) {
+			$thumb_height = $thumb_width;
+		} elseif( ! $thumb_width ) {
+			$thumb_width = $thumb_height;
+		}
 		$im_handle = imagecreatetruecolor( $thumb_width, $thumb_height ); // Create a black image
 		if( count($err_lines)*$line_height > $thumb_height )
 		{ // Message does not fit into picture:
