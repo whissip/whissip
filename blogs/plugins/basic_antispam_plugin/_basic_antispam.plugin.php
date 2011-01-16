@@ -248,7 +248,7 @@ class basic_antispam_plugin extends Plugin
 	 */
 	function FilterCommentAuthor( & $params )
 	{
-		if( ! isset($params['makelink']) )
+		if( ! $params['makelink'] )
 		{
 			return false;
 		}
