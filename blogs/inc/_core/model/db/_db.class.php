@@ -1104,6 +1104,63 @@ class DB
 
 
 	/**
+	 * Function to get column meta data info pertaining to the last query.
+	 *
+	 * NOTE: not used in whissip/b2evo anymore, but maintained still anyway.
+	 *
+	 * @param string|NULL Key of info, see {@link http://php.net/mysqli_fetch_field_direct} for a list;
+	 *                    empty/NULL for an array with all entries
+	 * @param integer Column offset; -1 for all
+	 */
+	function get_col_info( $info_type = 'name', $col_offset = -1 )
+	{
+		if( ! is_object($this->result) )
+		{ // fp> A function should NEVER FAIL SILENTLY!
+			debug_die( 'DB::get_col_info() cannot return a value because no result resource is available!' );
+		}
+
+		// Get column info:
+		if( $col_offset == -1 )
+		{ // all columns:
+			$n = mysqli_num_fields($this->result);
+			$i = 0;
+			while( $i < $n )
+			{
+				$col_info[$i] = mysqli_fetch_field_direct($this->result, $i);
+				$i++;
+			}
+		}
+		else
+		{
+			$col_info = mysqli_fetch_field_direct($this->result, $col_offset);
+		}
+
+		if( empty($info_type) )
+		{ // all field properties:
+			return $col_info;
+		}
+		else
+		{ // a specific column field property
+			if( $col_offset == -1 )
+			{
+				$new_array = array();
+				$i = 0;
+				foreach( $col_info as $col )
+				{
+					$new_array[$i] = $col->{$info_type};
+					$i++;
+				}
+				return $new_array;
+			}
+			else
+			{
+				return $col_info->{$info_type};
+			}
+		}
+	}
+
+
+	/**
 	 * Get a table (or "<p>No Results.</p>") for the SELECT query results.
 	 *
 	 * @return string HTML table or "No Results" if the
