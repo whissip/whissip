@@ -1121,7 +1121,7 @@ class DB
 		$n = mysqli_num_fields($this->result);
 		$i = 0;
 		while( $i < $n ) {
-			$col_info[$i] = mysqli_fetch_field($this->result);
+			$col_info[$i] = mysqli_fetch_field_direct($this->result, $i);
 			$i++;
 		}
 
