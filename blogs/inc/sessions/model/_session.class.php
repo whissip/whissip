@@ -226,7 +226,12 @@ class Session
 			$this->ID = $DB->insert_id;
 
 			// Set a cookie valid for ~ 10 years:
-			setcookie( $cookie_session, $this->ID.'_'.$this->key, time()+315360000, $cookie_path, $cookie_domain );
+			if( version_compare(PHP_VERSION, '5.2', '>=') ) {
+				setcookie( $cookie_session, $this->ID.'_'.$this->key, time()+315360000, $cookie_path, $cookie_domain, /* secure */ false, /* httpOnly */ true );
+			} else {
+				# Use a hack to get the HttpOnly flag in:
+				setcookie( $cookie_session, $this->ID.'_'.$this->key, time()+315360000, $cookie_path, $cookie_domain.'; HttpOnly' );
+			}
 
 			$Debuglog->add( 'Session: ID (generated): '.$this->ID, 'request' );
 			$Debuglog->add( 'Session: Cookie sent.', 'request' );
