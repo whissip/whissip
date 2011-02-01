@@ -207,6 +207,15 @@ class FileRoot
 		debug_die( "Root_type=$root_type not supported" );
 	}
 
+
+	/**
+	 * @return string
+	 */
+	public function __toString()
+	{
+		return 'FileRoot:'.$this->ID;
+	}
+
 }
 
 
