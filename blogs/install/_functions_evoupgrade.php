@@ -2818,7 +2818,7 @@ function upgrade_b2evo_tables()
 		task_end();
 	}
 
-	task_begin( 'Upgrading users table, add user gender...' );
+	task_begin( 'Upgrading users table, adding user gender...' );
 	db_add_col( 'T_users', 'user_gender', 'char(1) NULL DEFAULT NULL AFTER user_showonline' );
 	task_end();
 
@@ -2834,6 +2834,10 @@ function upgrade_b2evo_tables()
 	$DB->query( 'UPDATE T_coll_group_perms
 						SET bloggroup_perm_edit_ts = 1
 						WHERE bloggroup_group_ID = 1' );
+	task_end();
+
+	task_begin( 'Upgrading comments table, add trash status...' );
+	$DB->query( "ALTER TABLE T_comments MODIFY COLUMN comment_status ENUM('published','deprecated','draft', 'trash') DEFAULT 'published' NOT NULL");
 	task_end();
 
 	/*
@@ -3011,6 +3015,12 @@ function upgrade_b2evo_tables()
 
 /*
  * $Log$
+ * Revision 1.378  2011/02/14 14:13:24  efy-asimo
+ * Comments trash status
+ *
+ * Revision 1.377  2011/02/10 23:07:21  fplanque
+ * minor/doc
+ *
  * Revision 1.376  2011/01/06 14:31:47  efy-asimo
  * advanced blog permissions:
  *  - add blog_edit_ts permission

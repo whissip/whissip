@@ -752,7 +752,19 @@ $collections_Module = new collections_Module();
 
 
 /*
- * _collections.init.php,v
+ * $Log$
+ * Revision 1.22  2011/02/10 23:07:21  fplanque
+ * minor/doc
+ *
+ * Revision 1.20.2.5  2010/10/19 01:04:48  fplanque
+ * doc
+ *
+ * Revision 1.20.2.2  2010/07/06 00:47:42  fplanque
+ * minor/doc
+ *
+ * Revision 1.20.2.1  2010/06/30 01:20:09  fplanque
+ * no message
+ *
  * Revision 1.20  2010/05/02 19:50:50  fplanque
  * no message
  *

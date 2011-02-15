@@ -54,9 +54,9 @@ $AdminUI->disp_body_top();
 if( $blog )
 {	// We want to look at a specific blog:
 	// Begin payload block:
-	
+
 	// This div is to know where to display the message after overlay close:
-	echo '<div class="first_payload_block">'."\n";	
+	echo '<div class="first_payload_block">'."\n";
 
 	$AdminUI->disp_payload_begin();
 
@@ -78,7 +78,7 @@ if( $blog )
 		 * COMMENTS:
 		 */
 		$CommentList = new CommentList2( $Blog );
-	
+
 		// Filter list:
 		$CommentList->set_filters( array(
 				'types' => array( 'comment','trackback','pingback' ),
@@ -86,7 +86,7 @@ if( $blog )
 				'order' => 'DESC',
 				'comments' => 5,
 			) );
-	
+
 		// Get ready for display (runs the query):
 		$CommentList->display_init();
 	}
@@ -197,7 +197,7 @@ if( $blog )
 			{
 				var divid = 'commenturl_' + id;
 				fadeIn(divid, '#EE0000');
-				
+
 				$.ajax({
 					type: 'POST',
 					url: '<?php echo $htsrv_url; ?>async.php',
@@ -218,6 +218,16 @@ if( $blog )
 				AttachServerRequest( 'antispam_ban' ); // send form via hidden iframe
 				jQuery( '#close_button' ).bind( 'click', closeAntispamSettings );
 				jQuery( '.SaveButton' ).bind( 'click', refresh_overlay );
+
+				// Close antispam popup if Escape key is pressed:
+				var keycode_esc = 27;
+				jQuery(document).keyup(function(e)
+				{
+					if( e.keyCode == keycode_esc )
+					{
+						closeAntispamSettings();
+					}
+				});
 			}
 
 			// This is called to close the antispam ban overlay page
@@ -250,12 +260,12 @@ if( $blog )
 			function refresh_overlay()
 			{
 				var parameters = jQuery( '#antispam_add' ).serialize();
-				
+
 				$.ajax({
 					type: 'POST',
 					url: '<?php echo $admin_url; ?>',
 					data: 'action=ban&display_mode=js&mode=iframe&request=checkban&' + parameters,
-					success: function(result) 
+					success: function(result)
 					{
 						antispamSettings( result );
 					}
@@ -310,9 +320,14 @@ if( $blog )
 
 		$nb_blocks_displayed++;
 
+		$trashcan_link = '';
+		if( $current_User->check_perm( 'blogs', 'editall' ) )
+		{
+			$trashcan_link = get_trashcan_link();
+		}
 		$refresh_link = '<span class="floatright">'.action_icon( T_('Refresh comment list'), 'refresh', 'javascript:startRefreshComments()' ).'</span> ';
 
-		$block_item_Widget->title = $refresh_link.T_('Comments awaiting moderation').
+		$block_item_Widget->title = $refresh_link.$trashcan_link.T_('Comments awaiting moderation').
 			' <a href="'.$admin_url.'?ctrl=comments&amp;show_statuses[]=draft'.'">'.
 			'<span id="badge" class="badge">'.get_comments_awaiting_moderation_number( $Blog->ID ).'</span></a>';
 
@@ -480,6 +495,7 @@ if( $blog )
 		$block_item_Widget->disp_template_raw( 'block_end' );
 	}
 
+
 	if( $nb_blocks_displayed == 0 )
 	{	// We haven't displayed anything yet!
 
@@ -574,7 +590,7 @@ if( $blog )
 
 	// End payload block:
 	$AdminUI->disp_payload_end();
-	
+
 	echo '</div>'."\n";
 }
 else
@@ -696,6 +712,12 @@ $AdminUI->disp_global_footer();
 
 /*
  * $Log$
+ * Revision 1.74  2011/02/14 14:13:24  efy-asimo
+ * Comments trash status
+ *
+ * Revision 1.73  2011/02/10 23:07:21  fplanque
+ * minor/doc
+ *
  * Revision 1.72  2010/11/25 15:16:34  efy-asimo
  * refactor $Messages
  *
@@ -705,8 +727,8 @@ $AdminUI->disp_global_footer();
  * Revision 1.70  2010/09/20 13:00:44  efy-asimo
  * dashboard ajax calls - fix
  *
- * Revision 1.69  2010/07/26 06:52:16  efy-asimo
- * MFB v-4-0
+ * Revision 1.66.2.3  2010/07/03 20:36:53  fplanque
+ * minor fix
  *
  * Revision 1.68  2010/06/23 09:30:55  efy-asimo
  * Comments display and Antispam ban form modifications

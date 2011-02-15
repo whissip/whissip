@@ -63,10 +63,10 @@ function generic_ctp_number( $post_id, $mode = 'comments', $status = 'published'
 			foreach( $postIDarray as $tmp_post_id)
 			{	// Initializes each post to nocount!
 				$cache_ctp_number[$tmp_post_id] = array(
-						'comments' => array( 'published' => 0, 'draft' => 0, 'deprecated' => 0, 'total' => 0 ),
-						'trackbacks' => array( 'published' => 0, 'draft' => 0, 'deprecated' => 0, 'total' => 0 ),
-						'pingbacks' => array( 'published' => 0, 'draft' => 0, 'deprecated' => 0, 'total' => 0 ),
-						'feedbacks' => array( 'published' => 0, 'draft' => 0, 'deprecated' => 0, 'total' => 0 )
+						'comments' => array( 'published' => 0, 'draft' => 0, 'deprecated' => 0, 'trash' => 0, 'total' => 0 ),
+						'trackbacks' => array( 'published' => 0, 'draft' => 0, 'deprecated' => 0, 'trash' => 0, 'total' => 0 ),
+						'pingbacks' => array( 'published' => 0, 'draft' => 0, 'deprecated' => 0, 'trash' => 0, 'total' => 0 ),
+						'feedbacks' => array( 'published' => 0, 'draft' => 0, 'deprecated' => 0, 'trash' => 0, 'total' => 0 )
 					);
 			}
 
@@ -103,10 +103,10 @@ function generic_ctp_number( $post_id, $mode = 'comments', $status = 'published'
 
 		// Initializes post to nocount!
 		$cache_ctp_number[intval($post_id)] = array(
-				'comments' => array( 'published' => 0, 'draft' => 0, 'deprecated' => 0, 'total' => 0 ),
-				'trackbacks' => array( 'published' => 0, 'draft' => 0, 'deprecated' => 0, 'total' => 0 ),
-				'pingbacks' => array( 'published' => 0, 'draft' => 0, 'deprecated' => 0, 'total' => 0 ),
-				'feedbacks' => array( 'published' => 0, 'draft' => 0, 'deprecated' => 0, 'total' => 0 )
+				'comments' => array( 'published' => 0, 'draft' => 0, 'deprecated' => 0, 'trash' => 0, 'total' => 0 ),
+				'trackbacks' => array( 'published' => 0, 'draft' => 0, 'deprecated' => 0, 'trash' => 0, 'total' => 0 ),
+				'pingbacks' => array( 'published' => 0, 'draft' => 0, 'deprecated' => 0, 'trash' => 0, 'total' => 0 ),
+				'feedbacks' => array( 'published' => 0, 'draft' => 0, 'deprecated' => 0, 'trash' => 0, 'total' => 0 )
 			);
 
 		$query = 'SELECT comment_post_ID, comment_type, comment_status, COUNT(*) AS type_count
@@ -186,6 +186,11 @@ function comments_number( $zero='#', $one='#', $more='#', $post_ID = NULL )
 		global $id;
 		$post_ID = $id;
 	}
+	// fp>asimo: I'm not sure about this below. It's only in the backoffice where
+	// we want to display the total. in the front, we still don't want to count in drafts
+	// can you check & confirm?
+	// asimo>fp: This function is called only from the backoffice ( _item_list_full.view.php ).
+	// There we always have to show all comments.
 	$number = generic_ctp_number( $post_ID, 'comments', 'total' );
 	if ($number == 0)
 	{
@@ -206,7 +211,7 @@ function comments_number( $zero='#', $one='#', $more='#', $post_ID = NULL )
 
 /**
  * Get advanced perm for comment moderation on this blog
- * 
+ *
  * @param int blog ID
  * @return array statuses - current user has permission to moderate comments with these statuses
  */
@@ -235,20 +240,20 @@ function get_allowed_statuses( $blog )
 
 /**
  * Create comment form submit buttons
- * 
+ *
  * Note: Publsih in only displayed when comment is in draft status
  *
  * @param $Form
  * @param $edited_Comment
- * 
+ *
  */
 function echo_comment_buttons( $Form, $edited_Comment )
 {
 	global $Blog, $current_User;
-	
+
 	// ---------- SAVE ------------
 	$Form->submit( array( 'actionArray[update]', T_('Save!'), 'SaveButton' ) );
-	
+
 	// ---------- PUBLISH ---------
 	if( $edited_Comment->status == 'draft'
 			&& $current_User->check_perm( 'blog_post!published', 'edit', false, $Blog->ID )	// TODO: if we actually set the primary cat to another blog, we may still get an ugly perm die
@@ -271,7 +276,7 @@ function echo_comment_buttons( $Form, $edited_Comment )
 
 
 /**
- * JS Behaviour: Output JavaScript code to dynamically show or hide the "Publish!" 
+ * JS Behaviour: Output JavaScript code to dynamically show or hide the "Publish!"
  * button depending on the selected comment status.
  *
  * This function is used by the comment edit screen.
@@ -308,7 +313,7 @@ function echo_comment_publishbt_js()
 function add_jsban( $url )
 {
 	$url = rawurlencode(get_ban_domain( $url ));
-	return '<a id="ban_url" href="javascript:ban_url('.'\''.$url.'\''.');"'.get_icon( 'ban' ).'</a>';
+	return '<a id="ban_url" href="javascript:ban_url('.'\''.$url.'\''.');">'.get_icon( 'ban' ).'</a>';
 }
 
 
@@ -316,7 +321,7 @@ function add_jsban( $url )
  * Add a javascript ban action icon after each url in the given content
  * 
  * @param string Comment content
- * @return string the content with a ban icon after each url if the user has spamblacklist permission, the incoming content otherwise 
+ * @return string the content with a ban icon after each url if the user has spamblacklist permission, the incoming content otherwise
  */
 function add_ban_icons( $content )
 {
@@ -389,8 +394,27 @@ function add_ban_icons( $content )
 }
 
 
+/**
+ * Get trashcan link
+ */
+function get_trashcan_link()
+{
+	global $admin_url;
+	return '<span class="trashcan"><a href="'.$admin_url.'?ctrl=comments&amp;show_statuses[]=trash'.'">'.T_('Trashcan').'</a></span> ';
+}
+
+
 /*
  * $Log$
+ * Revision 1.22  2011/02/14 14:13:24  efy-asimo
+ * Comments trash status
+ *
+ * Revision 1.21  2011/02/10 23:07:21  fplanque
+ * minor/doc
+ *
+ * Revision 1.20  2011/01/23 19:24:36  sam2kb
+ * Fixed HTML errors in liks
+ *
  * Revision 1.19  2011/01/06 14:31:47  efy-asimo
  * advanced blog permissions:
  *  - add blog_edit_ts permission
@@ -405,6 +429,9 @@ function add_ban_icons( $content )
  * Revision 1.16  2010/09/28 11:33:06  efy-asimo
  * add_ban_icons - fix
  *
+ * Revision 1.10.2.7  2010/09/28 23:41:31  fplanque
+ * minor/doc
+ *
  * Revision 1.15  2010/09/23 15:12:14  efy-asimo
  * antispam in comment text feature - add permission check - fix
  *
@@ -414,8 +441,11 @@ function add_ban_icons( $content )
  * Revision 1.13  2010/09/20 13:06:06  efy-asimo
  * show total comments number on item full view - fix
  *
- * Revision 1.12  2010/07/26 06:52:16  efy-asimo
- * MFB v-4-0
+ * Revision 1.10.2.3  2010/07/03 22:52:19  fplanque
+ * no message
+ *
+ * Revision 1.10.2.2  2010/06/20 20:24:37  fplanque
+ * PHP4 compatibility
  *
  * Revision 1.11  2010/06/01 11:33:19  efy-asimo
  * Split blog_comments advanced permission (published, deprecated, draft)

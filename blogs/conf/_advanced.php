@@ -575,7 +575,8 @@ $public_access_to_media = true;
 
 
 /**
- * Do you want to stay in the current blog when you click on a post title or permalink, even if the post main cat belongs to another blog?
+ * Do you want to stay in the current blog when you click on a post title or permalink, 
+ * even if the post main cat belongs to another blog?
  *
  * @global boolean
  */
@@ -586,7 +587,7 @@ $cross_post_nav_in_same_blog = true;
  * Login error message (HTML).
  *
  * Setting this will trigger the login screen.
- *
+ * @todo fp>asimo move this to somewhere else; this is NOT configuration
  * @global string
  */
 $login_error = '';

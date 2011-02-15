@@ -785,7 +785,7 @@ class Comment extends DataObject
 
 		if( $ajax_button )
 		{
-			echo ' <a href="javascript:delete_comment_url('.$this->ID.');"'.get_icon( 'delete' ).'</a>';
+			echo ' <a href="javascript:delete_comment_url('.$this->ID.');">'.get_icon( 'delete' ).'</a>';
 		}
 		else
 		{
@@ -832,7 +832,7 @@ class Comment extends DataObject
 
 		if( $ajax_button )
 		{
-			echo ' <a id="ban_url" href="javascript:ban_url('.'\''.$authorurl.'\''.');"'.get_icon( 'ban' ).'</a>';
+			echo ' <a id="ban_url" href="javascript:ban_url('.'\''.$authorurl.'\''.');">'.get_icon( 'ban' ).'</a>';
 		}
 		else
 		{
@@ -895,9 +895,7 @@ class Comment extends DataObject
 		echo $before;
 		if( $ajax_button )
 		{
-			echo '<a href="javascript:deleteComment('.$this->ID.');" title="'.$title.'" onclick="return confirm(\'';
-			echo TS_('You are about to delete this comment!\\nThis cannot be undone!');
-			echo '\')"';
+			echo '<a href="javascript:deleteComment('.$this->ID.');" title="'.$title.'"';
 			if( !empty( $class ) ) echo ' class="'.$class.'"';
 			echo '>'.$text.'</a>';
 		}
@@ -1694,17 +1692,25 @@ class Comment extends DataObject
 	{
 		global $Plugins;
 
-		// remember ID, because parent method resets it to 0
-		$old_ID = $this->ID;
-
-		if( $r = parent::dbdelete() )
+		if( $this->status == 'trash' )
 		{
-			// re-set the ID for the Plugin event
-			$this->ID = $old_ID;
+			// remember ID, because parent method resets it to 0
+			$old_ID = $this->ID;
 
-			$Plugins->trigger_event( 'AfterCommentDelete', $params = array( 'Comment' => & $this ) );
+			if( $r = parent::dbdelete() )
+			{
+				// re-set the ID for the Plugin event
+				$this->ID = $old_ID;
 
-			$this->ID = 0;
+				$Plugins->trigger_event( 'AfterCommentDelete', $params = array( 'Comment' => & $this ) );
+
+				$this->ID = 0;
+			}
+		}
+		else
+		{ // don't delete just move to the trashcan
+			$this->set( 'status', 'trash' );
+			$r = $this->dbupdate();
 		}
 
 		return $r;
@@ -1729,6 +1735,9 @@ class Comment extends DataObject
 			case 'deprecated':
 				return 'blog_deprecated_comments';
 
+			case 'trash':
+				return 'blog_trash_comments';
+
 			default:
 				debug_die( 'Invalid comment status!' );
 		}
@@ -1739,6 +1748,15 @@ class Comment extends DataObject
 
 /*
  * $Log$
+ * Revision 1.76  2011/02/14 14:13:24  efy-asimo
+ * Comments trash status
+ *
+ * Revision 1.75  2011/02/10 23:07:21  fplanque
+ * minor/doc
+ *
+ * Revision 1.74  2011/01/23 19:24:36  sam2kb
+ * Fixed HTML errors in liks
+ *
  * Revision 1.73  2011/01/16 22:14:03  sam2kb
  * Fix hook invocation of FilterCommentAuthor ('makelink' gone missing)
  *
@@ -1766,8 +1784,8 @@ class Comment extends DataObject
  * Revision 1.65  2010/08/05 08:04:12  efy-asimo
  * Ajaxify comments on itemList FullView and commentList FullView pages
  *
- * Revision 1.64  2010/07/26 06:52:16  efy-asimo
- * MFB v-4-0
+ * Revision 1.56.2.6  2010/07/19 06:13:08  efy-asimo
+ * remove get_author_ip function() from comment class
  *
  * Revision 1.63  2010/06/24 08:54:05  efy-asimo
  * PHP 4 compatibility
