@@ -368,7 +368,8 @@ class Comment extends DataObject
 	{
 		global $Settings, $Plugins, $default_avatar;
 
-		if( ! $Settings->get('allow_avatars') ) return;
+		if( ! $Settings->get('allow_avatars') ) 
+			return;
 
 		if( $comment_author_User = & $this->get_author_User() )
 		{	// Author is a user
@@ -501,7 +502,7 @@ class Comment extends DataObject
 		{	// Not a registered user, display info recorded at edit time:
 			if( $params['after'] == '#' ) $params['after'] = ' ['.T_('Visitor').']';
 
-			if( strlen( $this->author_url ) <= 10 )
+			if( evo_strlen( $this->author_url ) <= 10 )
 			{	// URL is too short anyways...
 				$params['link_to'] = '';
 			}
@@ -597,7 +598,7 @@ class Comment extends DataObject
 
 		$url = $this->get_author_url();
 
-		if( strlen( $url ) < 10 )
+		if( evo_strlen( $url ) < 10 )
 		{
 			return false;
 		}
@@ -1708,7 +1709,7 @@ class Comment extends DataObject
 			}
 		}
 		else
-		{ // don't delete just move to the trashcan
+		{ // don't delete, just move to the trashcan:
 			$this->set( 'status', 'trash' );
 			$r = $this->dbupdate();
 		}
@@ -1748,6 +1749,12 @@ class Comment extends DataObject
 
 /*
  * $Log$
+ * Revision 1.78  2011/02/20 23:37:06  fplanque
+ * minor/doc
+ *
+ * Revision 1.77  2011/02/15 06:13:49  sam2kb
+ * strlen replaced with evo_strlen to support utf-8 logins and domain names
+ *
  * Revision 1.76  2011/02/14 14:13:24  efy-asimo
  * Comments trash status
  *

@@ -67,6 +67,7 @@ class User extends DataObject
 	var $level;
 	var $avatar_file_ID;
 	var $ctry_ID;
+	var $source;
 
 	/**
 	 * Does the user accept messages?
@@ -241,6 +242,7 @@ class User extends DataObject
 			$this->gender = $db_row->user_gender;
 			$this->avatar_file_ID = $db_row->user_avatar_file_ID;
 			$this->ctry_ID = $db_row->user_ctry_ID;
+			$this->source = $db_row->user_source;
 
 			// Group for this user:
 			$this->group_ID = $db_row->user_grp_ID;
@@ -261,7 +263,7 @@ class User extends DataObject
 		$edited_user_login = param( 'edited_user_login', 'string' );
 		param_check_not_empty( 'edited_user_login', T_( 'You must provide a login!' ) );
 		// We want all logins to be lowercase to guarantee uniqueness regardless of the database case handling for UNIQUE indexes:
-		$this->set_from_Request( 'login', 'edited_user_login', true, 'strtolower' );
+		$this->set_from_Request( 'login', 'edited_user_login', true, 'evo_strtolower' );
 
 		// ******* Identity form ******* //
 
@@ -387,6 +389,12 @@ class User extends DataObject
 
 			param( 'edited_user_gender', 'string', '' );
 			$this->set_from_Request('gender', 'edited_user_gender', true);
+
+			if( $is_identity_form && $current_User->check_perm( 'users', 'edit' ) )
+			{
+				param( 'edited_user_source', 'string', true );
+				$this->set_from_Request('source', 'edited_user_source', true);
+			}
 
 			param( 'edited_user_url', 'string', true );
 			param_check_url( 'edited_user_url', 'commenting' );
@@ -560,7 +568,7 @@ class User extends DataObject
 
 			case 'userurl>userpage':
 				// We give priority to user submitted url:
-				if( strlen($this->url)>10 )
+				if( evo_strlen($this->url) > 10 )
 				{
 					$url = $this->url;
 				}
@@ -949,7 +957,7 @@ class User extends DataObject
 		}
 
 		// Adjust $permname for pluggable perms, before checking the perm cache.
-		$pluggable_perms = array( 'spamblacklist', 'slugs', 'templates', 'options', 'files' );
+		$pluggable_perms = array( 'admin', 'spamblacklist', 'slugs', 'templates', 'options', 'files' );
 		if( in_array( $permname, $pluggable_perms ) ) {
 			$permname = 'perm_'.$permname;
 		}
@@ -1928,6 +1936,23 @@ class User extends DataObject
 
 
 	/**
+	 * Return gender of the user
+	 */
+	function gender()
+	{
+		switch( $this->gender )
+		{
+			case 'M':
+				return T_('Male');
+			case 'F':
+				return T_('Female');
+		}
+
+		return NULL;
+	}
+
+
+	/**
 	 * Template function: display email of the user
 	 */
 	function email( $format = 'htmlbody' )
@@ -2114,6 +2139,21 @@ class User extends DataObject
 
 /*
  * $Log$
+ * Revision 1.96  2011/02/21 15:25:26  efy-asimo
+ * Display user gender
+ *
+ * Revision 1.95  2011/02/17 14:56:38  efy-asimo
+ * Add user source param
+ *
+ * Revision 1.94  2011/02/15 15:37:00  efy-asimo
+ * Change access to admin permission
+ *
+ * Revision 1.93  2011/02/15 06:13:49  sam2kb
+ * strlen replaced with evo_strlen to support utf-8 logins and domain names
+ *
+ * Revision 1.92  2011/02/15 05:31:53  sam2kb
+ * evo_strtolower mbstring wrapper for strtolower function
+ *
  * Revision 1.91  2011/02/14 14:13:24  efy-asimo
  * Comments trash status
  *

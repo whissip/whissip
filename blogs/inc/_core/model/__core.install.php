@@ -48,7 +48,6 @@ $schema_queries = array(
 		"CREATE TABLE T_groups (
 			grp_ID int(11) NOT NULL auto_increment,
 			grp_name varchar(50) NOT NULL default '',
-			grp_perm_admin enum('none','hidden','visible') NOT NULL default 'visible',
 			grp_perm_blogs enum('user','viewall','editall') NOT NULL default 'user',
 			grp_perm_bypass_antispam         TINYINT(1) NOT NULL DEFAULT 0,
 			grp_perm_xhtmlvalidation         VARCHAR(10) NOT NULL default 'always',
@@ -117,6 +116,7 @@ $schema_queries = array(
 			user_validated tinyint(1) NOT NULL DEFAULT 0,
 			user_avatar_file_ID int(10) unsigned default NULL,
 			user_ctry_ID int(10) unsigned NULL,
+			user_source varchar(30) NULL,
 			PRIMARY KEY user_ID (user_ID),
 			UNIQUE user_login (user_login),
 			KEY user_grp_ID (user_grp_ID)
@@ -283,6 +283,12 @@ $schema_queries = array(
 
 /*
  * $Log$
+ * Revision 1.55  2011/02/17 14:56:38  efy-asimo
+ * Add user source param
+ *
+ * Revision 1.54  2011/02/15 15:37:00  efy-asimo
+ * Change access to admin permission
+ *
  * Revision 1.53  2010/12/24 01:47:12  fplanque
  * bump - changed user_notify default
  *

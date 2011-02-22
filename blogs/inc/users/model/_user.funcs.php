@@ -324,7 +324,7 @@ function get_user_admin_link( $before = '', $after = '', $link_text = '', $link_
 {
 	global $admin_url, $blog, $current_User;
 
-	if( is_logged_in() && ! $current_User->check_perm( 'admin', 'visible' ) )
+	if( is_logged_in() && ! $current_User->check_perm( 'admin', 'normal' ) )
 	{ // If user should NOT see admin link:
 		return $not_visible;
 	}
@@ -578,7 +578,7 @@ function profile_check_params( $params, $User = NULL )
 			{
 				param_error( $params['pass1'][1], T_('You typed two different passwords.') );
 			}
-			elseif( strlen($params['pass1'][0]) < $Settings->get('user_minpwdlen') )
+			elseif( evo_strlen($params['pass1'][0]) < $Settings->get('user_minpwdlen') )
 			{
 				param_error( $params['pass1'][1], sprintf( T_('The minimum password length is %d characters.'), $Settings->get('user_minpwdlen')) );
 			}
@@ -720,6 +720,12 @@ function seconds_to_fields( $duration )
 
 /*
  * $Log$
+ * Revision 1.27  2011/02/15 15:37:00  efy-asimo
+ * Change access to admin permission
+ *
+ * Revision 1.26  2011/02/15 06:13:49  sam2kb
+ * strlen replaced with evo_strlen to support utf-8 logins and domain names
+ *
  * Revision 1.25  2010/11/24 14:55:30  efy-asimo
  * Add user gender
  *

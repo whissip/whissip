@@ -52,6 +52,7 @@ param( 'login',   'string', '' );
 param( 'email',   'string', '' );
 param( 'country', 'integer', '' );
 param( 'gender',  'string', NULL );
+param( 'source', 'string', '' );
 param( 'redirect_to', 'string', '' ); // do not default to $admin_url; "empty" gets handled better in the end (uses $blogurl, if no admin perms).
 
 
@@ -107,7 +108,7 @@ switch( $action )
 		profile_check_params( $paramsList );
 
 		// We want all logins to be lowercase to guarantee uniqueness regardless of the database case handling for UNIQUE indexes:
-		$login = strtolower( $login );
+		$login = evo_strtolower( $login );
 
 		$UserCache = & get_UserCache();
 		if( $UserCache->get_by_login( $login ) )
@@ -128,6 +129,7 @@ switch( $action )
 		$new_User->set( 'nickname', $login );
 		$new_User->set( 'ctry_ID', $country );
 		$new_User->set( 'gender', $gender );
+		$new_User->set( 'source', $source );
 		$new_User->set_email( $email );
 		$new_User->set( 'ip', $Hit->IP );
 		$new_User->set( 'domain', $Hit->get_remote_host( true ) );
@@ -235,6 +237,12 @@ require $adminskins_path.'login/_reg_form.main.php';
 
 /*
  * $Log$
+ * Revision 1.108  2011/02/17 14:56:38  efy-asimo
+ * Add user source param
+ *
+ * Revision 1.107  2011/02/15 05:31:53  sam2kb
+ * evo_strtolower mbstring wrapper for strtolower function
+ *
  * Revision 1.106  2010/11/25 15:16:34  efy-asimo
  * refactor $Messages
  *

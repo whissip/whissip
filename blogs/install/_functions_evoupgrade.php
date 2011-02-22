@@ -359,7 +359,7 @@ function upgrade_b2evo_tables()
 				continue;
 			}
 			// crop off the baseurl:
-			$blog_siteurl = substr( $blog_siteurl.'/', strlen( $baseurl) );
+			$blog_siteurl = evo_substr( $blog_siteurl.'/', evo_strlen($baseurl) );
 			// echo ' -> ', $blog_siteurl,'<br />';
 
 			$query_update_blog = "UPDATE T_blogs SET blog_siteurl = '$blog_siteurl' WHERE blog_ID = $blog_ID";
@@ -2840,6 +2840,33 @@ function upgrade_b2evo_tables()
 	$DB->query( "ALTER TABLE T_comments MODIFY COLUMN comment_status ENUM('published','deprecated','draft', 'trash') DEFAULT 'published' NOT NULL");
 	task_end();
 
+	task_begin( 'Upgrading groups admin access permission...' );
+	$sql = 'SELECT grp_ID, grp_perm_admin 
+				FROM T_groups';
+	$rows = $DB->get_results( $sql, OBJECT, 'Get groups admin perms' );
+	foreach( $rows as $row )
+	{
+		switch( $row->grp_perm_admin )
+		{
+			case 'visible':
+				$value = 'normal';
+				break;
+			case 'hidden':
+				$value = 'restricted';
+				break;
+			default:
+				$value = 'none';
+		}
+		$DB->query( 'INSERT INTO T_groups__groupsettings( gset_grp_ID, gset_name, gset_value )
+						VALUES( '.$row->grp_ID.', "perm_admin", "'.$value.'" )' );
+	}
+	db_drop_col( 'T_groups', 'grp_perm_admin' );
+	task_end();
+
+	task_begin( 'Upgrading users table, add users source...' );
+	db_add_col( 'T_users', 'user_source', 'varchar(30) NULL' );
+	task_end();
+
 	/*
 	 * ADD UPGRADES HERE.
 	 *
@@ -3015,6 +3042,15 @@ function upgrade_b2evo_tables()
 
 /*
  * $Log$
+ * Revision 1.381  2011/02/17 14:56:38  efy-asimo
+ * Add user source param
+ *
+ * Revision 1.380  2011/02/15 15:37:00  efy-asimo
+ * Change access to admin permission
+ *
+ * Revision 1.379  2011/02/15 06:13:49  sam2kb
+ * strlen replaced with evo_strlen to support utf-8 logins and domain names
+ *
  * Revision 1.378  2011/02/14 14:13:24  efy-asimo
  * Comments trash status
  *
