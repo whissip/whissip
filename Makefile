@@ -26,6 +26,7 @@ export-source:
 # Remove CVS log comment blogs
 # EXPERIMENTAL?!
 remove-cvs-log:
+	# better: sed '/ \* \$Log\$/,/ \*\// c \ * $Log$\n\ */'
 	find ./$(DIST_DIR)/ -name \*.php -print0 | xargs -0 -r php -r 'foreach( array_slice($$argv, 1) as $$file ) file_put_contents($$file, preg_replace("~^/\*[^\n]*\n \* \\\$$Log:[^\n]*\\\$$\n.* \*/\n?~sm", "", file_get_contents($$file)));'
 
 #TODO: should depend on directory "dist"

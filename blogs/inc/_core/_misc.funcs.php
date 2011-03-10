@@ -589,14 +589,7 @@ function evo_bytes( $string )
  */
 function evo_strtolower( $string )
 {
-	global $current_charset;
-
-	if( $current_charset != 'iso-8859-1' && $current_charset != '' && function_exists('mb_strtolower') )
-	{
-		return mb_strtolower( $string, $current_charset );
-	}
-
-	return strtolower($string);
+	return mb_strtolower( $string, 'utf-8' );
 }
 
 
@@ -608,12 +601,7 @@ function evo_strtolower( $string )
  */
 function evo_strlen( $string )
 {
-	if( is_callable('mb_strlen') )
-	{
-		return mb_strlen( $string, 'utf-8' );
-	}
-
-	return strlen($string);
+	return mb_strlen( $string, 'utf-8' );
 }
 
 
@@ -636,12 +624,7 @@ function evo_substr( $string, $start = 0, $length = '#' )
 		$length = evo_strlen($string);
 	}
 
-	if( is_callable('mb_substr') )
-	{
-		return mb_substr( $string, $start, $length, 'utf8' );
-	}
-
-	return substr( $string, $start, $length );
+	return mb_substr( $string, $start, $length, 'utf8' );
 }
 
 
