@@ -415,6 +415,11 @@ function get_icon_info($name)
 			'alt'  => T_( 'Allowed' ),
 			'size' => array( 16, 14 ),
 		);
+		case 'file_allowed_registered': return array(
+			'file' => 'icons/lock_open.png',
+			'alt'  => T_( 'Allowed for registered users' ),
+			'size' => array( 16, 14 ),
+		);
 		case 'file_not_allowed': return array(
 			'file' => 'icons/locked.gif',
 			'alt'  => T_( 'Blocked' ),
@@ -518,11 +523,31 @@ function get_icon_info($name)
 			'alt'	 => '-',
 			'size' => array( 12, 12 ),
 		);
+
+		case 'recycle_full': return array(
+			'file' => 'icons/recycle_full.png',
+			'alt'  => T_('Open recycle bin'),
+			'size' => array( 16, 16 ),
+		);
+		case 'recycle_empty': return array(
+			'file' => 'icons/recycle_empty.png',
+			'alt'  => T_('Empty recycle bin'),
+			'size' => array( 16, 16 ),
+		);
 	}
 }
 
 /*
  * $Log$
+ * Revision 1.73  2011/03/10 14:54:18  efy-asimo
+ * Allow file types modification & add m4v file type
+ *
+ * Revision 1.72  2011/02/24 13:11:28  efy-asimo
+ * Change recycle icons size
+ *
+ * Revision 1.71  2011/02/24 07:42:26  efy-asimo
+ * Change trashcan to Recycle bin
+ *
  * Revision 1.70  2010/01/22 20:20:16  efy-asimo
  * Remove File manager rename file
  *

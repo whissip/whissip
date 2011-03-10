@@ -52,6 +52,7 @@ if( ! $commented_Item->can_comment( NULL ) )
 $comment = param( 'p', 'html' );
 
 param( 'comment_autobr', 'integer', ($comments_use_autobr == 'always') ? 1 : 0 );
+$commented_Item->load_Blog(); // Make sure Blog is loaded (will be needed wether logged in or not)
 
 if( is_logged_in() )
 {
@@ -71,7 +72,14 @@ else
 	// Note: we use funky field names to defeat the most basic guestbook spam bots and/or their most basic authors
 	$author = param( 'u', 'string' );
 	$email = param( 'i', 'string' );
-	$url = param( 'o', 'string' );
+	if( $commented_Item->Blog->get_setting( 'allow_anon_url' ) )
+	{
+		$url = param( 'o', 'string' );
+	}
+	else
+	{
+		$url = NULL;
+	}
 	param( 'comment_cookies', 'integer', 0 );
 	param( 'comment_allow_msgform', 'integer', 0 ); // checkbox
 }
@@ -111,8 +119,6 @@ $Plugins->trigger_event( 'CommentFormSent', array(
 
 // Check that this action request is not a CSRF hacked request:
 $Session->assert_received_crumb( 'comment' );
-
-$commented_Item->get_Blog(); // Make sure Blog is loaded (will be needed wether logged in or not)
 
 if( $User )
 {	// User is logged in (or provided, e.g. via OpenID plugin)
@@ -249,6 +255,49 @@ if( $action != 'preview' )
 	/* end flood-protection */
 }
 
+// get already attached file ids
+param( 'preview_attachments', 'string', '' );
+
+if( $commented_Item->can_attach() && ( ( $action == 'preview' ) || $ok ) )
+{ // attaching files is permitted
+	$FileRootCache = & get_FileRootCache();
+	if( is_logged_in() )
+	{ // registered user
+		$root = FileRoot::gen_ID( 'user', $current_User->ID );
+		$path = 'comments/p'.$commented_Item->ID;
+	}
+	else
+	{ // anonymous user
+		$root = FileRoot::gen_ID( 'collection', $commented_Item->Blog->ID );
+		$path = 'anonymous_comments/p'.$commented_Item->ID;
+	}
+
+	// process upload
+	$result = process_upload( $root, $path, true, false, false, false );
+	if( !empty( $result ) )
+	{
+		$uploadedFiles = $result['uploadedFiles'];
+		if( !empty( $result['failedFiles'] ) )
+		{ // upload failed
+			$Messages->add( T_( 'Couldn\'t attach selected file:' ).$result['failedFiles'][0], 'warning' );
+		}
+		if( !empty( $uploadedFiles ) )
+		{ // upload succeeded
+			foreach( $uploadedFiles as $File )
+			{
+				if( empty( $preview_attachments ) )
+				{
+					$preview_attachments = $File->ID;//get_rdfp_rel_path();
+				}
+				else
+				{
+					$preview_attachments .= ','.$File->ID;//get_rdfp_rel_path();
+				}
+			}
+		}
+	}
+}
+
 
 // Trigger event: a Plugin could add a $category="error" message here..
 $Plugins->trigger_event('BeforeCommentFormInsert', array(
@@ -293,6 +342,7 @@ if( $Messages->has_errors() )
 if( $action == 'preview' )
 { // set the Comment into user's session and redirect.
 	$Comment->set( 'original_content', $original_comment ); // used in the textarea input field again
+	$Comment->set( 'preview_attachments', $preview_attachments ); // memorize attachments
 	$Session->set( 'core.preview_Comment', $Comment );
 	$Session->set( 'core.no_CachePageContent', 1 );
 	$Session->dbsave();
@@ -320,6 +370,25 @@ else
 // RECORD comment:
 
 $Comment->dbinsert();
+
+// Create links
+if( !empty( $preview_attachments ) )
+{
+	global $DB;
+	$order = 1;
+	$attachments = explode( ',', $preview_attachments );
+	$DB->begin();
+	foreach( $attachments as $file_ID )
+	{ // create links between comment and attached files
+		$edited_Link = new Link();
+		$edited_Link->set( 'cmt_ID', $Comment->ID );
+		$edited_Link->set( 'file_ID', $file_ID );
+		$edited_Link->set( 'position', 'aftermore' );
+		$edited_Link->set( 'order', $order );
+		$edited_Link->dbinsert();
+	}
+	$DB->commit();
+}
 
 
 /*
@@ -405,6 +474,12 @@ header_redirect(); // Will save $Messages into Session
 
 /*
  * $Log$
+ * Revision 1.147  2011/03/03 12:47:29  efy-asimo
+ * comments attachments
+ *
+ * Revision 1.146  2011/03/02 09:45:58  efy-asimo
+ * Update collection features allow_comments, disable_comments_bypost, allow_attachments, allow_rating
+ *
  * Revision 1.145  2010/11/25 15:16:34  efy-asimo
  * refactor $Messages
  *

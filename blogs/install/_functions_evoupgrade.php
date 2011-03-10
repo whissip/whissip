@@ -2867,6 +2867,59 @@ function upgrade_b2evo_tables()
 	db_add_col( 'T_users', 'user_source', 'varchar(30) NULL' );
 	task_end();
 
+	task_begin( 'Upgrading blogs table, remove allowcomments setting...' );
+	$DB->query( 'INSERT INTO T_coll_settings ( cset_coll_ID, cset_name, cset_value )
+					SELECT blog_ID, "allow_comments", "never"
+						FROM T_blogs
+						WHERE blog_allowcomments = "never"' );
+	db_drop_col( 'T_blogs', 'blog_allowcomments' );
+	task_end();
+
+	task_begin( 'Upgrading collection settings allow_rating fields...' );
+	$DB->query( 'UPDATE T_coll_settings
+					SET cset_value = "any"
+					WHERE cset_value = "always" AND cset_name = "allow_rating"' );
+	task_end();
+
+	task_begin( 'Upgrading links table, add link_cmt_ID...' );
+	$DB->query( 'ALTER TABLE T_links
+					MODIFY COLUMN link_itm_ID int(11) unsigned NULL,
+					MODIFY COLUMN link_creator_user_ID int(11) unsigned NULL,
+					MODIFY COLUMN link_lastedit_user_ID int(11) unsigned NULL,
+					ADD COLUMN link_cmt_ID int(11) unsigned NULL AFTER link_itm_ID,
+					ADD INDEX link_cmt_ID ( link_cmt_ID )' );
+	task_end();
+
+	require_once dirname(__FILE__).'/_functions_create.php';
+	create_default_jobs( true );
+
+	task_begin( 'Upgrading filetypes table...' );
+	// get allowed filetype ids
+	$sql = 'SELECT ftyp_ID
+				FROM T_filetypes
+				WHERE ftyp_allowed != 0';
+	$allowed_ids = implode( ',', $DB->get_col( $sql, 0, 'Get allowed filetypes' ) );
+	// update table column
+	$DB->query( 'ALTER TABLE T_filetypes
+					MODIFY COLUMN ftyp_allowed enum("any","registered","admin") NOT NULL default "admin"' );
+	// update ftyp_allowed column content
+	$DB->query( 'UPDATE T_filetypes
+					SET ftyp_allowed = "registered"
+					WHERE ftyp_ID IN ('.$allowed_ids.')' );
+	$DB->query( 'UPDATE T_filetypes
+					SET ftyp_allowed = "admin"
+					WHERE ftyp_ID NOT IN ('.$allowed_ids.')' );
+	$DB->query( 'UPDATE T_filetypes
+					SET ftyp_allowed = "any"
+					WHERE ftyp_extensions = "gif" OR ftyp_extensions = "png" OR ftyp_extensions LIKE "%jpg%"' );
+	// Add m4v file type if not exists
+	if( !db_key_exists( 'T_filetypes', 'ftyp_extensions', '"m4v"' ) )
+	{
+		$DB->query( 'INSERT INTO T_filetypes (ftyp_extensions, ftyp_name, ftyp_mimetype, ftyp_icon, ftyp_viewtype, ftyp_allowed)
+			             VALUES ("m4v", "MPEG video file", "video/x-m4v", "", "browser", "registered")', 'Add "m4v" file type' );
+	}
+	task_end();
+
 	/*
 	 * ADD UPGRADES HERE.
 	 *
@@ -3042,6 +3095,21 @@ function upgrade_b2evo_tables()
 
 /*
  * $Log$
+ * Revision 1.386  2011/03/10 14:54:19  efy-asimo
+ * Allow file types modification & add m4v file type
+ *
+ * Revision 1.385  2011/03/07 08:11:04  efy-asimo
+ * Create default jobbs into the scheduler
+ *
+ * Revision 1.384  2011/03/03 12:47:29  efy-asimo
+ * comments attachments
+ *
+ * Revision 1.383  2011/03/02 09:48:15  efy-asimo
+ * remove comment
+ *
+ * Revision 1.382  2011/03/02 09:45:59  efy-asimo
+ * Update collection features allow_comments, disable_comments_bypost, allow_attachments, allow_rating
+ *
  * Revision 1.381  2011/02/17 14:56:38  efy-asimo
  * Add user source param
  *

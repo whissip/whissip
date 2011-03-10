@@ -42,7 +42,7 @@ if( $params['disp_comment_form'] && $Item->can_comment( $params['before_comment_
 { // We want to display the comments form and the item can be commented on:
 
 	echo $params['before_comment_form'];
-	
+
 	// INIT/PREVIEW:
 	if( $Comment = $Session->get('core.preview_Comment') )
 	{	// We have a comment to preview
@@ -64,6 +64,7 @@ if( $params['disp_comment_form'] && $Item->can_comment( $params['before_comment_
 
 			// Form fields:
 			$comment_content = $Comment->original_content;
+			$comment_attachments = $Comment->preview_attachments;
 			// for visitors:
 			$comment_author = $Comment->author;
 			$comment_author_email = $Comment->author_email;
@@ -79,7 +80,7 @@ if( $params['disp_comment_form'] && $Item->can_comment( $params['before_comment_
 		if( $PageCache->is_collecting )
 		{	// This page is going into the cache, we don't want personal data cached!!!
 			// fp> These fields should be filled out locally with Javascript tapping directly into the cookies. Anyone JS savvy enough to do that?
-      $comment_author = '';
+			$comment_author = '';
 			$comment_author_email = '';
 			$comment_author_url = '';
 		}
@@ -132,7 +133,7 @@ if( $params['disp_comment_form'] && $Item->can_comment( $params['before_comment_
 		  /* ]]> */
 		  </script>';
 
-	$Form = new Form( $htsrv_url.'comment_post.php', 'bComment_form_id_'.$Item->ID, 'post' );
+	$Form = new Form( $htsrv_url.'comment_post.php', 'bComment_form_id_'.$Item->ID, 'post', NULL, 'multipart/form-data' );
 	$Form->begin_form( 'bComment', '', array( 'target' => '_self', 'onsubmit' => 'return validateCommentForm(this);' ) );
 
 	// TODO: dh> a plugin hook would be useful here to add something to the top of the Form.
@@ -161,7 +162,11 @@ if( $params['disp_comment_form'] && $Item->can_comment( $params['before_comment_
 		// Note: we use funky field names to defeat the most basic guestbook spam bots
 		$Form->text( 'u', $comment_author, 40, T_('Name'), '', 100, 'bComment' );
 		$Form->text( 'i', $comment_author_email, 40, T_('Email'), '<br />'.T_('Your email address will <strong>not</strong> be revealed on this site.'), 100, 'bComment' );
-		$Form->text( 'o', $comment_author_url, 40, T_('Website'), '<br />'.T_('Your URL will be displayed.'), 100, 'bComment' );
+		$Item->load_Blog();
+		if( $Item->Blog->get_setting( 'allow_anon_url' ) )
+		{
+			$Form->text( 'o', $comment_author_url, 40, T_('Website'), '<br />'.T_('Your URL will be displayed.'), 100, 'bComment' );
+		}
 	}
 
 	if( $Item->can_rate() )
@@ -188,6 +193,17 @@ if( $params['disp_comment_form'] && $Item->can_comment( $params['before_comment_
 
 	// set b2evoCanvas for plugins
 	echo '<script type="text/javascript">var b2evoCanvas = document.getElementById( "p" );</script>';
+
+	// Attach files:
+	if( $Item->can_attach() )
+	{
+		if( !isset( $comment_attachments ) )
+		{
+			$comment_attachments = '';
+		}
+		$Form->hidden( 'preview_attachments', $comment_attachments );
+		$Form->input_field( array( 'label' => T_('Attach files'), 'note' => '<br />'.get_upload_restriction(), 'name' => 'uploadfile[]', 'type' => 'file', 'size' => '30' ) );
+	}
 
 	$comment_options = array();
 
@@ -244,6 +260,12 @@ if( $params['disp_comment_form'] && $Item->can_comment( $params['before_comment_
 
 /*
  * $Log$
+ * Revision 1.21  2011/03/03 12:47:29  efy-asimo
+ * comments attachments
+ *
+ * Revision 1.20  2011/03/02 09:45:59  efy-asimo
+ * Update collection features allow_comments, disable_comments_bypost, allow_attachments, allow_rating
+ *
  * Revision 1.19  2010/06/07 19:05:58  sam2kb
  * Added missing params
  *

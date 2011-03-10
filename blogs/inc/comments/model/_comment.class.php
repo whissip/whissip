@@ -125,6 +125,10 @@ class Comment extends DataObject
 		// Call parent constructor:
 		parent::DataObject( 'T_comments', 'comment_', 'comment_ID' );
 
+		$this->delete_cascades = array(
+				array( 'table'=>'T_links', 'fk'=>'link_cmt_ID', 'msg'=>T_('%d links to destination comments') ),
+			);
+
 		if( $db_row == NULL )
 		{
 			// echo 'null comment';
@@ -1254,21 +1258,97 @@ class Comment extends DataObject
 	 *
 	 * @param string Output format, see {@link format_to_output()}
 	 * @param boolean Add ban url action icon after each url or not
+	 * @param boolean show comment attachments
+	 * @param array attachment display params
 	 */
-	function content( $format = 'htmlbody', $ban_urls = false )
+	function content( $format = 'htmlbody', $ban_urls = false, $show_attachments = true, $params = array() )
 	{
 		global $current_User;
-		if( $ban_urls )
-		{ // add ban icons
-			$Item = & $this->get_Item();
-			if( $current_User->check_perm( $this->blogperm_name(), '', false, $Item->get_blog_ID() ) )
-			{ // current user has edit permission for this comment
-				echo add_ban_icons( $this->get_content( $format ) );
-				return; // return after content display
+
+		if( $show_attachments )
+		{
+			// Make sure we are not missing any param:
+			$params = array_merge( array(
+					'before_image'        => '<div class="image_block">',
+					'before_image_legend' => '<div class="image_legend">',
+					'after_image_legend'  => '</div>',
+					'after_image'         => '</div>',
+					'image_size'          => 'fit-400x320',
+				), $params );
+			$attachments = array( 'images' => array(), 'docs' => array() );
+			if( empty( $this->ID ) && isset( $this->preview_attachments ) )
+			{ // PREVIEW
+				$attachment_ids = explode( ',', $this->preview_attachments );
+				$FileCache = & get_FileCache();
+				foreach( $attachment_ids as $ID )
+				{
+					$File = $FileCache->get_by_ID( $ID, false, false );
+					if( $File != NULL )
+					{
+						$index = $File->is_image() ? 'images' : 'docs';
+						$attachments[$index][] = $File;
+					}
+				}
+			}
+			else
+			{ // Get links
+				$LinkCache = & get_LinkCache();
+				$commentLinks = $LinkCache->get_by_comment_ID( $this->ID );
+				if( !empty( $commentLinks ) )
+				{
+					foreach( $commentLinks as $Link )
+					{
+						$File = $Link->get_File();
+						$index = $File->is_image() ? 'images' : 'docs';
+						$attachments[$index][] = $File;
+					}
+				}
 			}
 		}
 
-		echo $this->get_content( $format );
+		if( isset( $attachments['images'] ) )
+		{
+			foreach( $attachments['images'] as $image_File )
+			{ // show image attachments
+				echo $image_File->get_tag( $params['before_image'], $params['before_image_legend'], $params['after_image_legend'], $params['after_image'], $params['image_size'] );
+			}
+		}
+
+		if( $ban_urls )
+		{ // add ban icons
+			$Item = & $this->get_Item();
+			// check if user has edit permission for this comment
+			$ban_urls = $current_User->check_perm( $this->blogperm_name(), '', false, $Item->get_blog_ID() );
+		}
+
+		if( $ban_urls )
+		{ // ban urls and user has permission
+			echo add_ban_icons( $this->get_content( $format ) );
+		}
+		else
+		{ // don't ban urls
+			echo $this->get_content( $format );
+		}
+
+		if( isset( $attachments['docs'] ) )
+		{ // show not image attachments
+			$after_docs = '';
+			if( count( $attachments['docs'] ) > 0 )
+			{
+				echo '<br /><b>'.T_( 'Attachments:' ).'</b>';
+				echo '<ul class="bFiles">';
+				$after_docs = '</ul>';
+			}
+			foreach( $attachments['docs'] as $doc_File )
+			{
+				echo '<li>';
+				echo action_icon( T_('Download file'), 'download', $doc_File->get_url(), '', 5 ).' ';
+				echo $doc_File->get_view_link( $doc_File->get_name() );
+				echo '('.bytesreadable( $doc_File->get_size() ).')';
+				echo '</li>';
+			}
+			echo $after_docs;
+		}
 	}
 
 
@@ -1691,15 +1771,24 @@ class Comment extends DataObject
 	 */
 	function dbdelete()
 	{
-		global $Plugins;
+		global $Plugins, $DB;
 
 		if( $this->status == 'trash' )
 		{
 			// remember ID, because parent method resets it to 0
 			$old_ID = $this->ID;
 
+			// Select comment attachment ids
+			$result = $DB->get_col( 'SELECT link_file_ID FROM T_links
+										WHERE link_cmt_ID = '.$this->ID );
+
 			if( $r = parent::dbdelete() )
 			{
+				if( !empty( $result ) )
+				{ // remove deleted comment not linked attachments
+					remove_orphan_files( $result );
+				}
+
 				// re-set the ID for the Plugin event
 				$this->ID = $old_ID;
 
@@ -1709,7 +1798,7 @@ class Comment extends DataObject
 			}
 		}
 		else
-		{ // don't delete, just move to the trashcan:
+		{ // don't delete, just move to the trash:
 			$this->set( 'status', 'trash' );
 			$r = $this->dbupdate();
 		}
@@ -1749,6 +1838,15 @@ class Comment extends DataObject
 
 /*
  * $Log$
+ * Revision 1.81  2011/03/04 08:40:23  efy-asimo
+ * Add params to content display template
+ *
+ * Revision 1.80  2011/03/03 12:47:29  efy-asimo
+ * comments attachments
+ *
+ * Revision 1.79  2011/02/24 07:42:27  efy-asimo
+ * Change trashcan to Recycle bin
+ *
  * Revision 1.78  2011/02/20 23:37:06  fplanque
  * minor/doc
  *

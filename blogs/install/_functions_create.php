@@ -213,23 +213,24 @@ function create_default_data()
 	$DB->query( "INSERT INTO T_filetypes
 			(ftyp_ID, ftyp_extensions, ftyp_name, ftyp_mimetype, ftyp_icon, ftyp_viewtype, ftyp_allowed)
 		VALUES
-			(1, 'gif', 'GIF image', 'image/gif', 'image2.png', 'image', 1),
-			(2, 'png', 'PNG image', 'image/png', 'image2.png', 'image', 1),
-			(3, 'jpg jpeg', 'JPEG image', 'image/jpeg', 'image2.png', 'image', 1),
-			(4, 'txt', 'Text file', 'text/plain', 'document.png', 'text', 1),
-			(5, 'htm html', 'HTML file', 'text/html', 'html.png', 'browser', 0),
-			(6, 'pdf', 'PDF file', 'application/pdf', 'pdf.png', 'browser', 1),
-			(7, 'doc', 'Microsoft Word file', 'application/msword', 'doc.gif', 'external', 1),
-			(8, 'xls', 'Microsoft Excel file', 'application/vnd.ms-excel', 'xls.gif', 'external', 1),
-			(9, 'ppt', 'Powerpoint', 'application/vnd.ms-powerpoint', 'ppt.gif', 'external', 1),
-			(10, 'pps', 'Slideshow', 'pps', 'pps.gif', 'external', 1),
-			(11, 'zip', 'ZIP archive', 'application/zip', 'zip.gif', 'external', 1),
-			(12, 'php php3 php4 php5 php6', 'PHP script', 'application/x-httpd-php', 'php.gif', 'text', 0),
-			(13, 'css', 'Style sheet', 'text/css', '', 'text', 1),
-			(14, 'mp3', 'MPEG audio file', 'audio/mpeg', '', 'browser', 1),
-			(15, 'm4a', 'MPEG audio file', 'audio/x-m4a', '', 'browser', 1),
-			(16, 'mp4', 'MPEG video', 'video/mp4', '', 'browser', 1),
-			(17, 'mov', 'Quicktime video', 'video/quicktime', '', 'browser', 1)
+			(1, 'gif', 'GIF image', 'image/gif', 'image2.png', 'image', 'any'),
+			(2, 'png', 'PNG image', 'image/png', 'image2.png', 'image', 'any'),
+			(3, 'jpg jpeg', 'JPEG image', 'image/jpeg', 'image2.png', 'image', 'any'),
+			(4, 'txt', 'Text file', 'text/plain', 'document.png', 'text', 'registered'),
+			(5, 'htm html', 'HTML file', 'text/html', 'html.png', 'browser', 'admin'),
+			(6, 'pdf', 'PDF file', 'application/pdf', 'pdf.png', 'browser', 'registered'),
+			(7, 'doc', 'Microsoft Word file', 'application/msword', 'doc.gif', 'external', 'registered'),
+			(8, 'xls', 'Microsoft Excel file', 'application/vnd.ms-excel', 'xls.gif', 'external', 'registered'),
+			(9, 'ppt', 'Powerpoint', 'application/vnd.ms-powerpoint', 'ppt.gif', 'external', 'registered'),
+			(10, 'pps', 'Slideshow', 'pps', 'pps.gif', 'external', 'registered'),
+			(11, 'zip', 'ZIP archive', 'application/zip', 'zip.gif', 'external', 'registered'),
+			(12, 'php php3 php4 php5 php6', 'PHP script', 'application/x-httpd-php', 'php.gif', 'text', 'admin'),
+			(13, 'css', 'Style sheet', 'text/css', '', 'text', 'registered'),
+			(14, 'mp3', 'MPEG audio file', 'audio/mpeg', '', 'browser', 'registered'),
+			(15, 'm4a', 'MPEG audio file', 'audio/x-m4a', '', 'browser', 'registered'),
+			(16, 'mp4', 'MPEG video', 'video/mp4', '', 'browser', 'registered'),
+			(17, 'mov', 'Quicktime video', 'video/quicktime', '', 'browser', 'registered'),
+			(18, 'm4v', 'MPEG video file', 'video/x-m4v', '', 'browser', 'registered')
 		" );
 	echo "OK.<br />\n";
 
@@ -257,6 +258,9 @@ function create_default_data()
 	// don't change order of the following two functions as countries has relations to currencies
 	create_default_currencies();
 	create_default_countries();
+
+	// create default scheduled jobs
+	create_default_jobs();
 
 	echo 'Creating default "help" slug... ';
 	$DB->query( '
@@ -709,6 +713,58 @@ function create_default_countries()
 			(246, 'zm', 'Zambia', 145),
 			(247, 'zw', 'Zimbabwe', 146)" );
 	echo "OK.<br />\n";
+}
+
+/**
+ * Create default scheduled jobs
+ * 
+ * @param boolean true if it's called from the ugrade script, false if it's called from the install script
+ */
+function create_default_jobs( $is_upgrade = false )
+{
+	global $DB, $localtimenow;
+
+	// get tomorrow date
+	$date = date2mysql( $localtimenow + 86400 );
+	$ctsk_params = $DB->quote( 'N;' );
+
+	$prune_pagecache_ctrl = 'cron/jobs/_prune_page_cache.job.php';
+	$prune_sessions_ctrl = 'cron/jobs/_prune_hits_sessions.job.php';
+	$poll_antispam_ctrl = 'cron/jobs/_antispam_poll.job.php';
+
+	// init insert values
+	$prune_pagecache = "( ".$DB->quote( form_date( $date, '02:00:00' ) ).", 86400, ".$DB->quote( T_( 'Prune old files from page cache' ) ).", ".$DB->quote( $prune_pagecache_ctrl ).", ".$ctsk_params." )";
+	$prune_sessions = "( ".$DB->quote( form_date( $date, '03:00:00' ) ).", 86400, ".$DB->quote( T_( 'Prune old hits & sessions' ) ).", ".$DB->quote( $prune_sessions_ctrl ).", ".$ctsk_params." )";
+	$poll_antispam = "( ".$DB->quote( form_date( $date, '04:00:00' ) ).", 86400, ".$DB->quote( T_( 'Poll the antispam blacklist' ) ).", ".$DB->quote( $poll_antispam_ctrl ).", ".$ctsk_params." )";
+	$insert_values = array( $prune_pagecache_ctrl => $prune_pagecache, $prune_sessions_ctrl => $prune_sessions, $poll_antispam_ctrl => $poll_antispam );
+
+	if( $is_upgrade )
+	{ // Check if this jobs already exists, and don't create another
+		$sql = 'SELECT count(ctsk_ID) as job_number, ctsk_controller
+					FROM T_cron__task LEFT JOIN T_cron__log ON ctsk_ID = clog_ctsk_ID
+						WHERE clog_status IS NULL AND
+							( ctsk_controller = '.$DB->quote( $prune_pagecache_ctrl ).' OR
+							ctsk_controller = '.$DB->quote( $prune_sessions_ctrl ).' OR
+							ctsk_controller = '.$DB->quote( $poll_antispam_ctrl ).' )
+						GROUP BY ctsk_controller';
+		$result = $DB->get_results( $sql );
+		foreach( $result as $row )
+		{ // clear existing jobs insert values
+			unset( $insert_values[$row->ctsk_controller] );
+		}
+	}
+
+	$values = implode( ', ', $insert_values );
+	if( empty( $values ) )
+	{ // nothing to create
+		return;
+	}
+
+	task_begin( T_( 'Creating default scheduled jobs... ' ) );
+	$DB->query( '
+		INSERT INTO T_cron__task ( ctsk_start_datetime, ctsk_repeat_after, ctsk_name, ctsk_controller, ctsk_params )
+		VALUES '.$values, T_( 'Create default scheduled jobs' ) );
+	task_end();
 }
 
 /**
@@ -1296,6 +1352,12 @@ function create_demo_contents()
 
 /*
  * $Log$
+ * Revision 1.304  2011/03/10 14:54:19  efy-asimo
+ * Allow file types modification & add m4v file type
+ *
+ * Revision 1.303  2011/03/07 08:11:04  efy-asimo
+ * Create default jobbs into the scheduler
+ *
  * Revision 1.302  2011/02/15 15:37:00  efy-asimo
  * Change access to admin permission
  *

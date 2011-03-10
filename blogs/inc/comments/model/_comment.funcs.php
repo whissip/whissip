@@ -306,7 +306,7 @@ function echo_comment_publishbt_js()
 
 /**
  * Add a javascript ban action icon after the given url
- * 
+ *
  * @param string url
  * @return string the url with ban icon
  */
@@ -319,7 +319,7 @@ function add_jsban( $url )
 
 /**
  * Add a javascript ban action icon after each url in the given content
- * 
+ *
  * @param string Comment content
  * @return string the content with a ban icon after each url if the user has spamblacklist permission, the incoming content otherwise
  */
@@ -395,17 +395,31 @@ function add_ban_icons( $content )
 
 
 /**
- * Get trashcan link
+ * Get opentrash link
+ *
+ * @param boolean check permission or not. Should be false only if it was already checked.
+ * @return Open recycle bin link if user has the corresponding 'blogs' - 'editall' permission, empty string otherwise
  */
-function get_trashcan_link()
+function get_opentrash_link( $check_perm = true )
 {
-	global $admin_url;
-	return '<span class="trashcan"><a href="'.$admin_url.'?ctrl=comments&amp;show_statuses[]=trash'.'">'.T_('Trashcan').'</a></span> ';
+	global $admin_url, $current_User;
+	if( !$check_perm || $current_User->check_perm( 'blogs', 'editall' ) )
+	{
+		return '<span class="floatright">'.action_icon( T_('Open recycle bin'), 'recycle_full',
+						$admin_url.'?ctrl=comments&amp;show_statuses[]=trash', T_('Open recycle bin'), 5, 3 ).'</span> ';
+	}
+	return '';
 }
 
 
 /*
  * $Log$
+ * Revision 1.25  2011/02/25 22:04:09  fplanque
+ * minor / UI cleanup
+ *
+ * Revision 1.24  2011/02/24 07:42:27  efy-asimo
+ * Change trashcan to Recycle bin
+ *
  * Revision 1.23  2011/02/15 06:13:49  sam2kb
  * strlen replaced with evo_strlen to support utf-8 logins and domain names
  *

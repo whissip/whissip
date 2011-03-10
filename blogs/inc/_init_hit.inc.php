@@ -109,7 +109,8 @@ $pagenow = explode( '?', $pagenow );
 $pagenow = $pagenow[0];
 */
 // find precisely the first occurrence of something.php in SCRIPT_NAME, extract that and ignore any extra path.
-if( ! preg_match( '#/([A-Za-z0-9_\-.]+\.php[0-9]?)#', $_SERVER['SCRIPT_NAME'], $matches ))
+if( ! preg_match( '#/([A-Za-z0-9_\-.]+\.php[0-9]?)#i', $_SERVER['SCRIPT_NAME'], $matches ))
+	! preg_match( '#/([A-Za-z0-9_\-.]+\.php[0-9]?)#i', $ReqURI, $matches ) )
 {
 	debug_die('Can\'t identify current .php script name in SCRIPT_NAME ('.htmlspecialchars($_SERVER['SCRIPT_NAME']).').');
 }
@@ -230,6 +231,10 @@ $Timer->pause( '_init_hit' );
 
 /*
  * $Log$
+ * Revision 1.9  2011/03/01 18:29:47  sam2kb
+ * Better pagenow handling
+ * Fixes this http://forums.b2evolution.net//viewtopic.php?t=21671
+ *
  * Revision 1.8  2011/01/11 17:48:49  sam2kb
  * Allow filenames with dots and uppercase PHP extension
  *

@@ -610,6 +610,8 @@ function locale_options_return( $default = '' )
  *
  * This gets tested in {@link test_locale_from_httpaccept()}.
  *
+ * @author Rewritten by blueyed in Revision 1.42
+ *
  * @return string Locale made out of HTTP_ACCEPT_LANGUAGE or $default_locale, if no match
  */
 function locale_from_httpaccept()
@@ -1041,6 +1043,12 @@ function locales_load_available_defs()
 
 /*
  * $Log$
+ * Revision 1.47  2011/03/02 00:52:01  fplanque
+ * added @author tag
+ *
+ * Revision 1.46  2011/02/27 17:45:11  fplanque
+ * no message
+ *
  * Revision 1.45  2011/02/10 23:07:21  fplanque
  * minor/doc
  *
