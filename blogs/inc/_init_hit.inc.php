@@ -109,8 +109,7 @@ $pagenow = explode( '?', $pagenow );
 $pagenow = $pagenow[0];
 */
 // find precisely the first occurrence of something.php in SCRIPT_NAME, extract that and ignore any extra path.
-if( ! preg_match( '#/([A-Za-z0-9_\-.]+\.php[0-9]?)#i', $_SERVER['SCRIPT_NAME'], $matches ))
-	! preg_match( '#/([A-Za-z0-9_\-.]+\.php[0-9]?)#i', $ReqURI, $matches ) )
+if( ! preg_match( '#/([A-Za-z0-9_\-.]+\.php[0-9]?)#i', $_SERVER['SCRIPT_NAME'], $matches ) )
 {
 	debug_die('Can\'t identify current .php script name in SCRIPT_NAME ('.htmlspecialchars($_SERVER['SCRIPT_NAME']).').');
 }
