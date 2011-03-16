@@ -398,22 +398,46 @@ function add_ban_icons( $content )
  * Get opentrash link
  *
  * @param boolean check permission or not. Should be false only if it was already checked.
+ * @param boolean show "Open recycle bin" link even if doesn't exists comment with 'trash' status
  * @return Open recycle bin link if user has the corresponding 'blogs' - 'editall' permission, empty string otherwise
  */
-function get_opentrash_link( $check_perm = true )
+function get_opentrash_link( $check_perm = true, $force_show = false )
 {
-	global $admin_url, $current_User;
-	if( !$check_perm || $current_User->check_perm( 'blogs', 'editall' ) )
-	{
-		return '<span class="floatright">'.action_icon( T_('Open recycle bin'), 'recycle_full',
+	global $admin_url, $current_User, $DB, $blog;
+
+	$show_recycle_bin = ( !$check_perm || $current_User->check_perm( 'blogs', 'editall' ) );
+	if( $show_recycle_bin && ( !$force_show ) )
+	{ // get trash comments number
+		$query = 'SELECT count( comment_ID )
+					FROM T_blogs LEFT OUTER JOIN T_categories ON blog_ID = cat_blog_ID
+						LEFT OUTER JOIN T_items__item ON cat_ID = post_main_cat_ID
+						LEFT OUTER JOIN T_comments ON post_ID = comment_post_ID
+					WHERE comment_status = "trash"';
+		if( isset( $blog ) )
+		{
+			$query .= ' AND blog_ID='.$blog;
+		}
+		$show_recycle_bin = ( $DB->get_var( $query ) > 0 );
+	}
+
+	$result = '<div id="recycle_bin">';
+	if( $show_recycle_bin )
+	{ // show "Open recycle bin"
+		$result .= '<span class="floatright">'.action_icon( T_('Open recycle bin'), 'recycle_full',
 						$admin_url.'?ctrl=comments&amp;show_statuses[]=trash', T_('Open recycle bin'), 5, 3 ).'</span> ';
 	}
-	return '';
+	return $result.'</div>';
 }
 
 
 /*
  * $Log$
+ * Revision 1.27  2011/03/16 13:56:05  efy-asimo
+ * Update show "Open recycle bin"
+ *
+ * Revision 1.26  2011/03/16 13:34:53  efy-asimo
+ * animate comment delete
+ *
  * Revision 1.25  2011/02/25 22:04:09  fplanque
  * minor / UI cleanup
  *
