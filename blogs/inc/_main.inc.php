@@ -51,8 +51,6 @@ if( !isset($use_hacks) ) $use_hacks = false;
 
 
 if( defined( 'EVO_MAIN_INIT' ) )
-
-
 {	/*
 	 * Prevent double loading since require_once won't work in all situations
 	 * on windows when some subfolders have caps :(
