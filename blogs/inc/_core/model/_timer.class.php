@@ -343,7 +343,7 @@ class Timer_noop
 	function get_count( $category ) {}
 	function get_microtime( $category ) {}
 	function get_state( $category ) {}
-	function get_categories() {}
+	function get_categories() { return array(); }
 	function get_current_microtime() {}
 }
 
