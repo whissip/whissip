@@ -2120,120 +2120,123 @@ function debug_info( $force = false, $force_clean = false )
 
 		// ========================== Timer table ================================
 		$time_page = $Timer->get_duration( 'total' );
-		$timer_rows = array();
-		foreach( $Timer->get_categories() as $l_cat )
-		{
-			if( $l_cat == 'sql_query' )
+		if( $time_page ) {
+			$timer_rows = array();
+			foreach( $Timer->get_categories() as $l_cat )
 			{
-				continue;
+				if( $l_cat == 'sql_query' )
+				{
+					continue;
+				}
+				$timer_rows[ $l_cat ] = $Timer->get_duration( $l_cat );
 			}
-			$timer_rows[ $l_cat ] = $Timer->get_duration( $l_cat );
-		}
-		// Don't sort to see orginal order of creation
-		// arsort( $timer_rows );
-		// ksort( $timer_rows );
+			// Don't sort to see orginal order of creation
+			// arsort( $timer_rows );
+			// ksort( $timer_rows );
 
-		// Remove "total", it will get output as the last one:
-		$total_time = $timer_rows['total'];
-		unset($timer_rows['total']);
+			// Remove "total", it will get output as the last one:
+			$total_time = $timer_rows['total'];
+			unset($timer_rows['total']);
 
-		$percent_total = $time_page > 0 ? number_format( 100/$time_page * $total_time, 2 ) : '0';
-
-		if( $clean )
-		{
-			echo '== Timers =='."\n\n";
-			echo '+'.str_repeat( '-', $table_headerlen ).'+'."\n";
-			printf( $printf_format."\n", 'Category', 'Time', '%', 'Count' );
-			echo '+'.str_repeat( '-', $table_headerlen ).'+'."\n";
-		}
-		else
-		{
-			echo '<table class="debug_timer"><thead>'
-				.'<tr><td colspan="4" class="center">Timers</td></tr>' // dh> TODO: should be TH. Workaround so that tablesorter does not pick it up. Feedback from author requested.
-				.'<tr><th>Category</th><th>Time</th><th>%</th><th>Count</th></tr>'
-				.'</thead>';
-
-			// Output "total":
-			echo "\n<tfoot><tr>"
-				.'<td>total</td>'
-				.'<td class="right">'.$total_time.'</td>'
-				.'<td class="right">'.$percent_total.'%</td>'
-				.'<td class="right">'.$Timer->get_count('total').'</td></tr></tfoot>';
-
-			echo '<tbody>';
-		}
-
-		$table_rows_collapse = array();
-		foreach( $timer_rows as $l_cat => $l_time )
-		{
-			$percent_l_cat = $time_page > 0 ? number_format( 100/$time_page * $l_time, 2 ) : '0';
+			$percent_total = $time_page > 0 ? number_format( 100/$time_page * $total_time, 2 ) : '0';
 
 			if( $clean )
 			{
-				$row = sprintf( $printf_format, $l_cat, $l_time, $percent_l_cat.'%', $Timer->get_count( $l_cat ) );
+				echo '== Timers =='."\n\n";
+				echo '+'.str_repeat( '-', $table_headerlen ).'+'."\n";
+				printf( $printf_format."\n", 'Category', 'Time', '%', 'Count' );
+				echo '+'.str_repeat( '-', $table_headerlen ).'+'."\n";
 			}
 			else
 			{
-				$row = "\n<tr>"
-					.'<td>'.$l_cat.'</td>'
-					.'<td class="right">'.$l_time.'</td>'
-					.'<td class="right">'.$percent_l_cat.'%</td>'
-					.'<td class="right">'.$Timer->get_count( $l_cat ).'</td></tr>';
+				echo '<table class="debug_timer"><thead>'
+					.'<tr><td colspan="4" class="center">Timers</td></tr>' // dh> TODO: should be TH. Workaround so that tablesorter does not pick it up. Feedback from author requested.
+					.'<tr><th>Category</th><th>Time</th><th>%</th><th>Count</th></tr>'
+					.'</thead>';
+
+				// Output "total":
+				echo "\n<tfoot><tr>"
+					.'<td>total</td>'
+					.'<td class="right">'.$total_time.'</td>'
+					.'<td class="right">'.$percent_total.'%</td>'
+					.'<td class="right">'.$Timer->get_count('total').'</td></tr></tfoot>';
+
+				echo '<tbody>';
 			}
 
-			// Maybe ignore this row later, but not for clean display.
-			if( ! $clean && ( $percent_l_cat < 1  ) )
-			{	// Hide everything that tool less tahn 5% of the time
-				$table_rows_collapse[] = $row;
+			$table_rows_collapse = array();
+			foreach( $timer_rows as $l_cat => $l_time )
+			{
+				$percent_l_cat = $time_page > 0 ? number_format( 100/$time_page * $l_time, 2 ) : '0';
+
+				if( $clean )
+				{
+					$row = sprintf( $printf_format, $l_cat, $l_time, $percent_l_cat.'%', $Timer->get_count( $l_cat ) );
+				}
+				else
+				{
+					$row = "\n<tr>"
+						.'<td>'.$l_cat.'</td>'
+						.'<td class="right">'.$l_time.'</td>'
+						.'<td class="right">'.$percent_l_cat.'%</td>'
+						.'<td class="right">'.$Timer->get_count( $l_cat ).'</td></tr>';
+				}
+
+				// Maybe ignore this row later, but not for clean display.
+				if( ! $clean && ( $percent_l_cat < 1  ) )
+				{	// Hide everything that tool less tahn 5% of the time
+					$table_rows_collapse[] = $row;
+				}
+				else
+				{
+					echo $row."\n";
+				}
+			}
+			$count_collapse = count($table_rows_collapse);
+			// Collapse ignored rows, allowing to expand them with Javascript:
+			if( $count_collapse > 5 )
+			{
+				echo '<tr><td colspan="4" class="center" id="evo-debuglog-timer-long-header">';
+				echo '<a href="" onclick="var e = document.getElementById(\'evo-debuglog-timer-long\'); e.style.display = (e.style.display == \'none\' ? \'\' : \'none\'); return false;">+ '.$count_collapse.' queries &lt; 1%</a> </td></tr>';
+				echo '</tbody>';
+				echo '<tbody id="evo-debuglog-timer-long" style="display:none;">';
+			}
+			echo implode( "\n", $table_rows_collapse )."\n";
+
+			if ( $clean )
+			{ // "total" (done in tfoot for html above)
+				echo sprintf( $printf_format, 'total', $total_time, $percent_total.'%', $Timer->get_count('total') );
+				echo '+'.str_repeat( '-', $table_headerlen ).'+'."\n\n";
 			}
 			else
 			{
-				echo $row."\n";
+				echo "\n</tbody></table>";
+
+				// add jquery.tablesorter to the "Debug info" table.
+				global $rsc_url;
+				echo '
+					<script type="text/javascript" src="'.$rsc_url.'js/jquery/jquery.tablesorter.min.js"></script>
+					<script type="text/javascript">
+					(function($){
+						var clicked_once;
+						$("table.debug_timer th").click( function(event) {
+							if( clicked_once ) return; else clicked_once = true;
+							$("#evo-debuglog-timer-long tr").appendTo($("table.debug_timer tbody")[0]);
+							$("#evo-debuglog-timer-long-header").remove();
+							// click for tablesorter:
+							$("table.debug_timer").tablesorter();
+							jQuery(event.currentTarget).click();
+						});
+					})(jQuery);
+				</script>';
 			}
-		}
-		$count_collapse = count($table_rows_collapse);
-		// Collapse ignored rows, allowing to expand them with Javascript:
-		if( $count_collapse > 5 )
-		{
-			echo '<tr><td colspan="4" class="center" id="evo-debuglog-timer-long-header">';
-			echo '<a href="" onclick="var e = document.getElementById(\'evo-debuglog-timer-long\'); e.style.display = (e.style.display == \'none\' ? \'\' : \'none\'); return false;">+ '.$count_collapse.' queries &lt; 1%</a> </td></tr>';
-			echo '</tbody>';
-			echo '<tbody id="evo-debuglog-timer-long" style="display:none;">';
-		}
-		echo implode( "\n", $table_rows_collapse )."\n";
-
-		if ( $clean )
-		{ // "total" (done in tfoot for html above)
-			echo sprintf( $printf_format, 'total', $total_time, $percent_total.'%', $Timer->get_count('total') );
-			echo '+'.str_repeat( '-', $table_headerlen ).'+'."\n\n";
-		}
-		else
-		{
-			echo "\n</tbody></table>";
-
-			// add jquery.tablesorter to the "Debug info" table.
-			global $rsc_url;
-			echo '
-			<script type="text/javascript" src="'.$rsc_url.'js/jquery/jquery.tablesorter.min.js"></script>
-			<script type="text/javascript">
-			(function($){
-				var clicked_once;
-				$("table.debug_timer th").click( function(event) {
-					if( clicked_once ) return; else clicked_once = true;
-					$("#evo-debuglog-timer-long tr").appendTo($("table.debug_timer tbody")[0]);
-					$("#evo-debuglog-timer-long-header").remove();
-					// click for tablesorter:
-					$("table.debug_timer").tablesorter();
-					jQuery(event.currentTarget).click();
-				});
-			})(jQuery);
-			</script>';
 		}
 
 		// ================================== DB Summary ================================
 		if( isset($DB) )
 		{
-			echo $DB->num_queries.' SQL queries executed in '.$Timer->get_duration( 'SQL QUERIES' )." seconds\n";
+			$sql_duration = $Timer->get_duration( 'SQL QUERIES' );
+			echo $DB->num_queries.' SQL queries executed in '.( $sql_duration ? $sql_duration : '?' )." seconds\n";
 			if( ! $clean )
 			{
 				echo ' &nbsp; <a href="'.$ReqHostPathQuery.'#evo_debug_queries">scroll down to details</a><p>';
