@@ -905,7 +905,7 @@ class Hit
 	 *        blueyed>> Move functionality to Plugin (with a hook in Item::content())?!
 	 * @return boolean
 	 */
-	function is_new_view()
+	function is_new_view($uri = NULL, $blog_ID = NULL)
 	{
 		if( $this->get_agent_type() == 'robot' )
 		{	// Robot requests are not considered as (new) views:
@@ -917,13 +917,22 @@ class Hit
 			global $current_User;
 			global $DB, $Debuglog, $Settings, $ReqURI, $localtimenow;
 
+			if( $uri === NULL ) {
+				$uri = $ReqURI;
+			}
+
 			// Restrict to current user if logged in:
+			if( ! isset($blog_ID) ) {
+				$blog_ID = get_blog_ID();
+			}
+			$where_blog = $blog_ID ? ' AND hit_blog_ID = '.$blog_ID : '';
 			if( ! empty($current_User->ID) )
 			{ // select by user ID: one user counts really just once. May be even faster than the anonymous query below..!?
 				$sql = "
 					SELECT SQL_NO_CACHE hit_ID FROM T_hitlog INNER JOIN T_sessions ON hit_sess_ID = sess_ID
 					 WHERE sess_user_ID = ".$current_User->ID."
-						 AND hit_uri = '".$DB->escape( substr($ReqURI, 0, 250) )."'
+					   AND hit_uri = '".$DB->escape( substr($uri, 0, 250) )."'
+					   $where_blog
 					 LIMIT 1";
 			}
 			else
@@ -933,8 +942,9 @@ class Hit
 					  FROM T_hitlog
 					 WHERE hit_datetime > '".date( 'Y-m-d H:i:s', $localtimenow - $Settings->get('reloadpage_timeout') )."'
 					   AND hit_remote_addr = ".$DB->quote( $this->IP )."
-					   AND hit_uri = '".$DB->escape( substr($ReqURI, 0, 250) )."'
+					   AND hit_uri = '".$DB->escape( substr($uri, 0, 250) )."'
 					   AND hit_agent_type = ".$DB->quote($this->get_agent_type())."
+					   $where_blog
 					 LIMIT 1";
 			}
 			if( $DB->get_var( $sql, 0, 0, 'Hit: Check for reload' ) )
