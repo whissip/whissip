@@ -675,27 +675,9 @@ class Hit
 	 */
 	function record_the_hit()
 	{
-		global $DB, $Session, $ReqURI, $Blog, $blog, $localtimenow, $Debuglog;
+		global $DB, $Session, $ReqURI, $localtimenow, $Debuglog;
 
 		$Debuglog->add( 'Hit: Recording the hit.', 'request' );
-
-		if( !empty($Blog) )
-		{
-			$blog_ID = $Blog->ID;
-		}
-		elseif( !empty( $blog ) )
-		{
-			if( ! is_numeric($blog) )
-			{ // this can be anything given by URL param "blog"! (because it's called on shutdown)
-			  // see todo in param().
-				$blog = NULL;
-			}
-			$blog_ID = $blog;
-		}
-		else
-		{
-			$blog_ID = NULL;
-		}
 
 		$hit_uri = substr($ReqURI, 0, 250); // VARCHAR(250) and likely to be longer
 		$hit_referer = substr($this->referer, 0, 250); // VARCHAR(250) and likely to be longer
@@ -732,7 +714,7 @@ class Hit
 				hit_referer, hit_referer_dom_ID, hit_keyphrase_keyp_ID, hit_serprank, hit_blog_ID, hit_remote_addr, hit_agent_type )
 			VALUES( '".$Session->ID."', FROM_UNIXTIME(".$localtimenow."), '".$DB->escape($hit_uri)."', '".$this->referer_type
 				."', '".$DB->escape($hit_referer)."', ".$DB->null($this->get_referer_domain_ID()).', '.$DB->null($keyp_ID)
-				.', '.$DB->null($serprank).', '.$DB->null($blog_ID).", '".$DB->escape( $this->IP )."', '".$this->get_agent_type()."'
+				.', '.$DB->null($serprank).', '.$DB->null(get_blog_ID()).", '".$DB->escape( $this->IP )."', '".$this->get_agent_type()."'
 			)";
 
 		$DB->query( $sql, 'Record the hit' );

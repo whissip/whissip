@@ -534,6 +534,31 @@ function get_collection_kinds( $kind = NULL )
 
 
 /**
+ * Get the current blog ID either from $Blog or $blog.
+ *
+ * @return integer|NULL
+ **/
+function get_blog_ID()
+{
+	global $Blog, $blog;
+
+	if( !empty($Blog) )
+	{
+		return $Blog->ID;
+	}
+	if( !empty( $blog ) )
+	{
+		if( ! is_numeric($blog) )
+		{ // this can be anything given by URL param "blog"! (because it's called on shutdown)
+			// see todo in param().
+			$blog = NULL;
+		}
+		return $blog;
+	}
+}
+
+
+/**
  * Enable/Disable the given cache
  * 
  * @param string cache key name, 'general_cache_enabled', blogs 'cache_enabled'
