@@ -1329,9 +1329,7 @@ class Item extends ItemLight
 
 
 	/**
-	 * Increase view counter
-	 *
-	 * @todo merge with inc_viewcount
+	 * Output code to increase view counter (asynchronously).
 	 */
 	function count_view( $params = array() )
 	{
@@ -1349,15 +1347,14 @@ class Item extends ItemLight
 			return false;
 		}
 
-		/*
-		 * Check if we want to increment view count, see {@link Hit::is_new_view()}
-		 */
-		if( ! $Hit->is_new_view() )
-		{	// This is a reload
-			// echo 'RELOAD';
+		// Has this item been viewed in this session already?
+		global $Session;
+		if( $Session->get('vi_'.$this->ID) ) {
 			return false;
 		}
 
+		// Should be do noscript-image-tracking?
+		$do_image_tracking = true;
 		if( ! $params['allow_multiple_counts_per_page'] )
 		{	// Check that we don't increase multiple viewcounts on the same page
 			// This make the assumption that the first post in a list is "viewed" and the other are not (necesarily)
@@ -1365,15 +1362,39 @@ class Item extends ItemLight
 			if( $view_counts_on_this_page >= 1 )
 			{	// we already had a count on this page
 				// echo 'ALREADY HAD A COUNT';
-				return false;
+				$do_image_tracking = false;
 			}
 			$view_counts_on_this_page++;
 		}
 
-		//echo 'COUNTING VIEW';
+		// output tracking code/image:
+		global $htsrv_url;
+		$track_url = url_add_param($htsrv_url.'log.php', 'action=log_view&v='.$this->get_viewcount_verify_hash().'&item_ID='.$this->ID);
 
-		// Increment view counter (only if current User is not the item's author)
-		return $this->inc_viewcount(); // won't increment if current_User == Author
+		// Create JS to do an HTTP request asynchronously, or insert it via "noscript" once.
+		// jquery-appear is being used to trigger a callback, if the element is at
+		// least 100px scrolled into the viewport.
+		echo '<script type="text/javascript">';
+		echo '$( function() { '
+			.'$("#item_'.$this->ID.' div.content_full").appear(evoLogView, {one: false, threshold:100, data: ["'.$track_url.'"]})'
+			.'} )';
+		echo '</script>';
+
+		if( $do_image_tracking ) {
+			// output image once for non-JS. log.php checks for "already viewed?".
+			echo '<noscript><img src="'.url_add_param(htmlspecialchars($track_url), 't=img').'" width="1" height="1" /></noscript>';
+		}
+	}
+
+
+	/**
+	 * Get hash for requests to /htsrv/log.php?action=log_view.
+	 * @return string
+	 */
+	function get_viewcount_verify_hash () {
+		global $Settings, $Session;
+
+		return substr(sha1($Settings->get_public_key_salt().$this->ID.$Session->ID), 0, 8);
 	}
 
 
@@ -3246,7 +3267,7 @@ class Item extends ItemLight
 	 * Note: viewcount is incremented whenever the Item's content is displayed with "MORE"
 	 * (i-e full content), see {@link Item::content()}.
 	 *
-	 * Viewcount is NOT incremented on page reloads and other special cases, see {@link Hit::is_new_view()}
+	 * Viewcount is NOT incremented on page reloads and other special cases.
 	 *
 	 * %d gets replaced in all params by the number of views.
 	 *
@@ -3878,7 +3899,9 @@ class Item extends ItemLight
 
 
 	/**
-	 * Increment the view count of the item directly in DB (if the item's Author is not $current_User).
+	 * Increment the view count of the item directly in DB (if the item's author
+	 * is not $current_User, and the item has not been viewed in the current
+	 * session already).
 	 *
 	 * This method serves TWO purposes (that would break if we used dbupdate() ) :
 	 *  - Increment the viewcount WITHOUT affecting the lastmodified date and user.
@@ -3891,17 +3914,26 @@ class Item extends ItemLight
 	function inc_viewcount()
 	{
 		global $Plugins, $DB, $current_User, $Debuglog;
+		global $Session;
 
 		if( isset( $current_User ) && ( $current_User->ID == $this->creator_user_ID ) )
 		{
 			$Debuglog->add( 'Not incrementing view count, because viewing user is creator of the item.', 'items' );
+			return false;
+		}
 
+		$Session->reload_data(); // make this "more" atomic
+		if( $Session->get('vi_'.$this->ID) ) {
+			$Debuglog->add( 'Not incrementing view count, because item has been viewed in current session already.', 'items' );
 			return false;
 		}
 
 		$DB->query( 'UPDATE T_items__item
 		                SET post_views = post_views + 1
 		              WHERE '.$this->dbIDname.' = '.$this->ID );
+
+		$Session->set('vi_'.$this->ID, 1, 86400*7); // save "viewed" state for one week
+		$Session->dbsave();
 
 		// Trigger event that the item's view has been increased
 		$Plugins->trigger_event( 'ItemViewsIncreased', array( 'Item' => & $this ) );

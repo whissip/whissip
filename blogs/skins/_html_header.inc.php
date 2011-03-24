@@ -17,6 +17,10 @@ global $app_name, $app_version;
 
 # require_css( 'style.css', true ); // included by absolute path below
 
+require_js( '#jquery#' ); // for new item log viewing
+require_js( 'jquery/jquery.appear.js' );
+require_js( 'functions.js' ); // for evoLogView
+
 add_js_for_toolbar();		// Registers all the javascripts needed by the toolbar menu
 
 ?>

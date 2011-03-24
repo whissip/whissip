@@ -645,6 +645,12 @@ class Hit
 	{
 		global $Settings, $Debuglog, $is_admin_page;
 
+		global $is_htsrv_request;
+		if( $is_htsrv_request ) {
+			$Debuglog->add( 'Hit: Hit NOT logged, (htsrv request)', 'request' );
+			return false;
+		}
+
 		if( $is_admin_page && ! $Settings->get('log_admin_hits') )
 		{	// We don't want to log admin hits:
 			$Debuglog->add( 'Hit: Hit NOT logged, (Admin page logging is disabled)', 'request' );
@@ -903,6 +909,7 @@ class Hit
 	 *
 	 * @todo fplanque>> if this is only useful to display who's online or view counts, provide option to disable all those resource consuming gadgets. (Those gadgets should be plugins actually, and they should enable this query only if needed)
 	 *        blueyed>> Move functionality to Plugin (with a hook in Item::content())?!
+	 * @deprecated This is not used anymore.
 	 * @return boolean
 	 */
 	function is_new_view($uri = NULL, $blog_ID = NULL)

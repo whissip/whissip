@@ -143,8 +143,8 @@ switch( $content_mode )
 		// Full dislpay:
 		echo $params['content_start_full'];
 
-		// Increment view count of first post on page:
-		$shutdown_count_item_views[] = $Item->ID;
+		// Increment view count of this item (if it's a new view):
+		$Item->count_view();
 
 		if( ! empty($params['image_size']) )
 		{

@@ -180,19 +180,8 @@ function shutdown()
 	// connection_aborted()
 	// connection_status()
 
-	if( ! empty($shutdown_count_item_views) )
-	{ // Increment view counts for Items:
-		$ItemCache = & get_ItemCache();
-		foreach( $shutdown_count_item_views as $item_ID )
-		{
-			// asimo> Inserted the $item_ID != 0 check, because another way comes unexpected error on preview page
-			if( !empty($item_ID) && ( $Item = $ItemCache->get_by_ID($item_ID, false) ) ) {
-				$Item->count_view( array(
-					'allow_multiple_counts_per_page' => false,
-				) );
-			}
-		}
-	}
+	# $shutdown_count_item_views is obsolete
+	assert( empty($shutdown_count_item_views) );
 
 	// Save the current HIT:
 	$Hit->log();

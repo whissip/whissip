@@ -504,3 +504,23 @@ function evoFadeBg( selector, bgs, options )
 
 	eval(toEval);
 }
+
+/**
+ * Log view of `this` object using `tracker_url`, if it is visible after 5s.
+ * This is the callback for jquery-appear and used to track/increment item
+ * views.
+ */
+function evoLogView(event, tracker_url) {
+	var aThis = $(this);
+	if( $(aThis).data('_evoViewLogged') ) { return; }
+
+	setTimeout( function() {
+		if( $(aThis).data('_evoViewLogged') ) { return; }
+
+		if($(aThis).data("appeared")){
+			// object is still in viewport
+			$("body").append("<img src='"+tracker_url+"' width='0' height='0' alt=''>");
+			$(aThis).data('_evoViewLogged', true);
+		}
+	}, 5000 );
+}
