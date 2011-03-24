@@ -1,7 +1,7 @@
 <?php
 /**
  * This file implements Comment handling functions.
-  *
+ *
  * This file is part of the b2evolution/evocms project - {@link http://b2evolution.net/}.
  * See also {@link http://sourceforge.net/projects/evocms/}.
  *
@@ -84,6 +84,9 @@ function generic_ctp_number( $post_id, $mode = 'comments', $status = 'published'
 				$cache_ctp_number[$row->comment_post_ID][$row->comment_type.'s']['total'] += $row->type_count;
 
 				// Total for status on post:
+				if( ! isset($cache_ctp_number[$row->comment_post_ID]['feedbacks'][$row->comment_status]) ) {
+					$cache_ctp_number[$row->comment_post_ID]['feedbacks'][$row->comment_status] = 0;
+				}
 				$cache_ctp_number[$row->comment_post_ID]['feedbacks'][$row->comment_status] += $row->type_count;
 
 				// Total for post:
