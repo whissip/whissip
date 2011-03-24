@@ -15,7 +15,10 @@
       data: undefined,
 
       //call fn only on the first appear?
-      one: true 
+      one: true,
+
+      //call fn when element is within this many pixels of viewport
+      threshold: 0
       
     }, options);
     
@@ -53,10 +56,10 @@
         var x = o.left;
         var y = o.top;
         
-        if (y + t.height() >= b && 
-            y <= b + w.height() &&
-            x + t.width() >= a && 
-            x <= a + w.width()) {
+        if (y + t.height() + settings.threshold >= b && 
+            y <= b + w.height() + settings.threshold &&
+            x + t.width() + settings.threshold >= a && 
+            x <= a + w.width() + settings.threshold) {
 
           //trigger the custom event
           if (!t.appeared) t.trigger('appear', settings.data);
