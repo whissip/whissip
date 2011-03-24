@@ -27,7 +27,7 @@
       var t = $(this);
       
       //whether the element is currently visible
-      t.appeared = false;
+      t.data("appeared", false);
       
       if (!fn) {
 
@@ -45,7 +45,7 @@
         if (!t.is(':visible')) {
           
           //it became hidden
-          t.appeared = false;
+          t.data("appeared", false);
           return;
         }
 
@@ -62,12 +62,12 @@
             x <= a + w.width() + settings.threshold) {
 
           //trigger the custom event
-          if (!t.appeared) t.trigger('appear', settings.data);
+          if (!t.data("appeared")) t.trigger('appear', settings.data);
           
         } else {
 
           //it scrolled out of view
-          t.appeared = false;
+          t.data("appeared", false);
         }
       };
 
@@ -75,7 +75,7 @@
       var modifiedFn = function() {
         
         //mark the element as visible
-        t.appeared = true;
+        t.data("appeared", true);
 
         //is this supposed to happen only once?
         if (settings.one) {
