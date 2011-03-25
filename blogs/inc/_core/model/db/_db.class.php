@@ -499,13 +499,13 @@ class DB
 		}
 
 		// Add Debuglog warning when quoting integers (not necessary):
-		if( $type == 'integer' )
-		{
-			global $Debuglog;
-			if( $Debuglog ) {
-				$Debuglog->add('DB::quote: quoting integer: '.$str.' (performance drawback) '.debug_get_backtrace(), 'debug');
-			}
-		}
+		// if( $type == 'integer' )
+		// {
+		// 	global $Debuglog;
+		// 	if( $Debuglog ) {
+		// 		$Debuglog->add('DB::quote: quoting integer: '.$str.' (performance drawback) '.debug_get_backtrace(), 'debug');
+		// 	}
+		// }
 		return "'".$this->escape($str)."'";
 	}
 
