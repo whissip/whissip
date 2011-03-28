@@ -2003,10 +2003,9 @@ function upgrade_b2evo_tables()
 									  SET blog_advanced_perms = 1" );
 		echo "OK.<br />\n";
 
-		echo "Additionnal blog permissions...";
-		$DB->query( "ALTER TABLE T_coll_user_perms
-									ADD COLUMN bloguser_perm_admin tinyint NOT NULL default 0 AFTER bloguser_perm_properties,
-									ADD COLUMN bloguser_perm_edit  ENUM('no','own','lt','le','all','redirected') NOT NULL default 'no' AFTER bloguser_perm_poststatuses" );
+		echo "Additional blog permissions...";
+		db_add_col( "T_coll_user_perms", "bloguser_perm_admin", "tinyint NOT NULL default 0 AFTER bloguser_perm_properties" );
+		db_add_col( "T_coll_user_perms", "bloguser_perm_edit", "ENUM('no','own','lt','le','all','redirected') NOT NULL default 'no' AFTER bloguser_perm_poststatuses" );
 
 		$DB->query( "ALTER TABLE T_coll_group_perms
 									ADD COLUMN bloggroup_perm_admin tinyint NOT NULL default 0 AFTER bloggroup_perm_properties,
@@ -2857,7 +2856,7 @@ function upgrade_b2evo_tables()
 			default:
 				$value = 'none';
 		}
-		$DB->query( 'INSERT INTO T_groups__groupsettings( gset_grp_ID, gset_name, gset_value )
+		$DB->query( 'REPLACE INTO T_groups__groupsettings( gset_grp_ID, gset_name, gset_value )
 						VALUES( '.$row->grp_ID.', "perm_admin", "'.$value.'" )' );
 	}
 	db_drop_col( 'T_groups', 'grp_perm_admin' );
