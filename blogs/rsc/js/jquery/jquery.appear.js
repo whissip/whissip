@@ -82,6 +82,7 @@
 
           //remove the check
           w.unbind('scroll', check);
+          w.unbind('resize', check);
           var i = $.inArray(check, $.fn.appear.checks);
           if (i >= 0) $.fn.appear.checks.splice(i, 1);
         }
@@ -94,8 +95,8 @@
       if (settings.one) t.one('appear', settings.data, modifiedFn);
       else t.bind('appear', settings.data, modifiedFn);
       
-      //check whenever the window scrolls
-      w.scroll(check);
+      //check whenever the window scrolls or resizes
+      w.scroll(check).resize(check);
       
       //check whenever the dom changes
       $.fn.appear.checks.push(check);
