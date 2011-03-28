@@ -83,7 +83,7 @@ $Plugins->trigger_event( 'SessionLoaded' );
 
 
 // Trigger a page content caching plugin. This would either return the cached content here or start output buffering
-if( empty($generating_static) )
+if( empty($generating_static) && $Plugins->get_IDs_by_event('CachePageContent') )
 {
 	if( $Session->get( 'core.no_CachePageContent' ) )
 	{ // The event is disabled for this request:

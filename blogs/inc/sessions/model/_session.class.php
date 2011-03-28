@@ -397,7 +397,10 @@ class Session
 
 			if( $param == 'Messages' )
 			{ // also set boolean to not call CachePageContent plugin event on next request:
-				$this->set( 'core.no_CachePageContent', 1 );
+				global $Plugins;
+				if( $Plugins->get_IDs_by_event('CachePageContent') ) {
+					$this->set( 'core.no_CachePageContent', 1 );
+				}
 			}
 
 			$Debuglog->add( 'Session: Session data['.$param.'] updated. Expire in: '.( $expire ? $expire.'s' : '-' ).'.', 'request' );

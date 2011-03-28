@@ -1550,6 +1550,21 @@ class Plugins
 
 
 	/**
+	 * Get a list of plugin IDs for a given event.
+	 * This is meant for a quick check if some event is registered at all.
+	 * @return array
+	 */
+	function get_IDs_by_event($event)
+	{
+		if( ! isset($this->index_event_IDs[$event]) ) {
+			return array();
+		}
+
+		return $this->index_event_IDs[$event];
+	}
+
+
+	/**
 	 * Get a list of Plugins for a given event.
 	 *
 	 * @param string Event name
