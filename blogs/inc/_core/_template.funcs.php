@@ -763,10 +763,10 @@ function include_headlines()
 	global $headlines;
 	global $ResourceBundles;
 
-	// Output links for resource bundles (CSS/JS), if there are any:
+	// Output links for resource bundles (CSS only - JS in footer), if there are any:
 	if( $ResourceBundles )
 	{ // only if the class has been loaded, it is relevant here
-		if( $rsc_bundle_lines = $ResourceBundles->get_html_headlines() )
+		if( $rsc_bundle_lines = $ResourceBundles->get_html_headlines_for_type('css') )
 		{
 			echo "\n\t<!-- Resource bundles: -->";
 			echo "\n\t".implode("\n\t", $rsc_bundle_lines);
@@ -791,6 +791,17 @@ function include_headlines()
  */
 function include_footerlines()
 {
+	// Output links for resource bundles (CSS only - JS in footer), if there are any:
+	if( $GLOBALS['ResourceBundles'] )
+	{ // only if the class has been loaded, it is relevant here
+		if( $rsc_bundle_lines = $GLOBALS['ResourceBundles']->get_html_headlines_for_type('js') )
+		{
+			echo "\n\t<!-- Resource bundles: -->";
+			echo "\n\t".implode("\n\t", $rsc_bundle_lines);
+			echo "\n";
+		}
+	}
+
 	global $js_translations;
 	if( empty( $js_translations ) )
 	{ // nothing to do
