@@ -21,5 +21,7 @@ $Plugins->trigger_event('SkinEndHtmlBody');
 <!-- End of skin_wrapper -->
 </div>
 
+<?php include_footerlines(); ?>
+
 </body>
 </html>
