@@ -80,14 +80,6 @@ class Hit
 	var $referer_domain_ID;
 
 	/**
-	 * Is this a reload?
-	 * This gets lazy-filled by {@link is_new_view()}.
-	 * @var boolean
-	 * @access protected
-	 */
-	var $_is_new_view;
-
-	/**
 	 * Ignore this hit?
 	 * @var boolean
 	 */
@@ -895,77 +887,6 @@ class Hit
 		$Timer->pause( 'Hit::get_remote_host' );
 
 		return $this->_remoteHost;
-	}
-
-
-	/**
-	 * Determine if a hit is a new view (not reloaded or from a robot).
-	 *
-	 * 'Reloaded' means: visited before from the same user (in a session) or from same IP/user_agent in the
-	 * last {@link $Settings reloadpage_timeout} seconds.
-	 *
-	 * This gets queried by the Item objects before incrementing its view count (if the Item gets viewed
-	 * in total ({@link $dispmore})).
-	 *
-	 * @todo fplanque>> if this is only useful to display who's online or view counts, provide option to disable all those resource consuming gadgets. (Those gadgets should be plugins actually, and they should enable this query only if needed)
-	 *        blueyed>> Move functionality to Plugin (with a hook in Item::content())?!
-	 * @deprecated This is not used anymore.
-	 * @return boolean
-	 */
-	function is_new_view($uri = NULL, $blog_ID = NULL)
-	{
-		if( $this->get_agent_type() == 'robot' )
-		{	// Robot requests are not considered as (new) views:
-			return false;
-		}
-
-		if( ! isset($this->_is_new_view) )
-		{
-			global $current_User;
-			global $DB, $Debuglog, $Settings, $ReqURI, $localtimenow;
-
-			if( $uri === NULL ) {
-				$uri = $ReqURI;
-			}
-
-			// Restrict to current user if logged in:
-			if( ! isset($blog_ID) ) {
-				$blog_ID = get_blog_ID();
-			}
-			$where_blog = $blog_ID ? ' AND hit_blog_ID = '.$blog_ID : '';
-			if( ! empty($current_User->ID) )
-			{ // select by user ID: one user counts really just once. May be even faster than the anonymous query below..!?
-				$sql = "
-					SELECT SQL_NO_CACHE hit_ID FROM T_hitlog INNER JOIN T_sessions ON hit_sess_ID = sess_ID
-					 WHERE sess_user_ID = ".$current_User->ID."
-					   AND hit_uri = '".$DB->escape( substr($uri, 0, 250) )."'
-					   $where_blog
-					 LIMIT 1";
-			}
-			else
-			{ // select by remote_addr/hit_agent_type:
-				$sql = "
-					SELECT SQL_NO_CACHE hit_ID
-					  FROM T_hitlog
-					 WHERE hit_datetime > '".date( 'Y-m-d H:i:s', $localtimenow - $Settings->get('reloadpage_timeout') )."'
-					   AND hit_remote_addr = ".$DB->quote( $this->IP )."
-					   AND hit_uri = '".$DB->escape( substr($uri, 0, 250) )."'
-					   AND hit_agent_type = ".$DB->quote($this->get_agent_type())."
-					   $where_blog
-					 LIMIT 1";
-			}
-			if( $DB->get_var( $sql, 0, 0, 'Hit: Check for reload' ) )
-			{
-				$Debuglog->add( 'Hit: No new view!', 'request' );
-				$this->_is_new_view = false;  // We don't want to log this hit again
-			}
-			else
-			{
-				$this->_is_new_view = true;
-			}
-		}
-
-		return $this->_is_new_view;
 	}
 
 
