@@ -1374,11 +1374,15 @@ class Item extends ItemLight
 		// Create JS to do an HTTP request asynchronously, or insert it via "noscript" once.
 		// jquery-appear is being used to trigger a callback, if the element is at
 		// least 100px scrolled into the viewport.
-		echo '<script type="text/javascript">';
-		echo '$( function() { '
+
+		// Require necessary JS (will get added to bundles in the footer)
+		require_js( '#jquery#' ); // for new item log viewing
+		require_js( 'jquery/jquery.appear.js' );
+		require_js( 'functions.js' ); // for evoLogView
+
+		add_js_headline( '$( function() { '
 			.'$("#item_'.$this->ID.' div.content_full").appear(evoLogView, {one: false, threshold:100, data: ["'.$track_url.'"]})'
-			.'} )';
-		echo '</script>';
+			.'} )' );
 
 		if( $do_image_tracking ) {
 			// output image once for non-JS. log.php checks for "already viewed?".
