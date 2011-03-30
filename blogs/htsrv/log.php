@@ -56,8 +56,8 @@ switch( $action )
 {
   case 'log_view':
     // get item
-    param( 'item_ID', 'integer', true );
-    param( 'v', 'string', true );
+    param( 'item_ID', 'integer', true, false, /* override: */ true );
+    param( 'v', 'string', true, false, /* override: */ true );
 
     $ItemCache = get_ItemCache();
     $Item = $ItemCache->get_by_ID($item_ID);
