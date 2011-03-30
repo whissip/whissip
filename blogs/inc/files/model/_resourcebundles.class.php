@@ -390,6 +390,7 @@ class ResourceBundles
 		$GLOBALS['Timer']->pause('ResourceBundles::resolve_bundle_parts');
 
 		// Create the bundles.
+		$r = array();
 		foreach($this->bundle_parts[$type] as $attribs_key => $bundle_parts)
 		{
 			$attribs = unserialize($attribs_key);
