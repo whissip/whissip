@@ -379,6 +379,21 @@ class ResourceBundlesTestCase extends EvoUnitTestCase
 
 
 	/**
+	 * Test that files are not added again after reset_bundle_parts().
+	 */
+	function test_unique_entries_after_reset()
+	{
+		$rb = new TestResourceBundles();
+		$rb->add_file('js', 'jquery.js', array('rsc_order'=>10));
+		$headlines = $rb->get_html_headlines();
+		$rb->forget_resolved_bundles();
+		$rb->add_file('js', 'jquery.js', array('rsc_order'=>10));
+		$headlines = $rb->get_html_headlines();
+		$this->assertEqual( $headlines, array() );
+	}
+
+
+	/**
 	 * Test that multiple @imports (from different files) get added only once to the bundle.
 	 */
 	function test_recursive_only_once()

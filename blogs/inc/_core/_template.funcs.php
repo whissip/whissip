@@ -772,7 +772,7 @@ function include_headlines()
 			echo "\n\t".implode("\n\t", $rsc_bundle_lines);
 			echo "\n";
 		}
-		$ResourceBundles->reset();
+		$ResourceBundles->forget_resolved_bundles();
 	}
 
 	if( $headlines )

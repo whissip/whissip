@@ -274,11 +274,12 @@ class ResourceBundles
 
 
 	/**
-	 * Reset bundle parts.
+	 * Forget resolved bundle parts.
+	 *
 	 * Use this to reuse the same object, after having retrieved the headlines once.
-	 * @todo Provide means to remember that files had been bundled already, e.g. '#jquery#', and should not get re-added again.
+	 * Any previously added/resolved files are remembered (i.e. not being added again).
 	 */
-	public function reset()
+	public function forget_resolved_bundles()
 	{
 		$this->bundle_parts = array();
 	}
@@ -605,18 +606,24 @@ class ResourceBundles
 			return $r;
 		}
 
+		if( ! isset($this->bundle_parts_file_hist[$type]) ) {
+			$this->bundle_parts_file_hist[$type] = array();
+		}
+
 		// Clean bundle parts.
 		//  - Resolve paths (this is done late, so e.g. the page's base_path is known)
 		//  - Remove duplicates
 		// We cache this result for 1 hour, if possible.
 		$mc_key = 'resourcebundles_cache_'.$type.'_'
-			.md5(serialize($this->bundle_parts[$type])).'_'
+			.md5(serialize($this->bundle_parts[$type]).serialize($this->bundle_parts_file_hist[$type])).'_'
 			.$_SERVER['SERVER_NAME'].'_'
 			.filemtime(__FILE__); // use this file's mtime in the cache key (since logic might have changed)
+
 		$mc_cache_info = get_from_mem_cache($mc_key, /* by ref: */ $success);
 		if( $mc_cache_info )
 		{
-			$this->bundle_parts[$type] = $mc_cache_info;
+			$this->bundle_parts[$type] = $mc_cache_info[0];
+			$this->bundle_parts_file_hist[$type] = $mc_cache_info[1];
 		}
 		else
 		{
@@ -659,17 +666,15 @@ class ResourceBundles
 
 						// Check if it has been added already.
 						$attribs_key = serialize($attribs);
-						if( isset($this->bundle_parts[$type][$attribs_key]) )
+
+						if( isset($this->bundle_parts_file_hist[$type][$attribs_key])
+							&& in_array( $path, $this->bundle_parts_file_hist[$type][$attribs_key] ) )
 						{ // there are entries with the same attributes:
-							foreach( $this->bundle_parts[$type][$attribs_key] as $compare_bundle_part )
-							{
-								if( $compare_bundle_part['content_type'] == 'file'
-									&& $compare_bundle_part['content'] == $path )
-								{ // already added.
-									continue 2;
-								}
-							}
+							continue;
 						}
+
+						// Remember already added file paths across reset()
+						$this->bundle_parts_file_hist[$type][$attribs_key][] = $path;
 
 						// Save orig 'content' value, in case the bundle cannot
 						// be written.
@@ -691,7 +696,7 @@ class ResourceBundles
 			$this->bundle_parts[$type] = $this->sort_by_order($this->bundle_parts[$type]);
 
 			// Store info in memory cache.
-			set_to_mem_cache($mc_key, $this->bundle_parts[$type], 3600);
+			set_to_mem_cache($mc_key, array($this->bundle_parts[$type], $this->bundle_parts_file_hist[$type]), 3600);
 		}
 
 		return $this->bundle_parts[$type];
