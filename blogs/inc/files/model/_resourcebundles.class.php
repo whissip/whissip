@@ -274,6 +274,17 @@ class ResourceBundles
 
 
 	/**
+	 * Reset bundle parts.
+	 * Use this to reuse the same object, after having retrieved the headlines once.
+	 * @todo Provide means to remember that files had been bundled already, e.g. '#jquery#', and should not get re-added again.
+	 */
+	public function reset()
+	{
+		$this->bundle_parts = array();
+	}
+
+
+	/**
 	 * Get headline for use in HTML head section,
 	 * referencing the bundle of type $type.
 	 *
