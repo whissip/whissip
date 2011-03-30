@@ -2202,8 +2202,10 @@ function debug_info( $force = false, $force_clean = false )
 				echo "\n</tbody></table>";
 
 				// add jquery.tablesorter to the "Debug info" table.
+				// It's too late for bundles here, so we include jQuery to be sure (this is debug only).
 				global $rsc_url;
 				echo '
+					<script type="text/javascript" src="'.$rsc_url.'js/jquery.min.js"></script>
 					<script type="text/javascript" src="'.$rsc_url.'js/jquery/jquery.tablesorter.min.js"></script>
 					<script type="text/javascript">
 					(function($){
