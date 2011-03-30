@@ -766,12 +766,13 @@ function include_headlines()
 	// Output links for resource bundles (CSS only - JS in footer), if there are any:
 	if( $ResourceBundles )
 	{ // only if the class has been loaded, it is relevant here
-		if( $rsc_bundle_lines = $ResourceBundles->get_html_headlines_for_type('css') )
+		if( $rsc_bundle_lines = $ResourceBundles->get_html_headlines() )
 		{
 			echo "\n\t<!-- Resource bundles: -->";
 			echo "\n\t".implode("\n\t", $rsc_bundle_lines);
 			echo "\n";
 		}
+		$ResourceBundles->reset();
 	}
 
 	if( $headlines )
