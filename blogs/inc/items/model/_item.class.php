@@ -1386,7 +1386,7 @@ class Item extends ItemLight
 
 		if( $do_image_tracking ) {
 			// output image once for non-JS. log.php checks for "already viewed?".
-			echo '<noscript><img src="'.url_add_param(htmlspecialchars($track_url), 't=img').'" width="1" height="1" /></noscript>';
+			echo '<script type="text/javascript"></script><noscript><img src="'.url_add_param(htmlspecialchars($track_url), 't=img').'" width="1" height="1" /></noscript>';
 		}
 	}
 
