@@ -564,12 +564,6 @@ function require_js( $js_file, $relative_to_base = false )
 	{ // It's an alias
 		if ( $js_file == '#jquery#' && $debug ) $js_file = '#jquery_debug#';
 		$js_file = $js_aliases[$js_file];
-
-		// HACK: put it to the front, since inline code (rsc_pack=inline, added in add_js_headline)
-		//       may depend on it (jQuery).
-		//       Probably all libs should get included in a "first bundle".
-		//       This is only required since we (have to) use the "add rsc_pack=inline" hack.
-		$attribs['rsc_order'] = 10;
 	}
 
 	$GLOBALS['ResourceBundles']->add_file('js', $js_file, $attribs);
@@ -692,17 +686,28 @@ function add_headline($headline)
 
 
 /**
+ * Add a footer line, which then gets output at the bottom of the HTML BODY.
+ * @param string
+ */
+function add_footerline($footerline)
+{
+	global $footerlines;
+	$footerlines[] = $footerline;
+}
+
+
+/**
  * Add a Javascript headline.
  * This is an extra function, to provide consistent wrapping and allow to bundle it
  * (i.e. create a bundle with all required JS files and these inline code snippets,
  *  in the correct order).
+ * It is being added as a footer line actually, to allow for adding them when page
+ * output has started already, and to make sure libs like jQuery are available.
  * @param string Javascript
  */
 function add_js_headline($headline)
 {
-	// FIXME: workaround for b2evo, which has no $attribs yet; keep inline code in a separate bundle.
-	$attribs['rsc_pack'] = 'inline';
-	$GLOBALS['ResourceBundles']->add_inline('js', $headline, $attribs);
+	add_footerline('<script type="text/javascript">'.$headline.'</script>');
 }
 
 
@@ -804,24 +809,27 @@ function include_footerlines()
 	}
 
 	global $js_translations;
-	if( empty( $js_translations ) )
-	{ // nothing to do
-		return;
-	}
-	$r = '';
-
-	foreach( $js_translations as $string => $translation )
-	{ // output each translation
-		if( $string != $translation )
-		{ // this is translated
-			$r .= '<div><span class="b2evo_t_string">'.$string.'</span><span class="b2evo_translation">'.$translation.'</span></div>'."\n";
+	if( ! empty( $js_translations ) )
+	{
+		$r = '';
+		foreach( $js_translations as $string => $translation )
+		{ // output each translation
+			if( $string != $translation )
+			{ // this is translated
+				$r .= '<div><span class="b2evo_t_string">'.$string.'</span><span class="b2evo_translation">'.$translation.'</span></div>'."\n";
+			}
+		}
+		if( $r )
+		{ // we have some translations
+			echo '<div id="b2evo_translations" style="display:none;">'."\n";
+			echo $r;
+			echo '</div>'."\n";
 		}
 	}
-	if( $r )
-	{ // we have some translations
-		echo '<div id="b2evo_translations" style="display:none;">'."\n";
-		echo $r;
-		echo '</div>'."\n";
+
+	global $footerlines;
+	if( $footerlines ) {
+		echo implode("\n", $footerlines);
 	}
 }
 
