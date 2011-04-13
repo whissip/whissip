@@ -3871,12 +3871,14 @@ class Item extends ItemLight
 			if( !empty($this->tags) )
 			{
 				// Find the tags that are already in the DB
-				$query = 'SELECT LOWER( tag_name )
+				$query = 'SELECT tag_name
 										FROM T_items__tag
 									 WHERE tag_name IN ('.$DB->quote($this->tags).')';
 				$existing_tags = $DB->get_col( $query, 0, 'Find existing tags' );
 
-				$new_tags = array_diff( array_map('evo_strtolower', $this->tags), $existing_tags );
+				$new_tags = array_diff(
+					array_map('evo_strtolower', $this->tags),
+					array_map('evo_strtolower', $existing_tags ) );
 
 				if( !empty( $new_tags ) )
 				{	// insert new tags:
