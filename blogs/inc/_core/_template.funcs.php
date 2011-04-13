@@ -798,9 +798,10 @@ function include_headlines()
 function include_footerlines()
 {
 	// Output links for resource bundles (CSS only - JS in footer), if there are any:
-	if( $GLOBALS['ResourceBundles'] )
+	global $ResourceBundles;
+	if( $ResourceBundles )
 	{ // only if the class has been loaded, it is relevant here
-		if( $rsc_bundle_lines = $GLOBALS['ResourceBundles']->get_html_headlines_for_type('js') )
+		if( $rsc_bundle_lines = $ResourceBundles->get_html_headlines_for_type('js') )
 		{
 			echo "\n\t<!-- Resource bundles: -->";
 			echo "\n\t".implode("\n\t", $rsc_bundle_lines);
