@@ -1380,6 +1380,7 @@ class Item extends ItemLight
 		require_js( 'jquery/jquery.appear.js' );
 		require_js( 'functions.js' ); // for evoLogView
 
+		// TODO: make this a single function call with just the track_url param
 		add_js_headline( '$( function() { '
 			.'$("#item_'.$this->ID.' div.content_full").appear(evoLogView, {one: false, threshold:100, data: ["'.$track_url.'"]})'
 			.'} )' );
