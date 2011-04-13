@@ -143,9 +143,6 @@ switch( $content_mode )
 		// Full dislpay:
 		echo $params['content_start_full'];
 
-		// Increment view count of this item (if it's a new view):
-		$Item->count_view();
-
 		if( ! empty($params['image_size']) )
 		{
 			// Display images that are linked to this post:
@@ -237,6 +234,9 @@ switch( $content_mode )
 					'limit_attach' =>         $params['limit_attach'],
 				) );
 		}
+
+		// Increment view count of this item (if it's a new view):
+		$Item->count_view();
 
 		echo $params['content_end_full'];
 
