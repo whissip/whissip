@@ -707,7 +707,7 @@ function add_footerline($footerline)
  */
 function add_js_headline($headline)
 {
-	add_footerline('<script type="text/javascript">'.$headline.'</script>');
+	add_footerline('<script type="text/javascript" defer="defer">'.$headline.'</script>');
 }
 
 
