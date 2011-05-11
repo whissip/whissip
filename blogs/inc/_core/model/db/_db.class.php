@@ -511,6 +511,21 @@ class DB
 
 
 	/**
+	 * Surround identifier with backticks, such as table or column names.
+	 * Escape quote char in the identifier itself	by duplicating them.
+	 * @see http://dev.mysql.com/doc/refman/5.1/en/identifiers.html
+	 *
+	 * @param string
+	 * @return string Quoted value
+	 */
+	function quote_identifier($str)
+	{
+		$str = str_replace('`', '``', $str);
+		return '`'.$str.'`';
+	}
+
+
+	/**
 	 * @return string Return the given value or 'NULL', if it's === NULL.
 	 */
 	function null($val)
@@ -1246,6 +1261,7 @@ class DB
 			$sql = strmaxlen($sql, $maxlen, '...');
 		}
 
+		// Format query (adding newlines/indent)
 		$new = '';
 		$word = '';
 		$in_comment = false;
