@@ -41,7 +41,7 @@ load_class( 'regional/model/_country.class.php', 'Country' );
 global $Blog, $Session, $Messages, $inc_path;
 global $action, $user_profile_only, $edited_User, $form_action;
 
-$form_action = $Blog->gen_blogurl().'?disp=profile';
+$form_action = $Blog->gen_blogurl().'?disp='.$disp;
 
 if( ! is_logged_in() )
 { // must be logged in!
@@ -53,7 +53,6 @@ $user_profile_only = true;
 // edited_User is always the current_User
 $edited_User = $current_User;
 
-$redirect_to = param( 'redirect_to', 'string', '' );
 $action = param_action();
 
 if( !empty( $action ) )
@@ -85,18 +84,12 @@ switch( $action )
 		break;
 }
 
-$user_tab = param( 'user_tab', 'string' );
-if( empty($user_tab) )
-{
-	$user_tab = 'identity';
-}
-
 // Display tabs
 echo '<div class="tabs">';
-$tabs = get_user_sub_entries( false, NULL );
-foreach( $tabs as $tab => $tab_data )
+$entries = get_user_sub_entries( false, NULL );
+foreach( $entries as $entry => $entry_data )
 {
-	if( $tab == $user_tab )
+	if( $entry == $disp )
 	{
 		echo '<div class="selected">';
 	}
@@ -104,24 +97,24 @@ foreach( $tabs as $tab => $tab_data )
 	{
 		echo '<div class="option">';
 	}
-	echo '<a href='.$tab_data['href'].'>'.$tab_data['text'].'</a>';
+	echo '<a href='.$entry_data['href'].'>'.$entry_data['text'].'</a>';
 	echo '</div>';
 }
 echo '</div>';
 
 // Display form
-switch( $user_tab )
+switch( $disp )
 {
-	case 'identity':
+	case 'profile':
 		require $inc_path.'users/views/_user_identity.form.php';
 		break;
 	case 'avatar':
 		require $inc_path.'users/views/_user_avatar.form.php';
 		break;
-	case 'password':
+	case 'pwdchange':
 		require $inc_path.'users/views/_user_password.form.php';
 		break;
-	case 'preferences':
+	case 'userprefs':
 		require $inc_path.'users/views/_user_preferences.form.php';
 		break;
 	default:
@@ -131,6 +124,12 @@ switch( $user_tab )
 
 /*
  * $Log$
+ * Revision 1.23  2011/05/11 07:11:52  efy-asimo
+ * User settings update
+ *
+ * Revision 1.22  2011/05/09 06:38:19  efy-asimo
+ * Simple avatar modification update
+ *
  * Revision 1.21  2011/04/06 13:30:56  efy-asimo
  * Refactor profile display
  *

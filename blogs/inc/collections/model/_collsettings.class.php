@@ -164,6 +164,9 @@ class CollectionSettings extends AbstractSettings
 
 /*
  * $Log$
+ * Revision 1.55  2011/05/05 20:14:30  sam2kb
+ * More replacement tags for item footer
+ *
  * Revision 1.54  2011/03/24 15:15:05  efy-asimo
  * in-skin login - feature
  *

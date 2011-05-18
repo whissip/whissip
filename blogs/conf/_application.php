@@ -21,7 +21,7 @@ $app_version = '4.1.0-beta';
  * Release date (ISO)
  * @global string
  */
-$app_date = '2011-02-23';
+$app_date = '2011-05-02';
 
 /**
  * This is used to check if the database is up to date.
@@ -31,7 +31,7 @@ $app_date = '2011-02-23';
  *
  * {@internal Before changing this in CVS, it should be discussed! }}
  */
-$new_db_version = 10000;
+$new_db_version = 10100;
 
 /**
  * Is displayed on the login screen:
