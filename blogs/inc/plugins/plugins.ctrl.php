@@ -705,7 +705,7 @@ switch( $action )
 		$Session->set('fadeout_id', $edit_Plugin->ID);
 
 		// Redirect so that a reload doesn't write to the DB twice:
-		header_redirect( '?ctrl=plugins', 303 ); // Will EXIT
+		header_redirect( '?ctrl=plugins&action='.$action.'&plugin_ID='.$plugin_ID, 303 ); // Will EXIT
 		// We have EXITed already at this point!!
 		break;
 
