@@ -2789,32 +2789,35 @@ function upgrade_b2evo_tables()
 
 	if( $old_db_version < 10100 )
 	{	// 4.1
-		task_begin( 'Convert group permissions to pluggable permissions...' );
-		// asimo>This delete query needs just in case if this version of b2evo was used, before upgrade process call
-		$DB->query( 'DELETE FROM T_groups__groupsettings
-						WHERE gset_name = "perm_files" OR gset_name = "perm_options" OR gset_name = "perm_templates"' );
-		// Get current permission values from groups table
-		$sql = 'SELECT grp_ID, grp_perm_spamblacklist, grp_perm_slugs, grp_perm_files, grp_perm_options, grp_perm_templates
-			      FROM T_groups';
-		$rows = $DB->get_results( $sql, OBJECT, 'Get groups converted permissions' );
-		// Insert values into groupsettings table
-		foreach( $rows as $row )
-		{
-			$DB->query( 'INSERT INTO T_groups__groupsettings( gset_grp_ID, gset_name, gset_value )
-							VALUES( '.$row->grp_ID.', "perm_spamblacklist", "'.$row->grp_perm_spamblacklist.'" ),
-								( '.$row->grp_ID.', "perm_slugs", "'.$row->grp_perm_slugs.'" ),
-								( '.$row->grp_ID.', "perm_files", "'.$row->grp_perm_files.'" ),
-								( '.$row->grp_ID.', "perm_options", "'.$row->grp_perm_options.'" ),
-								( '.$row->grp_ID.', "perm_templates", "'.$row->grp_perm_templates.'" )' );
-		}
+		if( db_col_exists('T_groups', 'grp_perm_templates') )
+		{ // only do this once
+			task_begin( 'Convert group permissions to pluggable permissions...' );
+			// asimo>This delete query needs just in case if this version of b2evo was used, before upgrade process call
+			$DB->query( 'DELETE FROM T_groups__groupsettings
+							WHERE gset_name = "perm_files" OR gset_name = "perm_options" OR gset_name = "perm_templates"' );
+			// Get current permission values from groups table
+			$sql = 'SELECT grp_ID, grp_perm_spamblacklist, grp_perm_slugs, grp_perm_files, grp_perm_options, grp_perm_templates
+				      FROM T_groups';
+			$rows = $DB->get_results( $sql, OBJECT, 'Get groups converted permissions' );
+			// Insert values into groupsettings table
+			foreach( $rows as $row )
+			{
+				$DB->query( 'INSERT INTO T_groups__groupsettings( gset_grp_ID, gset_name, gset_value )
+								VALUES( '.$row->grp_ID.', "perm_spamblacklist", "'.$row->grp_perm_spamblacklist.'" ),
+									( '.$row->grp_ID.', "perm_slugs", "'.$row->grp_perm_slugs.'" ),
+									( '.$row->grp_ID.', "perm_files", "'.$row->grp_perm_files.'" ),
+									( '.$row->grp_ID.', "perm_options", "'.$row->grp_perm_options.'" ),
+									( '.$row->grp_ID.', "perm_templates", "'.$row->grp_perm_templates.'" )' );
+			}
 
-		// Drop all converted permission colums from groups table
-		db_drop_col( 'T_groups', 'grp_perm_spamblacklist' );
-		db_drop_col( 'T_groups', 'grp_perm_slugs' );
-		db_drop_col( 'T_groups', 'grp_perm_files' );
-		db_drop_col( 'T_groups', 'grp_perm_options' );
-		db_drop_col( 'T_groups', 'grp_perm_templates' );
-		task_end();
+			// Drop all converted permission colums from groups table
+			db_drop_col( 'T_groups', 'grp_perm_spamblacklist' );
+			db_drop_col( 'T_groups', 'grp_perm_slugs' );
+			db_drop_col( 'T_groups', 'grp_perm_files' );
+			db_drop_col( 'T_groups', 'grp_perm_options' );
+			db_drop_col( 'T_groups', 'grp_perm_templates' );
+			task_end();
+		}
 
 		task_begin( 'Upgrading users table, adding user gender...' );
 		db_add_col( 'T_users', 'user_gender', 'char(1) NULL DEFAULT NULL AFTER user_showonline' );
