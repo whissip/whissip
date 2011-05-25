@@ -1672,13 +1672,16 @@ function pre_dump( $var__var__var__var__ )
  *
  * @param integer|NULL Get the last x entries from the stack (after $ignore_from is applied). Anything non-numeric means "all".
  * @param array After a key/value pair matches a stack entry, this and the rest is ignored.
- *              For example, array('class' => 'DB') would exclude everything after the stack
- *              "enters" class DB and everything that got called afterwards.
- *              You can also give an array of arrays which means that every condition in one of the given array must match.
+ *        For example, array('class' => 'DB') would exclude everything after the stack
+ *        "enters" class DB and everything that got called afterwards.
+ *        array('function' => 'debug_get_backtrace') would ignore the call to this function
+ *        itself.
+ *        You can also give an array of arrays which means that every condition in
+ *        one of the given array must match.
  * @param integer Number of stack entries to include, after $ignore_from matches.
  * @return string HTML table
  */
-function debug_get_backtrace( $limit_to_last = NULL, $ignore_from = array( 'function' => 'debug_get_backtrace' ), $offset_ignore_from = 0 )
+function debug_get_backtrace( $limit_to_last = NULL, $ignore_from = array(), $offset_ignore_from = 0 )
 {
 	if( ! function_exists( 'debug_backtrace' ) ) // PHP 4.3.0
 	{
@@ -1751,7 +1754,7 @@ function debug_get_backtrace( $limit_to_last = NULL, $ignore_from = array( 'func
 		$count_backtrace = $limit_to_last;
 	}
 
-	$r .= '<div style="padding:1ex; margin-bottom:1ex; text-align:left; color:#000; background-color:#ddf;">
+	$r .= '<div style="padding:1ex; margin-bottom:1ex; text-align:left; color:#000; background-color:#ddf">
 					<h3>Backtrace:</h3>'."\n";
 	if( $count_backtrace )
 	{
@@ -1822,7 +1825,7 @@ function debug_get_backtrace( $limit_to_last = NULL, $ignore_from = array( 'func
 			$r .= '<strong>';
 			if( isset($l_trace['file']) )
 			{
-				$r .= "File: </strong> ".$l_trace['file'];
+				$r .= 'File: </strong> '.htmlspecialchars($l_trace['file']);
 			}
 			else
 			{
