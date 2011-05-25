@@ -119,6 +119,38 @@ $group_msg_perm = $GroupCache->get_option_array( 'check_messaging_perm' );
 			}
 		}
 	}
+
+	// Identity shown dropdown list handler
+	// init variables
+	var idmodes = [];
+	var laquo = String.fromCharCode(171);
+	var raquo = String.fromCharCode(187);
+	idmodes["nickname"] = " " + laquo + "<?php echo T_( 'Nickname' ); ?>" + raquo;
+	idmodes["login"] = " " + laquo + "<?php echo T_( 'Login' ); ?>" + raquo;
+	idmodes["firstname"] = " " + laquo + "<?php echo T_( 'First name' ); ?>" + raquo;
+	idmodes["lastname"] = " " + laquo + "<?php echo T_( 'Last name' ); ?>" + raquo;
+	idmodes["namefl"] = " " + laquo + "<?php echo T_( 'First name' ).' '.T_( 'Last name' ); ?>" + raquo;
+	idmodes["namelf"] = " " + laquo + "<?php echo T_( 'Last name' ).' '.T_( 'First name' ); ?>" + raquo;
+
+	// Identity fields on change fucntion
+	function idmodes_onchange( fieldname )
+	{
+		var fieldText = jQuery( '#edited_user_' + fieldname ).val();
+		if( fieldText == "" )
+		{
+			fieldText = "-";
+		}
+		jQuery( '#edited_user_idmode option[value="' + fieldname + '"]' ).text( fieldText + idmodes[fieldname] );
+	}
+
+	// Handle Identity shown composite fields (-First name Last name- and -Last name First name-)
+	function name_onchange()
+	{
+		var firstName = jQuery( '#edited_user_firstname' ).val();
+		var lastName = jQuery( '#edited_user_lastname' ).val();
+		jQuery( '#edited_user_idmode option[value="namefl"]' ).text( firstName + " " + lastName + idmodes["namefl"] );
+		jQuery( '#edited_user_idmode option[value="namelf"]' ).text( lastName + " " + firstName + idmodes["namelf"] );
+	}
 </script>
 <?php
 
@@ -137,11 +169,11 @@ if( $is_admin )
 {
 	if( $edited_User->ID == 0 )
 	{
-		$form_title = T_('Edit user identity');
+		$form_title = T_('Edit user profile');
 	}
 	else
 	{
-		$form_title = sprintf( T_('Edit %s identity'), $edited_User->dget('fullname').' ['.$edited_User->dget('login').']' );
+		$form_title = sprintf( T_('Edit profile for user %s'), $edited_User->dget('fullname').' &laquo;'.$edited_User->dget('login').'&raquo;' );
 	}
 	$form_class = 'fform';
 }
@@ -155,7 +187,7 @@ else
 
 	$Form->add_crumb( 'user' );
 	$Form->hidden_ctrl();
-	$Form->hidden( 'user_tab', 'identity' );
+	$Form->hidden( 'user_tab', 'profile' );
 	$Form->hidden( 'identity_form', '1' );
 
 	$Form->hidden( 'user_ID', $edited_User->ID );
@@ -214,7 +246,10 @@ if( $action != 'view' )
 		array( 'PM', 1, T_( 'Allow others to send me private messages' ), ( $edited_User->get( 'allow_msgform' ) % 2 == 1 ) ),
 		array( 'email', 2, T_( 'Allow others to send me emails through a message form (email address will never be displayed)' ),  $edited_User->get( 'allow_msgform' ) > 1 ) );
 	$Form->checklist( $messaging_options, 'edited_user_msgform', T_('Message form') );
-	$Form->checkbox( 'edited_user_notify', $edited_User->get('notify'), T_('Notifications'), T_('Check this to receive a notification whenever someone else comments on one of <strong>your</strong> posts.') );
+	$notify_options = array(
+		array( 'edited_user_notify', 1, T_( 'Notify me by email whenever a comment is published on one of <strong>my</strong> posts.' ), $edited_User->get( 'notify' ) ),
+		array( 'edited_user_notify_moderation', 2, T_( 'Notify me by email whenever a comment is awaiting moderation on one of <strong>my</strong> blogs.' ), $edited_User->get( 'notify_moderation' ) ) );
+	$Form->checklist( $notify_options, 'edited_user_notification', T_( 'Notifications' ) );
 
 }
 else
@@ -236,14 +271,14 @@ $Form->begin_fieldset( T_('Identity') );
 if( $action != 'view' )
 {   // We can edit the values:
 
-	$Form->text_input( 'edited_user_login', $edited_User->login, 20, T_('Login'), '', array( 'required' => true ) );
+	$Form->text_input( 'edited_user_login', $edited_User->login, 20, T_('Login'), '', array( 'required' => true, 'onchange' => 'idmodes_onchange( "login" )' ) );
 	$Form->text_input( 'edited_user_firstname', $edited_User->firstname, 20, T_('First name'), '', array( 'maxlength' => 50 ) );
 	$Form->text_input( 'edited_user_lastname', $edited_User->lastname, 20, T_('Last name'), '', array( 'maxlength' => 50 ) );
 
 	$nickname_editing = $Settings->get( 'nickname_editing' );
 	if( ( $nickname_editing == 'edited-user' && $edited_User->ID == $current_User->ID ) || ( $nickname_editing != 'hidden' && $has_full_access ) )
 	{
-		$Form->text_input( 'edited_user_nickname', $edited_User->nickname, 20, T_('Nickname'), '', array( 'maxlength' => 50, 'required' => true ) );
+		$Form->text_input( 'edited_user_nickname', $edited_User->nickname, 20, T_('Nickname'), '', array( 'maxlength' => 50, 'required' => true, 'onchange' => 'idmodes_onchange( "nickname" )' ) );
 	}
 	else
 	{
@@ -501,15 +536,40 @@ if( $action != 'view' )
 
 $Form->end_form();
 
-// call the users group dropdown list handler
 ?>
-	<script type="text/javascript">
-		user_group_changed();
-	</script>
+<script type="text/javascript">
+	// call the users group dropdown list handler
+	user_group_changed();
+
+	// handle firstname and lastname change in the Identity shown dropdown list
+	jQuery( '#edited_user_firstname' ).change( function()
+	{
+		// change First name text
+		idmodes_onchange( "firstname" );
+		// change -First name Last name- and -Last name First name- texts
+		name_onchange();
+	} );
+	jQuery( '#edited_user_lastname' ).change( function()
+	{
+		// change Last name text
+		idmodes_onchange( "lastname" );
+		// change -First name Last name- and -Last name First name- texts
+		name_onchange();
+	} );
+</script>
 <?php
 
 /*
  * $Log$
+ * Revision 1.24  2011/05/19 17:47:07  efy-asimo
+ * register for updates on a specific blog post
+ *
+ * Revision 1.23  2011/05/13 07:24:26  efy-asimo
+ * dinamically update "Identiy shown" select options
+ *
+ * Revision 1.22  2011/05/11 07:11:52  efy-asimo
+ * User settings update
+ *
  * Revision 1.21  2011/04/06 13:30:56  efy-asimo
  * Refactor profile display
  *

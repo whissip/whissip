@@ -84,6 +84,8 @@ class User extends DataObject
 	 */
 	var $allow_msgform;
 	var $notify;
+	var $notify_moderation;
+	var $unsubscribe_key;
 	var $showonline;
 	var $gender;
 
@@ -211,6 +213,8 @@ class User extends DataObject
  			$this->set( 'allow_msgform', 3 );
 
  			$this->set( 'notify', 0 );
+ 			$this->set( 'notify_moderation', 0 );
+ 			$this->set( 'unsubscribe_key', generate_random_key() );
  			$this->set( 'showonline', 1 );
 		}
 		else
@@ -238,6 +242,8 @@ class User extends DataObject
 			$this->allow_msgform = $db_row->user_allow_msgform;
 			$this->validated = $db_row->user_validated;
 			$this->notify = $db_row->user_notify;
+			$this->notify_moderation = $db_row->user_notify_moderation;
+			$this->unsubscribe_key = $db_row->user_unsubscribe_key;
 			$this->showonline = $db_row->user_showonline;
 			$this->gender = $db_row->user_gender;
 			$this->avatar_file_ID = $db_row->user_avatar_file_ID;
@@ -293,9 +299,13 @@ class User extends DataObject
 
 			if( $q = $DB->get_var( $query ) )
 			{
-				param_error( 'edited_user_login',
-					sprintf( T_( 'This login already exists. Do you want to <a %s>edit the existing user</a>?' ),
-						'href="?ctrl=user&amp;user_tab=identity&amp;user_ID='.$q.'"' ) );
+				$error_message = T_( 'This login already exists.' );
+				if( $current_User->check_perm( 'users', 'edit' ) )
+				{
+					$error_message = sprintf( T_( 'This login already exists. Do you want to <a %s>edit the existing user</a>?' ),
+						'href="?ctrl=user&amp;user_tab=profile&amp;user_ID='.$q.'"' );
+				}
+				param_error( 'edited_user_login', $error_message );
 			}
 
 			// EXPERIMENTAL user fields & EXISTING fields:
@@ -359,6 +369,9 @@ class User extends DataObject
 
 			param( 'edited_user_notify', 'integer', 0 );
 			$this->set_from_Request('notify', 'edited_user_notify', true);
+
+			param( 'edited_user_notify_moderation', 'integer', 0 );
+			$this->set_from_Request('notify_moderation', 'edited_user_notify_moderation', true);
 
 			param( 'edited_user_firstname', 'string', true );
 			$this->set_from_Request('firstname', 'edited_user_firstname', true);
@@ -813,6 +826,7 @@ class User extends DataObject
 
 			case 'level':
 			case 'notify':
+			case 'notify_moderation':
 			case 'showonline':
 				return $this->set_param( $parname, 'number', $parvalue, $make_null );
 
@@ -2347,6 +2361,12 @@ class User extends DataObject
 
 /*
  * $Log$
+ * Revision 1.100  2011/05/19 17:47:07  efy-asimo
+ * register for updates on a specific blog post
+ *
+ * Revision 1.99  2011/05/11 07:11:51  efy-asimo
+ * User settings update
+ *
  * Revision 1.98  2011/04/06 13:30:56  efy-asimo
  * Refactor profile display
  *

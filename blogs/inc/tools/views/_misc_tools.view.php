@@ -64,7 +64,7 @@ if( $current_User->check_perm('options', 'edit') )
 	echo '<li><a href="'.regenerate_url('action', 'action=recreate_itemslugs&amp;'.url_crumb('tools')).'">'.T_('Recreate all item slugs. Old slugs will still work, but redirect to the new one.').'</a></li>';
 	echo '</ul>';
 	$block_item_Widget->disp_template_raw( 'block_end' );
-	
+
 	$block_item_Widget->title = T_('Database Maintenance Tools');
 	$block_item_Widget->disp_template_replaced( 'block_start' );
 	echo '<ul>';
@@ -103,6 +103,9 @@ $block_item_Widget->disp_template_raw( 'block_end' );
 
 /*
  * $Log$
+ * Revision 1.7  2011/05/02 23:31:11  fplanque
+ * minor
+ *
  * Revision 1.6  2011/03/15 09:34:06  efy-asimo
  * have checkboxes for enabling caching in new blogs
  * refactorize cache create/enable/disable

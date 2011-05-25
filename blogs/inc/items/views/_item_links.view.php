@@ -221,7 +221,7 @@ function display_position( & $row )
 	$r = '<form action="" method="post">
 		<select id="'.$id.'" name="link_position">'
 		.Form::get_select_options_string($positions, $row->link_position, true).'</select>'
-		.'<script type="text/javascript">jQuery("#'.$id.'").change( evo_display_position_onchange );</script>';
+		.'<script type="text/javascript">jQuery(function(){ jQuery("#'.$id.'").change( evo_display_position_onchange ) });</script>';
 
 	$r .= '<noscript>';
 	// Add hidden fields for non-JS
