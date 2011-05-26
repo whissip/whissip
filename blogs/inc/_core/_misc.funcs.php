@@ -2041,9 +2041,10 @@ function bad_request_die( $additional_info = '' )
 
 
 /**
- * Outputs debug info, according to {@link $debug} or $force param. This gets called typically at the end of the page.
+ * Outputs debug info, according to {@link $debug} or $force param.
+ * This gets called typically at the end of the page.
  *
- * @param boolean true to force output regardless of {@link $debug}
+ * @param boolean true to force output regardless of {@link $debug} and content-type
  * @param boolean true to force clean output (without HTML) regardless of {@link $is_cli}
  */
 function debug_info( $force = false, $force_clean = false )
@@ -2070,7 +2071,7 @@ function debug_info( $force = false, $force_clean = false )
 		}
 
 		// Do not display, if no content-type header has been sent or it's != "text/html" (debug > 1 skips this)
-		if( $debug < 2 )
+		if( (int)$debug < 2 )
 		{
 			$content_type = NULL;
 			foreach(headers_list() as $header)
@@ -2091,7 +2092,7 @@ function debug_info( $force = false, $force_clean = false )
 	//Make sure debug output only happens once:
 	$debug_done = true;
 
-	// clean output:
+	// Clean output?
 	$clean = $is_cli || $force_clean;
 	$printf_format = '| %-45s | %-5s | %-7s | %-5s |';
 	$table_headerlen = 73;
