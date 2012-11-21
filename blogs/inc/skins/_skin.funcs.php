@@ -486,7 +486,7 @@ function skin_include( $template_name, $params = array() )
 
 		if( !isset( $disp_handlers['disp_'.$disp] ) )
 		{
-			printf( '<div class="skin_error">Unhandled disp type [%s]</div>', $disp );
+			printf( '<div class="skin_error">Unhandled disp type [%s]</div>',  htmlspecialchars( $disp ) );
 			$Timer->pause( $timer_name );
 			return;
 		}
@@ -902,6 +902,9 @@ function skin_installed( $name )
 
 /*
  * $Log$
+ * Revision 1.120  2012/11/21 19:31:53  efy-asimo
+ * Fix XSS vulnerability
+ *
  * Revision 1.89  2011/05/09 06:38:18  efy-asimo
  * Simple avatar modification update
  *
