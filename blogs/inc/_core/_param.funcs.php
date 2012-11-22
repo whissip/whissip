@@ -178,11 +178,11 @@ function param( $var, $type = 'raw', $default = '', $memorize = false,
 					debug_die( 'param(-): <strong>'.$var.'</strong> is not scalar!' );
 				}
 
-				// strip out any html:
 				// echo $var, '=', $GLOBALS[$var], '<br />';
-				$GLOBALS[$var] = trim( strip_tags($GLOBALS[$var]) );
 				// Make sure the string is a single line
-				$GLOBALS[$var] = preg_replace( '¤\r|\n¤', '', $GLOBALS[$var] );
+				$GLOBALS[$var] = preg_replace( '~\r|\n~', '', $GLOBALS[$var] );
+				// strip out any html:
+				$GLOBALS[$var] = trim( strip_tags($GLOBALS[$var]) );
 
 				$Debuglog->add( 'param(-): <strong>'.$var.'</strong> as string', 'params' );
 				break;
@@ -2116,6 +2116,9 @@ function isset_param( $var )
 
 /*
  * $Log$
+ * Revision 1.77  2012/11/22 10:52:09  efy-asimo
+ * Fix XSS vulnerability
+ *
  * Revision 1.68  2011/03/16 01:30:54  fplanque
  * fix for http://forums.b2evolution.net/viewtopic.php?p=107882
  *
